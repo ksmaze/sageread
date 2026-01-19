@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
+import { invoke } from "@tauri-apps/api/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router";
@@ -26,3 +27,8 @@ createRoot(document.getElementById("root")!).render(
     <Toaster position="top-center" />
   </QueryClientProvider>,
 );
+
+// Signal to Rust that frontend is rendered and ready to show
+invoke("app_ready").catch((err) => {
+  console.error("Failed to signal app ready:", err);
+});

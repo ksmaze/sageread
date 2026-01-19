@@ -46,13 +46,36 @@ use crate::core::{
 };
 use tauri::Manager;
 
+#[cfg(target_os = "android")]
+use jni::{
+    objects::{JClass, JObject},
+    JNIEnv,
+};
+
+#[tauri::command]
+async fn app_ready(app: tauri::AppHandle) {
+    // Show the main window now that the frontend DOM is ready
+    // show() is only available on desktop platforms
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    if let Some(main_window) = app.get_webview_window("main") {
+        let _ = main_window.show();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_updater::Builder::new().build())
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_os::init());
+
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        builder = builder
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_global_shortcut::Builder::new().build());
+    }
+
+    builder
         .manage(AppState::default())
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_http::init())
@@ -68,7 +91,9 @@ pub fn run() {
         .plugin(tauri_plugin_epub::init())
         .setup(|app| {
             let app_handle = app.handle().clone();
-            if std::env::consts::OS == "windows" {
+
+            #[cfg(target_os = "windows")]
+            {
                 if let Some(window) = app.get_webview_window("main") {
                     if let Err(e) = window.set_decorations(false) {
                         eprintln!("Failed to set window decorations: {}", e);
@@ -77,7 +102,7 @@ pub fn run() {
             }
             
             // Check for updates on startup
-            #[cfg(not(debug_assertions))]
+            #[cfg(all(not(debug_assertions), not(any(target_os = "android", target_os = "ios"))))]
             {
                 let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {
@@ -175,6 +200,7 @@ pub fn run() {
             list_local_models,
             download_model_file,
             delete_local_model,
+            app_ready,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
@@ -189,4 +215,15 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(target_os = "android")]
+#[no_mangle]
+pub extern "C" fn Java_com_xincmm_sageread_MainActivity_java_1init(
+    mut env: JNIEnv,
+    _class: JClass,
+    context: JObject,
+) {
+    rustls_platform_verifier::android::init_hosted(&mut env, context)
+        .expect("Failed to initialize Android platform verifier");
 }

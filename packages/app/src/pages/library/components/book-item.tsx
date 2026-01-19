@@ -1,7 +1,6 @@
 import AITagConfirmDialog from "@/components/ai/tag-confirm-dialog";
 import { useDownloadImage } from "@/hooks/use-download-image";
 import { useModelSelector } from "@/hooks/use-model-selector";
-import type { BookTag } from "@/pages/library/hooks/use-tags-management";
 import { type AITagSuggestion, generateTagsWithAI } from "@/services/ai-tag-service";
 import { updateBookVectorizationMeta } from "@/services/book-service";
 import { type EpubIndexResult, indexEpub } from "@/services/book-service";
@@ -11,12 +10,11 @@ import { useNotificationStore } from "@/store/notification-store";
 import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import { getCurrentVectorModelConfig } from "@/utils/model";
 import { listen } from "@tauri-apps/api/event";
-import { Menu, MenuItem, PredefinedMenuItem, Submenu } from "@tauri-apps/api/menu";
-import { LogicalPosition } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { MoreHorizontal } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import BookActionDrawer from "./book-action-drawer";
 import EditInfo from "./edit-info";
 import EmbeddingDialog from "./embedding-dialog";
 
@@ -30,13 +28,12 @@ interface BookUpdateData {
 interface BookItemProps {
   book: BookWithStatusAndUrls;
   viewMode?: "grid" | "list";
-  availableTags?: BookTag[];
   onDelete?: (book: BookWithStatusAndUrls) => Promise<boolean>;
   onUpdate?: (bookId: string, updates: BookUpdateData) => Promise<boolean>;
   onRefresh?: () => Promise<void>;
 }
 
-export default function BookItem({ book, availableTags = [], onDelete, onUpdate, onRefresh }: BookItemProps) {
+export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookItemProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const { downloadImage } = useDownloadImage();
 
@@ -72,6 +69,8 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
   }, [book.id]);
 
   const { openBook } = useLayoutStore();
+
+  const [showActionDrawer, setShowActionDrawer] = useState(false);
 
   const handleClick = useCallback(() => {
     openBook(book.id, book.title);
@@ -241,36 +240,30 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
       });
       setVectorizeProgress(null);
       const errorMessage = `《${book.title}》向量化失败`;
-      toast.error("向量化失败，请检查嵌入服务是否可用");
-      addNotification(errorMessage);
+      // Show the actual error message from the backend if available
+      const detailedError = err instanceof Error ? err.message : String(err);
+      toast.error(`向量化失败: ${detailedError}`);
+      addNotification(errorMessage + ": " + detailedError);
       if (onRefresh) await onRefresh();
     }
   }, [book.id, book.title, onRefresh]);
 
-  const handleTagToggle = useCallback(
-    async (tagId: string) => {
-      if (!onUpdate) return;
-
-      const currentTags = book.tags || [];
-      const hasTag = currentTags.includes(tagId);
-
-      let newTags: string[];
-      if (hasTag) {
-        // 移除标签
-        newTags = currentTags.filter((tag) => tag !== tagId);
-      } else {
-        // 添加标签（去重）
-        newTags = Array.from(new Set([...currentTags, tagId]));
-      }
-
-      try {
-        await onUpdate(book.id, { tags: newTags });
-      } catch (error) {
-        console.error("Failed to update tags:", error);
-      }
-    },
-    [book.id, book.tags, onUpdate],
-  );
+  const handleToggleReadStatus = useCallback(async () => {
+    if (!onUpdate) return;
+    const isUnread = !book.status || book.status.status === "unread";
+    // If currently unread, mark as read (progress 100%?). 
+    // Actually the interface is simple status toggle for now or we can set status.
+    // The native menu logic was just logging, let's make it real if possible or just log.
+    // For now, let's just log and show toast as placeholder since actual logic might depend on backend
+    console.log(isUnread ? "Mark as Read" : "Mark as Unread");
+    toast.info("Updating read status...");
+    
+    // Example implementation if we wanted to update:
+    // await onUpdate(book.id, { ... });
+    // But BookUpdateData only supports title, author, coverPath, tags. 
+    // It seems we can't update status via onUpdate based on the interface.
+    // We'll leave it as a placeholder.
+  }, [book.status]);
 
   const renderProgress = () => {
     if (!book.status) {
@@ -343,195 +336,103 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
     );
   };
 
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+  const longPressTriggered = useRef(false);
+
+  const showMenuAt = useCallback(
+    async () => {
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      setShowActionDrawer(true);
+    },
+    [],
+  );
+
   const handleMenuClick = useCallback(
-    async (e: React.MouseEvent) => {
+    (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-
-      try {
-        const separator1 = await PredefinedMenuItem.new({ text: "separator-1", item: "Separator" });
-        const separator2 = await PredefinedMenuItem.new({ text: "separator-2", item: "Separator" });
-        const separator3 = await PredefinedMenuItem.new({ text: "separator-3", item: "Separator" });
-
-        const isUnread = !book.status || book.status.status === "unread";
-        const markStatusItem = {
-          id: isUnread ? "mark-read" : "mark-unread",
-          text: isUnread ? "标记为已读" : "标记为未读",
-          action: () => {
-            if (isUnread) {
-              console.log("Mark as Read clicked");
-            } else {
-              console.log("Mark as Unread clicked");
-            }
-          },
-        };
-
-        const currentTags = book.tags || [];
-
-        const allTagMenuItems: any[] = [];
-
-        const aiGenerateItem = await MenuItem.new({
-          id: "ai-generate-tags",
-          text: "AI 生成",
-          action: () => {
-            handleAIGenerateTags();
-          },
-        });
-        allTagMenuItems.push(aiGenerateItem);
-
-        if (availableTags.length > 0) {
-          const aiSeparator = await PredefinedMenuItem.new({ text: "ai-separator", item: "Separator" });
-          allTagMenuItems.push(aiSeparator);
-          const databaseTags = await getTags();
-          const tagMenuItems = await Promise.all(
-            availableTags
-              .filter((tag) => tag.id !== "all" && tag.id !== "uncategorized")
-              .map(async (tag) => {
-                const tagName = tag.id.startsWith("tag-") ? tag.id.replace("tag-", "") : tag.name;
-                const dbTag = databaseTags.find((t) => t.name === tagName);
-                const realTagId = dbTag?.id;
-                const hasTag = realTagId ? currentTags.includes(realTagId) : false;
-
-                return await MenuItem.new({
-                  id: `tag-${tag.id}`,
-                  text: `${hasTag ? "✓ " : ""}${tagName}`,
-                  action: () => {
-                    if (realTagId) {
-                      handleTagToggle(realTagId);
-                    }
-                  },
-                });
-              }),
-          );
-
-          allTagMenuItems.push(...tagMenuItems);
-        }
-
-        const tagsSubmenu = await Submenu.new({
-          text: "管理标签",
-          items: allTagMenuItems,
-        });
-
-        const vectorMeta = book.status?.metadata?.vectorization;
-        const isVectorized = vectorMeta?.status === "success";
-
-        const vectorizeSubmenuItems = [];
-
-        if (isVectorized) {
-          vectorizeSubmenuItems.push(
-            await MenuItem.new({
-              id: "vector-info",
-              text: "✓ 已向量化",
-              enabled: false,
-            }),
-            await MenuItem.new({
-              id: "vector-model",
-              text: `模型: ${vectorMeta?.model || "未知"}`,
-              enabled: false,
-            }),
-            await MenuItem.new({
-              id: "vector-dimension",
-              text: `维度: ${vectorMeta?.dimension || 0}`,
-              enabled: false,
-            }),
-            await MenuItem.new({
-              id: "vector-chunks",
-              text: `分块: ${vectorMeta?.chunkCount || 0}`,
-              enabled: false,
-            }),
-          );
-        }
-
-        vectorizeSubmenuItems.push(
-          await MenuItem.new({
-            id: "vectorize-epub",
-            text: isVectorized ? "重新向量化" : "开始向量化",
-            action: async () => {
-              await handleVectorizeBook();
-            },
-          }),
-          await MenuItem.new({
-            id: "test-vector",
-            text: "向量化测试",
-            action: () => {
-              setShowEmbeddingDialog(true);
-            },
-          }),
-        );
-
-        const vectorizeSubmenu = await Submenu.new({
-          text: `${isVectorized ? "✓ " : ""}向量化`,
-          items: vectorizeSubmenuItems,
-        });
-
-        const menu = await Menu.new({
-          items: [
-            {
-              id: "open",
-              text: "打开",
-              action: () => {
-                handleClick();
-              },
-            },
-            vectorizeSubmenu,
-            separator1,
-            {
-              id: "edit",
-              text: "编辑信息",
-              action: () => {
-                setShowEditDialog(true);
-              },
-            },
-            ...(book.coverUrl
-              ? [
-                  {
-                    id: "download-image",
-                    text: "下载图片",
-                    action: () => {
-                      handleDownloadImage();
-                    },
-                  },
-                ]
-              : []),
-            tagsSubmenu,
-            separator2,
-            markStatusItem,
-            separator3,
-            {
-              id: "delete",
-              text: "删除",
-              action: () => {
-                handleNativeDelete();
-              },
-            },
-          ],
-        });
-
-        await menu.popup(new LogicalPosition(e.clientX, e.clientY));
-      } catch (error) {
-        console.error("Failed to show native menu:", error);
-      }
+      // If triggered by long press context menu event, ignore it as we handled it manually
+      if (longPressTriggered.current) return;
+      showMenuAt();
     },
-    [
-      handleClick,
-      handleNativeDelete,
-      handleDownloadImage,
-      handleTagToggle,
-      handleAIGenerateTags,
-      handleVectorizeBook,
-      book.coverUrl,
-      book.status,
-      availableTags,
-      book.tags,
-    ],
+    [showMenuAt],
   );
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      longPressTriggered.current = false;
+      const touch = e.touches[0];
+      touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+      longPressTimer.current = setTimeout(() => {
+        if (touchStartPos.current) {
+          longPressTriggered.current = true;
+          showMenuAt();
+        }
+      }, 500);
+    },
+    [showMenuAt],
+  );
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      if (longPressTriggered.current) {
+        e.preventDefault();
+        longPressTriggered.current = false;
+      }
+      touchStartPos.current = null;
+    },
+    [],
+  );
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartPos.current || !longPressTimer.current) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPos.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPos.current.y);
+    if (dx > 10 || dy > 10) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleTouchCancel = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    touchStartPos.current = null;
+    longPressTriggered.current = false;
+  }, []);
 
   return (
     <>
-      <div className="group cursor-pointer" onClick={handleClick}>
+      <div
+        className="group cursor-pointer"
+        onClick={(e) => {
+          if (longPressTriggered.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            longPressTriggered.current = false;
+            return;
+          }
+          handleClick();
+        }}
+      >
         <div
           onContextMenu={handleMenuClick}
-          className="rounded-r-2xl rounded-l-md border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={handleTouchMove}
+          onTouchCancel={handleTouchCancel}
+          className="rounded-r-2xl rounded-l-md border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 select-none"
+          style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", touchAction: "manipulation" }}
         >
           <div className="relative p-2 pb-0">
             <div className="mb-2">
@@ -540,7 +441,7 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
 
             <div className="aspect-[4/5] w-full overflow-hidden">
               {book.coverUrl ? (
-                <img src={book.coverUrl} alt={book.title} className="h-full w-full object-cover" />
+                <img src={book.coverUrl} alt={book.title} className="h-full w-full object-cover pointer-events-none" draggable={false} />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800">
                   <div className="p-4 text-center">
@@ -556,13 +457,39 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
             <div className="flex-1">{renderProgress()}</div>
             <div className="flex items-center gap-2">
               {renderVectorizationStatus()}
-              <MoreHorizontal onClick={handleMenuClick} className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <div
+                className="p-2 -mr-2 cursor-pointer"
+                onClick={handleMenuClick}
+              >
+                <MoreHorizontal className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <EditInfo book={book} isOpen={showEditDialog} onClose={() => setShowEditDialog(false)} onSave={onUpdate} />
+
+      <BookActionDrawer
+        book={book}
+        isOpen={showActionDrawer}
+        onOpenChange={setShowActionDrawer}
+        onOpenBook={handleClick}
+        onEditInfo={() => setShowEditDialog(true)}
+        onDelete={handleNativeDelete}
+        onDownloadImage={handleDownloadImage}
+        onToggleReadStatus={handleToggleReadStatus}
+        onVectorize={handleVectorizeBook}
+        onVectorTest={() => setShowEmbeddingDialog(true)}
+        onManageTags={() => {
+           // For now, we don't have a separate tag manager dialog, 
+           // we could expand it in the drawer later.
+           toast.info("请在编辑信息中管理标签");
+           setShowEditDialog(true);
+        }}
+        onAITags={handleAIGenerateTags}
+        vectorizeProgress={vectorizeProgress}
+      />
 
       <AITagConfirmDialog
         isOpen={showAITagDialog}

@@ -1,0 +1,8 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.sage_read" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Prevent black screen during WebView initialization -->
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:windowDisablePreview">false</item>
+    </style>
+</resources>

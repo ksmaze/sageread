@@ -129,7 +129,7 @@ export default function ReaderLayout() {
                 width: 300,
                 height: "100%",
               }}
-              minWidth={260}
+              minWidth={200}
               maxWidth={500}
               enable={{
                 top: false,
@@ -173,7 +173,7 @@ export default function ReaderLayout() {
                 width: 370,
                 height: "100%",
               }}
-              minWidth={320}
+              minWidth={260}
               maxWidth={580}
               enable={{
                 top: false,
@@ -226,7 +226,7 @@ export default function ReaderLayout() {
               >
                 {swapSidebars ? chatSidebar : notepadSidebar}
 
-                <div className="relative flex-1 rounded-md border shadow-around">
+                <div className="relative min-w-0 flex-1 rounded-md border shadow-around">
                   <ReaderViewer />
 
                   {showOverlay && (

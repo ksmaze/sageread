@@ -52,7 +52,10 @@ impl TextVectorizer {
     pub async fn new(config: VectorizerConfig) -> Result<Self> {
         log::info!("初始化嵌入 API 向量化器: embeddings_url={}, model={}", config.embeddings_url, config.model_name);
 
-        let client = Client::new();
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .context("Failed to build reqwest client")?;
         let tokenizer = o200k_base().context("Failed to initialize tiktoken tokenizer")?;
 
         Ok(Self {
@@ -96,13 +99,13 @@ impl TextVectorizer {
             // Ollama 格式：input 是字符串
             let request = OllamaEmbeddingRequest {
                 model: self.model_name.clone(),
-                input: processed_text,
+                input: processed_text.clone(), // Clone for logging if needed
             };
             req = req.json(&request);
         } else {
             // OpenAI 格式：input 是数组
             let request = OpenAIEmbeddingRequest {
-                input: vec![processed_text],
+                input: vec![processed_text.clone()],
                 model: self.model_name.clone(),
                 encoding_format: "float".to_string(),
             };
@@ -113,13 +116,19 @@ impl TextVectorizer {
             req = req.header("Authorization", format!("Bearer {}", k));
         }
 
+        log::debug!("Sending embedding request to {}", self.embeddings_url);
+        
         let response = req
             .send()
             .await
             .context("Failed to send request to embedding API")?;
 
-        if !response.status().is_success() {
+        let status = response.status();
+        log::debug!("Received response status: {}", status);
+
+        if !status.is_success() {
             let error_text = response.text().await.unwrap_or_default();
+            log::error!("Embedding API error ({}): {}", status, error_text);
             anyhow::bail!("Embedding API error: {}", error_text);
         }
 

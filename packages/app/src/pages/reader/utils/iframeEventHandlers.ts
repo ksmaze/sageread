@@ -180,7 +180,7 @@ export const handleClick = (bookId: string, event: MouseEvent) => {
 };
 
 const handleTouchEv = (bookId: string, event: TouchEvent, type: string) => {
-  const touch = event.targetTouches[0];
+  const touch = event.targetTouches[0] || event.changedTouches[0];
   const touches = [];
   if (touch) {
     touches.push({

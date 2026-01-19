@@ -1,0 +1,24 @@
+{
+  "identifier": "com.xincmm.sageread",
+  "app": {
+    "windows": [
+      {
+        "resizable": false,
+        "fullscreen": true,
+        "focus": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": false,
+    "android": {
+      "minSdkVersion": 28
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": false
+    }
+  }
+}

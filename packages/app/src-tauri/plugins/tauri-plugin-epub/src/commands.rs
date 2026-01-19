@@ -91,7 +91,10 @@ pub async fn index_epub<R: Runtime>(
         }),
     )
     .await
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| {
+        log::error!("EPUB processing failed: {:?}", e);
+        e.to_string()
+    })?;
 
     Ok(IndexResult {
         success: true,

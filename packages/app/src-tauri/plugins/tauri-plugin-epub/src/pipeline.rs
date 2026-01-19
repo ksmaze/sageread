@@ -163,9 +163,13 @@ where
 
     // 检测实际的向量维度
     log::info!("检测向量维度...");
-    let actual_dimension = vectorizer.detect_embedding_dimension()
-        .await
-        .with_context(|| "Failed to detect embedding dimension")?;
+    let actual_dimension = match vectorizer.detect_embedding_dimension().await {
+        Ok(dim) => dim,
+        Err(e) => {
+            log::error!("检测向量维度失败: {:?}", e);
+            return Err(e).context("Failed to detect embedding dimension in pipeline.rs");
+        }
+    };
     log::info!("检测到实际向量维度: {}", actual_dimension);
 
     // 直接删除数据库文件，不管是否存在

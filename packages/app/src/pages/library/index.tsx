@@ -158,7 +158,6 @@ export default function NewLibraryPage() {
                       key={book.id}
                       book={book}
                       viewMode={viewMode}
-                      availableTags={tags}
                       onDelete={handleBookDelete}
                       onUpdate={handleBookUpdate}
                       onRefresh={refreshBooks}
@@ -172,7 +171,6 @@ export default function NewLibraryPage() {
                       key={book.id}
                       book={book}
                       viewMode={viewMode}
-                      availableTags={tags}
                       onDelete={handleBookDelete}
                       onUpdate={handleBookUpdate}
                       onRefresh={refreshBooks}

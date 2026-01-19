@@ -1,17 +1,36 @@
 import { Button } from "@/components/ui/button";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect } from "react";
 import { useAutoHideControls } from "../hooks/use-auto-hide-controls";
 import { viewPagination } from "../hooks/use-pagination";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
 
 const FooterBar = () => {
   const store = useReaderStoreApi();
+  const bookId = useReaderStore((state) => state.bookId);
   const progress = useReaderStore((state) => state.progress);
   const { settings } = useAppSettingsStore();
   const globalViewSettings = settings.globalViewSettings;
   const view = store.getState().view;
-  const { isVisible: showControls, handleMouseEnter, handleMouseLeave } = useAutoHideControls();
+  const {
+    isVisible: showControls,
+    handleMouseEnter,
+    handleMouseLeave,
+    showControls: showControlsNow,
+    scheduleHide,
+  } = useAutoHideControls();
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "iframe-single-click" && event.data?.bookId === bookId) {
+        showControlsNow();
+        scheduleHide();
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [bookId, scheduleHide, showControlsNow]);
 
   const handleGoPrevPage = () => {
     const isScrolledMode = globalViewSettings?.scrolled;
@@ -50,7 +69,7 @@ const FooterBar = () => {
 
   return (
     <div
-      className="footer-bar pointer-events-auto flex h-10 w-full items-center px-2 transition-all duration-300"
+      className="footer-bar pointer-events-auto flex h-11 w-full items-center px-2 transition-all duration-300"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -58,7 +77,9 @@ const FooterBar = () => {
         <Button
           variant="ghost"
           size="icon"
-          className={`size-7 rounded-full transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"}`}
+          className={`size-11 rounded-full transition-opacity duration-300 ${
+            showControls ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
           onClick={handleGoPrevPage}
           title={isScrolledMode ? "上一章" : "上一页"}
         >
@@ -72,7 +93,9 @@ const FooterBar = () => {
         <Button
           variant="ghost"
           size="icon"
-          className={`size-7 rounded-full transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"}`}
+          className={`size-11 rounded-full transition-opacity duration-300 ${
+            showControls ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
           onClick={handleGoNextPage}
           title={isScrolledMode ? "下一章" : "下一页"}
         >

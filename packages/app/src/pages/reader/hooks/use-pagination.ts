@@ -2,6 +2,7 @@ import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { ViewSettings } from "@/types/book";
 import type { FoliateView } from "@/types/view";
 import { eventDispatcher } from "@/utils/event";
+import { useRef } from "react";
 import { useReaderStoreApi } from "../components/reader-provider";
 
 export type ScrollSource = "touch" | "mouse";
@@ -34,9 +35,86 @@ export const usePagination = (bookId: string, containerRef: React.RefObject<HTML
 
   const view = store.getState().view;
 
+  const touchStateRef = useRef<{
+    active: boolean;
+    startX: number;
+    startY: number;
+    lastX: number;
+    lastY: number;
+    startAt: number;
+  }>({
+    active: false,
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    lastY: 0,
+    startAt: 0,
+  });
+
   const handlePageFlip = async (msg: MessageEvent | CustomEvent | React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (msg instanceof MessageEvent) {
       if (msg.data && msg.data.bookId === bookId) {
+        if (msg.data.type === "iframe-touchstart") {
+          const touch = msg.data.targetTouches?.[0];
+          if (!touch) return;
+          touchStateRef.current = {
+            active: true,
+            startX: touch.clientX,
+            startY: touch.clientY,
+            lastX: touch.clientX,
+            lastY: touch.clientY,
+            startAt: Date.now(),
+          };
+          return;
+        }
+
+        if (msg.data.type === "iframe-touchmove") {
+          const touch = msg.data.targetTouches?.[0];
+          if (!touch || !touchStateRef.current.active) return;
+          touchStateRef.current.lastX = touch.clientX;
+          touchStateRef.current.lastY = touch.clientY;
+          return;
+        }
+
+        if (msg.data.type === "iframe-touchend") {
+          if (!touchStateRef.current.active) return;
+
+          const { startX, startY, lastX, lastY, startAt } = touchStateRef.current;
+          touchStateRef.current.active = false;
+
+          const dx = lastX - startX;
+          const dy = lastY - startY;
+          const dt = Date.now() - startAt;
+
+          const minSwipeDistancePx = 60;
+          const maxSwipeDurationMs = 700;
+          const isHorizontalSwipe = Math.abs(dx) >= minSwipeDistancePx && Math.abs(dx) > Math.abs(dy) * 1.5;
+
+          if (!isHorizontalSwipe || dt > maxSwipeDurationMs) {
+            return;
+          }
+
+          const isSwipeLeft = dx < 0;
+          const swap = Boolean(globalViewSettings.swapClickArea);
+
+          if (globalViewSettings.scrolled) {
+            if (!view) return;
+            if (isSwipeLeft) {
+              (swap ? view.renderer.prevSection : view.renderer.nextSection)?.();
+            } else {
+              (swap ? view.renderer.nextSection : view.renderer.prevSection)?.();
+            }
+            return;
+          }
+
+          if (isSwipeLeft) {
+            viewPagination(view, globalViewSettings, swap ? "left" : "right");
+          } else {
+            viewPagination(view, globalViewSettings, swap ? "right" : "left");
+          }
+          return;
+        }
+
         if (msg.data.type === "iframe-single-click") {
           const viewElement = containerRef.current;
           if (viewElement) {

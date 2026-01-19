@@ -8,11 +8,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useThemeStore } from "@/store/theme-store";
 import type { ThemeMode } from "@/styles/themes";
+import { getOSPlatform } from "@/utils/misc";
 import { getVersion } from "@tauri-apps/api/app";
 import { appDataDir } from "@tauri-apps/api/path";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { openPath } from "@tauri-apps/plugin-opener";
-import { check } from "@tauri-apps/plugin-updater";
 import clsx from "clsx";
 import { Check, ChevronDownIcon, Copy, FolderOpen, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -23,6 +23,9 @@ export default function GeneralSettings() {
   const [isCopied, setIsCopied] = useState(false);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [appVersion, setAppVersion] = useState("0.1.0");
+
+  const osPlatform = getOSPlatform();
+  const canCheckUpdates = !["android", "ios"].includes(osPlatform);
 
   const { themeMode, autoScroll, swapSidebars, setThemeMode, setAutoScroll, setSwapSidebars } = useThemeStore();
 
@@ -71,6 +74,7 @@ export default function GeneralSettings() {
   const handleCheckForUpdates = async () => {
     setIsCheckingUpdate(true);
     try {
+      const { check } = await import("@tauri-apps/plugin-updater");
       const update = await check();
       if (update) {
         toast.success(`发现新版本 ${update.version}`, {
@@ -114,22 +118,24 @@ export default function GeneralSettings() {
             <p className=" text-neutral-600 text-xs dark:text-neutral-400">v{appVersion}</p>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text dark:text-neutral-200">检查更新</span>
-              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">检查是否有新版本可用</p>
+          {canCheckUpdates && (
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text dark:text-neutral-200">检查更新</span>
+                <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">检查是否有新版本可用</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCheckForUpdates}
+                disabled={isCheckingUpdate}
+                className="gap-2"
+              >
+                <RefreshCw className={clsx("size-4", isCheckingUpdate && "animate-spin")} />
+                {isCheckingUpdate ? "检查中..." : "检查更新"}
+              </Button>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleCheckForUpdates}
-              disabled={isCheckingUpdate}
-              className="gap-2"
-            >
-              <RefreshCw className={clsx("size-4", isCheckingUpdate && "animate-spin")} />
-              {isCheckingUpdate ? "检查中..." : "检查更新"}
-            </Button>
-          </div>
+          )}
         </div>
       </section>
 

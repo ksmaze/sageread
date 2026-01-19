@@ -61,6 +61,9 @@ const Annotator: React.FC = () => {
       detail.doc.addEventListener("mouseup", () => {
         handleMouseUp(doc, index);
       });
+      detail.doc.addEventListener("touchend", () => {
+        handleMouseUp(doc, index);
+      });
     }
   };
 

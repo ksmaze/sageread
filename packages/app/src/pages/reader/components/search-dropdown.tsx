@@ -93,7 +93,12 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
           <Search size={18} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80 p-0" align="end" side="bottom" sideOffset={4}>
+      <DropdownMenuContent
+        className="w-[min(20rem,calc(100vw-1rem))] p-0"
+        align="end"
+        side="bottom"
+        sideOffset={4}
+      >
         <div className="flex max-h-[calc(100vh-8rem)] flex-col">
           <div className="sticky top-0 z-10 flex-shrink-0">
             <SearchBar

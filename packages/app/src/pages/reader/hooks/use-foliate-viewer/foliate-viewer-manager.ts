@@ -15,6 +15,9 @@ import {
   handleMouseMove,
   handleMousedown,
   handleMouseup,
+  handleTouchEnd,
+  handleTouchMove,
+  handleTouchStart,
   handleWheel,
 } from "../../utils/iframeEventHandlers";
 import { EventManager } from "./event-manager";
@@ -208,6 +211,9 @@ export class FoliateViewerManager {
       doc.addEventListener("mousemove", (event: MouseEvent) => handleMouseMove(bookId, event));
       doc.addEventListener("wheel", (event: WheelEvent) => handleWheel(bookId, event));
       doc.addEventListener("keydown", (event: KeyboardEvent) => handleKeydown(bookId, event));
+      doc.addEventListener("touchstart", (event: TouchEvent) => handleTouchStart(bookId, event), { passive: true });
+      doc.addEventListener("touchmove", (event: TouchEvent) => handleTouchMove(bookId, event), { passive: true });
+      doc.addEventListener("touchend", (event: TouchEvent) => handleTouchEnd(bookId, event), { passive: true });
     }
   }
 
