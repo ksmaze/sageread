@@ -12,6 +12,7 @@
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": false,
+    "externalBin": [],
     "android": {
       "minSdkVersion": 28
     }
