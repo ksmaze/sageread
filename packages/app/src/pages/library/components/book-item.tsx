@@ -290,14 +290,14 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
 
     const progress = progressTotal > 0 ? Math.round((progressCurrent / progressTotal) * 100) : 0;
     return (
-      <div className="flex items-center gap-1">
-        <div className="h-1.5 w-12 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
+      <div className="flex min-w-0 items-center gap-1 overflow-hidden">
+        <div className="h-1.5 w-8 shrink-0 overflow-hidden rounded-full bg-neutral-200 sm:w-12 dark:bg-neutral-700">
           <div
             className="h-full bg-blue-500 transition-all duration-300"
             style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
-        <span className="text-neutral-500 text-xs dark:text-neutral-400">{progress}%</span>
+        <span className="shrink-0 text-neutral-500 text-[10px] sm:text-xs dark:text-neutral-400">{progress}%</span>
       </div>
     );
   };
@@ -431,12 +431,12 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
           onTouchEnd={handleTouchEnd}
           onTouchMove={handleTouchMove}
           onTouchCancel={handleTouchCancel}
-          className="rounded-r-2xl rounded-l-md border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 select-none"
+          className="rounded-r-xl rounded-l-md sm:rounded-r-2xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 select-none"
           style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", touchAction: "manipulation" }}
         >
-          <div className="relative p-2 pb-0">
-            <div className="mb-2">
-              <h4 className="truncate text-neutral-600 text-sm leading-tight dark:text-neutral-200">{book.title}</h4>
+          <div className="relative p-1.5 pb-0 sm:p-2 sm:pb-0">
+            <div className="mb-1 sm:mb-2">
+              <h4 className="min-w-0 truncate text-neutral-600 text-xs leading-tight sm:text-sm dark:text-neutral-200">{book.title}</h4>
             </div>
 
             <div className="aspect-[4/5] w-full overflow-hidden">
@@ -453,15 +453,15 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
             </div>
           </div>
 
-          <div className="flex h-8 items-center justify-between space-x-2 p-2 py-0">
-            <div className="flex-1">{renderProgress()}</div>
+          <div className="flex h-7 min-w-0 items-center justify-between gap-1 p-1.5 py-0 sm:h-8 sm:gap-2 sm:p-2 sm:py-0">
+            <div className="min-w-0 flex-1 overflow-hidden">{renderProgress()}</div>
             <div className="flex items-center gap-2">
               {renderVectorizationStatus()}
               <div
                 className="p-2 -mr-2 cursor-pointer"
                 onClick={handleMenuClick}
               >
-                <MoreHorizontal className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+                <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-500 dark:text-neutral-400" />
               </div>
             </div>
           </div>

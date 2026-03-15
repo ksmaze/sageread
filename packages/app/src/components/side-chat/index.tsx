@@ -135,11 +135,11 @@ function ChatContent({ bookId }: ChatContentProps) {
     <main id="chat-sidebar" className="flex h-full flex-col overflow-hidden ">
       <div className="ml-1 flex-shrink-0 border-neutral-300 dark:border-neutral-700">
         <div className="flex h-8 items-center justify-between">
-          <div className="flex items-center gap-2 pl-0.5">
+          <div className="min-w-0 flex-1 pl-0.5">
             <ModelSelector
               selectedModel={selectedModel}
               onModelSelect={setSelectedModel}
-              className="z-40 w-[12rem] flex-shrink-0"
+              className="z-40 w-full max-w-[12rem]"
             />
           </div>
           <div className="flex items-center gap-0">

@@ -42,15 +42,11 @@ tauri-plugin-os = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-updater = "2"
 jni = "0.21.1"
+aws-lc-rs = "1.16.1"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-updater = "2"
-
-
-[patch.crates-io]
-aws-lc-rs = { git = "https://github.com/zsdsys/aws-lc-rs", branch = "android-getentropy-fix" }
-aws-lc-sys = { git = "https://github.com/zsdsys/aws-lc-rs", branch = "android-getentropy-fix" }
 
 [profile.release]
 lto = true

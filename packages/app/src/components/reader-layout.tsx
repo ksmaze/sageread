@@ -173,7 +173,7 @@ export default function ReaderLayout() {
                 width: 370,
                 height: "100%",
               }}
-              minWidth={260}
+              minWidth={190}
               maxWidth={580}
               enable={{
                 top: false,

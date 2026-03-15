@@ -114,9 +114,9 @@ export default function NewLibraryPage() {
         </div>
       )}
 
-      <div className="flex h-[calc(100vh-60px)] flex-1 flex-col">
-        <div className="flex shrink-0 items-center justify-between px-3 pt-3">
-          <h3 className="font-bold text-3xl dark:border-neutral-700">
+      <div className="flex min-w-0 h-[calc(100vh-60px)] flex-1 flex-col">
+        <div className="flex min-w-0 shrink-0 items-center justify-between gap-2 px-2 pt-2 sm:px-3 sm:pt-3">
+          <h3 className="min-w-0 truncate font-bold text-xl sm:text-2xl md:text-3xl dark:border-neutral-700">
             {selectedTagFromUrl === "all"
               ? "我的图书"
               : tags.find((t) => t.id === selectedTagFromUrl)?.name || "我的图书"}
@@ -143,7 +143,7 @@ export default function NewLibraryPage() {
         )}
 
         {hasBooks ? (
-          <div className="flex-1 overflow-y-auto p-3 pb-8">
+          <div className="flex-1 overflow-y-auto p-2 pb-8 sm:p-3">
             <div className="mx-auto">
               {searchQuery.trim() && (
                 <div className="mb-4 text-base-content/70 text-sm">
@@ -152,7 +152,7 @@ export default function NewLibraryPage() {
               )}
 
               {viewMode === "grid" ? (
-                <div className="grid 3xl:grid-cols-8 grid-cols-3 gap-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+                <div className="grid grid-cols-2 gap-2 xs:grid-cols-3 sm:grid-cols-4 sm:gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 3xl:grid-cols-8">
                   {visibleBooks.map((book) => (
                     <BookItem
                       key={book.id}
@@ -181,12 +181,12 @@ export default function NewLibraryPage() {
             </div>
           </div>
         ) : hasLibraryBooks && searchQuery.trim() ? (
-          <div className="flex flex-1 flex-col items-center justify-center p-8 px-2 text-center">
+          <div className="flex min-w-0 flex-1 flex-col items-center justify-center p-4 px-2 text-center sm:p-8">
             <div className="text-base-content/50 text-lg">没有找到 '{searchQuery}' 相关的书籍</div>
             <div className="mt-2 text-base-content/40 text-sm">尝试使用不同的关键词搜索</div>
           </div>
         ) : (
-          <div className="flex-1 px-2">
+          <div className="min-w-0 flex-1 px-2">
             <Upload />
           </div>
         )}
