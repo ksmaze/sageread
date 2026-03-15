@@ -31,3 +31,19 @@ declare module "app-tabs" {
 
   export function useChromeTabs(): any;
 }
+
+declare global {
+  interface Window {
+    onNativeTouch?: (event: {
+      type: "touchstart" | "touchend" | "touchcancel";
+      pointerId: number;
+      x: number;
+      y: number;
+      pressure: number;
+      pointerCount: number;
+      timestamp: number;
+    }) => void;
+  }
+}
+
+export {};

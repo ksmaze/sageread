@@ -1,9 +1,26 @@
 import { transformContent } from "@/services/transform-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { eventDispatcher } from "@/utils/event";
+import { getOSPlatform } from "@/utils/misc";
 import { type TextSelection, getTextFromRange } from "@/utils/sel";
 import { useEffect, useRef } from "react";
 import { useReaderStore } from "../components/reader-provider";
+
+export interface NativeTouchEventType {
+  type: "touchstart" | "touchend" | "touchcancel";
+  pointerId: number;
+  x: number;
+  y: number;
+  pressure: number;
+  pointerCount: number;
+  timestamp: number;
+}
+
+export const listenToNativeTouchEvents = () => {
+  window.onNativeTouch = (event: NativeTouchEventType) => {
+    void eventDispatcher.dispatch("native-touch", event);
+  };
+};
 
 export const useTextSelector = (
   bookId: string,
@@ -18,13 +35,15 @@ export const useTextSelector = (
     typeof bookData?.bookDoc?.metadata.language === "string"
       ? bookData.bookDoc.metadata.language
       : bookData?.bookDoc?.metadata.language?.[0] || "en";
+  const osPlatform = getOSPlatform();
 
   const isPopupVisible = useRef(false);
   const popupShowTime = useRef<number>(0);
+  const lastPointerType = useRef<string | null>(null);
   const POPUP_DEBOUNCE_TIME = 300;
 
-  const isValidSelection = (sel: Selection) => {
-    return sel && sel.toString().trim().length > 0 && sel.rangeCount > 0;
+  const isValidSelection = (sel: Selection | null) => {
+    return !!sel && sel.toString().trim().length > 0 && sel.rangeCount > 0;
   };
 
   const getAnnotationText = async (range: Range) => {
@@ -55,10 +74,54 @@ export const useTextSelector = (
     const sel = doc.getSelection() as Selection;
 
     if (isValidSelection(sel)) {
-      makeSelection(sel, index);
+      void makeSelection(sel, index);
     } else {
       handleDismissPopup();
     }
+  };
+
+  const handlePointerUp = (doc: Document, index: number) => {
+    const sel = doc.getSelection() as Selection;
+    if (isValidSelection(sel)) {
+      void makeSelection(sel, index);
+    }
+  };
+
+  const handlePointerDown = (event: PointerEvent) => {
+    lastPointerType.current = event.pointerType;
+  };
+
+  const handleTouchStart = () => {
+    lastPointerType.current = "touch";
+  };
+
+  const handleTouchEnd = () => {
+    lastPointerType.current = "touch";
+  };
+
+  const handleSelectionchange = (doc: Document, index: number) => {
+    if (osPlatform !== "android") return;
+
+    const sel = doc.getSelection() as Selection;
+    if (isValidSelection(sel)) {
+      void makeSelection(sel, index);
+    }
+  };
+
+  const handleContextmenu = (event: Event) => {
+    if (["android", "ios"].includes(osPlatform)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+
+    if (lastPointerType.current === "touch" || lastPointerType.current === "pen") {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+
+    return;
   };
 
   const handleScroll = () => {
@@ -96,8 +159,14 @@ export const useTextSelector = (
   }, []);
 
   return {
+    handleContextmenu,
+    handlePointerDown,
+    handlePointerUp,
     handleScroll,
+    handleSelectionchange,
     handleMouseUp,
+    handleTouchEnd,
+    handleTouchStart,
     handleShowPopup,
   };
 };

@@ -35,11 +35,28 @@ export default function ReaderLayout() {
 
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [viewportSize, setViewportSize] = useState(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
 
   const isWindows = getOSPlatform() === "windows";
+  const isPortrait = viewportSize.height > viewportSize.width;
+  const isCompactReaderLayout = viewportSize.width < 900 && isPortrait;
+  const chatDefaultWidth = isCompactReaderLayout ? Math.max(150, Math.floor(viewportSize.width * 0.42)) : 370;
+  const chatMinWidth = isCompactReaderLayout ? 140 : 190;
+  const chatMaxWidth = isCompactReaderLayout ? Math.max(180, Math.floor(viewportSize.width * 0.55)) : 580;
+  const notepadDefaultWidth = isCompactReaderLayout ? Math.max(150, Math.floor(viewportSize.width * 0.4)) : 300;
+  const notepadMinWidth = isCompactReaderLayout ? 140 : 200;
+  const notepadMaxWidth = isCompactReaderLayout ? Math.max(180, Math.floor(viewportSize.width * 0.5)) : 500;
+  const allowSidebarResize = true;
 
   useEffect(() => {
     const handleResize = () => {
+      setViewportSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
       setShowOverlay(true);
 
       if (resizeTimeoutRef.current) {
@@ -126,16 +143,16 @@ export default function ReaderLayout() {
           const notepadSidebar = isNotepadVisible && (
             <Resizable
               defaultSize={{
-                width: 300,
+                width: notepadDefaultWidth,
                 height: "100%",
               }}
-              minWidth={200}
-              maxWidth={500}
+              minWidth={notepadMinWidth}
+              maxWidth={notepadMaxWidth}
               enable={{
                 top: false,
-                right: !swapSidebars,
+                right: allowSidebarResize && !swapSidebars,
                 bottom: false,
-                left: swapSidebars,
+                left: allowSidebarResize && swapSidebars,
                 topRight: false,
                 bottomRight: false,
                 bottomLeft: false,
@@ -143,8 +160,12 @@ export default function ReaderLayout() {
               }}
               handleComponent={
                 swapSidebars
-                  ? { left: <div className="custom-resize-handle" /> }
-                  : { right: <div className="custom-resize-handle custom-resize-handle-left" /> }
+                  ? {
+                      left: allowSidebarResize ? <div className="custom-resize-handle" /> : undefined,
+                    }
+                  : {
+                      right: allowSidebarResize ? <div className="custom-resize-handle custom-resize-handle-left" /> : undefined,
+                    }
               }
               className="h-full"
               onResize={() => {
@@ -170,16 +191,16 @@ export default function ReaderLayout() {
           const chatSidebar = isChatVisible && (
             <Resizable
               defaultSize={{
-                width: 370,
+                width: chatDefaultWidth,
                 height: "100%",
               }}
-              minWidth={190}
-              maxWidth={580}
+              minWidth={chatMinWidth}
+              maxWidth={chatMaxWidth}
               enable={{
                 top: false,
-                right: swapSidebars,
+                right: allowSidebarResize && swapSidebars,
                 bottom: false,
-                left: !swapSidebars,
+                left: allowSidebarResize && !swapSidebars,
                 topRight: false,
                 bottomRight: false,
                 bottomLeft: false,
@@ -187,8 +208,12 @@ export default function ReaderLayout() {
               }}
               handleComponent={
                 swapSidebars
-                  ? { right: <div className="custom-resize-handle custom-resize-handle-left" /> }
-                  : { left: <div className="custom-resize-handle" /> }
+                  ? {
+                      right: allowSidebarResize ? <div className="custom-resize-handle custom-resize-handle-left" /> : undefined,
+                    }
+                  : {
+                      left: allowSidebarResize ? <div className="custom-resize-handle" /> : undefined,
+                    }
               }
               className="h-full"
               onResize={() => {

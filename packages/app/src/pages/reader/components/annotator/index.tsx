@@ -1,16 +1,18 @@
 import { HIGHLIGHT_COLOR_HEX } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { BookNote } from "@/types/book";
+import { eventDispatcher } from "@/utils/event";
+import { getOSPlatform } from "@/utils/misc";
 import { Overlayer } from "foliate-js/overlayer.js";
 import { NotebookPen } from "lucide-react";
 import type React from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { FiCopy, FiHelpCircle, FiMessageCircle } from "react-icons/fi";
 import { PiHighlighterFill } from "react-icons/pi";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { useAnnotator } from "../../hooks/use-annotator";
 import { useFoliateEvents } from "../../hooks/use-foliate-events";
-import { useTextSelector } from "../../hooks/use-text-selector";
+import { listenToNativeTouchEvents, type NativeTouchEventType, useTextSelector } from "../../hooks/use-text-selector";
 import { useReaderStore, useReaderStoreApi } from "../reader-provider";
 import AnnotationPopup from "./annotation-popup";
 import AskAIPopup from "./ask-ai-popup";
@@ -22,6 +24,8 @@ const Annotator: React.FC = () => {
   const bookId = useReaderStore((state) => state.bookId)!;
   const view = useReaderStore((state) => state.view);
   const globalViewSettings = settings.globalViewSettings;
+  const osPlatform = getOSPlatform();
+  const loadedDocsRef = useRef<Array<{ doc: Document; index: number }>>([]);
 
   // 使用 use-annotator hook
   const {
@@ -49,20 +53,43 @@ const Annotator: React.FC = () => {
     handleSendAIQuery,
   } = useAnnotator({ bookId });
 
-  const { handleScroll, handleMouseUp, handleShowPopup } = useTextSelector(bookId, setSelection, handleDismissPopup);
+  const {
+    handleContextmenu,
+    handleMouseUp,
+    handlePointerDown,
+    handlePointerUp,
+    handleScroll,
+    handleSelectionchange,
+    handleShowPopup,
+    handleTouchEnd,
+    handleTouchStart,
+  } = useTextSelector(bookId, setSelection, handleDismissPopup);
 
   const onLoad = (event: Event) => {
     const detail = (event as CustomEvent).detail;
     const { doc, index } = detail;
 
+    loadedDocsRef.current = [...loadedDocsRef.current.filter((entry) => entry.doc !== doc), { doc, index }];
+
     view?.renderer?.addEventListener("scroll", handleScroll);
 
     if (detail.doc) {
+      detail.doc.addEventListener("contextmenu", handleContextmenu);
       detail.doc.addEventListener("mouseup", () => {
         handleMouseUp(doc, index);
       });
+      detail.doc.addEventListener("pointerdown", (pointerEvent: PointerEvent) => {
+        handlePointerDown(pointerEvent);
+      });
+      detail.doc.addEventListener("selectionchange", () => {
+        handleSelectionchange(doc, index);
+      });
+      detail.doc.addEventListener("touchstart", () => {
+        handleTouchStart();
+      });
       detail.doc.addEventListener("touchend", () => {
-        handleMouseUp(doc, index);
+        handleTouchEnd();
+        handlePointerUp(doc, index);
       });
     }
   };
@@ -107,6 +134,37 @@ const Annotator: React.FC = () => {
   };
 
   useFoliateEvents(view, { onLoad, onDrawAnnotation, onShowAnnotation });
+
+  useEffect(() => {
+    if (osPlatform !== "android") {
+      return;
+    }
+
+    listenToNativeTouchEvents();
+
+    const handleNativeTouch = (event: CustomEvent) => {
+      const nativeEvent = event.detail as NativeTouchEventType;
+
+      if (nativeEvent.type === "touchstart") {
+        handleTouchStart();
+        return;
+      }
+
+      if (nativeEvent.type === "touchend") {
+        handleTouchEnd();
+        for (const { doc, index } of loadedDocsRef.current) {
+          handlePointerUp(doc, index);
+        }
+      }
+    };
+
+    eventDispatcher.on("native-touch", handleNativeTouch);
+
+    return () => {
+      eventDispatcher.off("native-touch", handleNativeTouch);
+      window.onNativeTouch = undefined;
+    };
+  }, [handlePointerUp, handleTouchEnd, handleTouchStart, osPlatform]);
 
   // 同步 popup 显示状态到 text selector
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
