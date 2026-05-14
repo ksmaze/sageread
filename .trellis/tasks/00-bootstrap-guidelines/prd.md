@@ -21,7 +21,7 @@ the rest conversationally.
 
 ## Status (update the checkboxes as you complete each item)
 
-- [ ] Fill guidelines for app
+- [x] Fill guidelines for app
 - [ ] Fill guidelines for app-tabs
 - [ ] Fill guidelines for foliate-js
 - [ ] Add code examples
