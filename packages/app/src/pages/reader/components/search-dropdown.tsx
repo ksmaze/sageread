@@ -2,46 +2,41 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/compon
 import type { BookSearchResult } from "@/types/book";
 import { Search } from "lucide-react";
 import type React from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
 import SearchBar from "./search-bar";
 import SearchResults from "./search-results";
 
-interface SearchDropdownProps {
-  onNavigate?: () => void;
+export interface ReaderSearchPanelProps {
+  isVisible?: boolean;
+  onClose?: () => void;
+  onResultSelect?: () => void;
 }
 
-const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
+export function ReaderSearchPanel({ isVisible = true, onClose, onResultSelect }: ReaderSearchPanelProps) {
   const store = useReaderStoreApi();
   const view = store.getState().view;
   const bookData = store.getState().bookData;
-  const openDropdown = useReaderStore((state) => state.openDropdown);
-  const setOpenDropdown = useReaderStore((state) => state.setOpenDropdown);
   const [searchResults, setSearchResults] = useState<BookSearchResult[] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
 
-  const isSearchDropdownOpen = openDropdown === "search";
+  const resetPanelState = useCallback(() => {
+    setSearchResults(null);
+    setSearchTerm("");
+    setHasSearched(false);
+  }, []);
 
-  if (!bookData) {
-    return null;
-  }
-
-  const handleToggleSearchDropdown = (isOpen: boolean) => {
-    setOpenDropdown?.(isOpen ? "search" : null);
-    if (!isOpen) {
-      setSearchResults(null);
-      setSearchTerm("");
-      setHasSearched(false);
+  useEffect(() => {
+    if (!isVisible) {
+      resetPanelState();
     }
-  };
+  }, [isVisible, resetPanelState]);
 
   const handleSearchResultClick = useCallback(
     (cfi: string) => {
-      setOpenDropdown?.(null);
-      setSearchResults(null);
-      setSearchTerm("");
-      onNavigate?.();
+      resetPanelState();
+      onResultSelect?.();
 
       view?.goTo(cfi);
 
@@ -60,7 +55,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
         window.addEventListener("message", handleIframeClick);
       }
     },
-    [onNavigate, view, bookData?.id, setOpenDropdown],
+    [bookData?.id, onResultSelect, resetPanelState, view],
   );
 
   const handleSearchResultChange = useCallback((results: BookSearchResult[]) => {
@@ -77,11 +72,64 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
   }, []);
 
   const handleHideSearchBar = useCallback(() => {
+    resetPanelState();
+    onClose?.();
+  }, [onClose, resetPanelState]);
+
+  if (!bookData) {
+    return null;
+  }
+
+  return (
+    <div className="flex max-h-[min(70dvh,36rem)] min-h-[18rem] flex-col">
+      <div className="sticky top-0 z-10 flex-shrink-0">
+        <SearchBar
+          isVisible={isVisible}
+          searchTerm={searchTerm}
+          onSearchResultChange={handleSearchResultChange}
+          onSearchTermChange={handleSearchTermChange}
+          onHideSearchBar={handleHideSearchBar}
+        />
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {searchResults && searchResults.length > 0 ? (
+          <SearchResults results={searchResults} onSelectResult={handleSearchResultClick} />
+        ) : hasSearched && searchResults && searchResults.length === 0 ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="p-12 text-center text-muted-foreground text-sm">未找到搜索结果</div>
+          </div>
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <div className="p-12 text-center text-muted-foreground text-sm">输入搜索词以查找内容</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface SearchDropdownProps {
+  onNavigate?: () => void;
+}
+
+const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
+  const openDropdown = useReaderStore((state) => state.openDropdown);
+  const setOpenDropdown = useReaderStore((state) => state.setOpenDropdown);
+  const isSearchDropdownOpen = openDropdown === "search";
+
+  const handleToggleSearchDropdown = (isOpen: boolean) => {
+    setOpenDropdown?.(isOpen ? "search" : null);
+  };
+
+  const handleCloseSearch = useCallback(() => {
     setOpenDropdown?.(null);
-    setSearchResults(null);
-    setSearchTerm("");
-    setHasSearched(false);
   }, [setOpenDropdown]);
+
+  const handleResultSelect = useCallback(() => {
+    setOpenDropdown?.(null);
+    onNavigate?.();
+  }, [onNavigate, setOpenDropdown]);
 
   return (
     <DropdownMenu open={isSearchDropdownOpen} onOpenChange={handleToggleSearchDropdown}>
@@ -99,33 +147,11 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
         side="bottom"
         sideOffset={4}
       >
-        <div className="flex max-h-[calc(100vh-8rem)] flex-col">
-          <div className="sticky top-0 z-10 flex-shrink-0">
-            <SearchBar
-              isVisible={isSearchDropdownOpen}
-              searchTerm={searchTerm}
-              onSearchResultChange={handleSearchResultChange}
-              onSearchTermChange={handleSearchTermChange}
-              onHideSearchBar={handleHideSearchBar}
-            />
-          </div>
-
-          <div className="flex-1 overflow-y-auto">
-            {searchResults && searchResults.length > 0 ? (
-              <div className="h-full overflow-y-auto">
-                <SearchResults results={searchResults} onSelectResult={handleSearchResultClick} />
-              </div>
-            ) : hasSearched && searchResults && searchResults.length === 0 ? (
-              <div className="flex h-full items-center justify-center">
-                <div className="p-12 text-center text-muted-foreground text-sm">未找到搜索结果</div>
-              </div>
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <div className="p-12 text-center text-muted-foreground text-sm">输入搜索词以查找内容</div>
-              </div>
-            )}
-          </div>
-        </div>
+        <ReaderSearchPanel
+          isVisible={isSearchDropdownOpen}
+          onClose={handleCloseSearch}
+          onResultSelect={handleResultSelect}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

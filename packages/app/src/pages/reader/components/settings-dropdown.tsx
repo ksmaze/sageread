@@ -18,17 +18,14 @@ const FONT_SIZE_MIN = 12;
 const FONT_SIZE_MAX = 32;
 const FONT_SIZE_STEP = 2;
 
-const SettingsDropdown = () => {
+export function ReaderStylePanel() {
   const store = useReaderStoreApi();
   const { themeMode, setThemeMode } = useThemeStore();
   const { settings, setSettings } = useAppSettingsStore();
-  const openDropdown = useReaderStore((state) => state.openDropdown);
-  const setOpenDropdown = useReaderStore((state) => state.setOpenDropdown)!;
   const { fonts: customFontList, loadFonts } = useFontStore();
 
   const globalViewSettings = settings.globalViewSettings;
   const view = store.getState().view;
-  const isSettingsDropdownOpen = openDropdown === "settings";
 
   const customFonts = useMemo(
     () =>
@@ -80,10 +77,6 @@ const SettingsDropdown = () => {
         font.sansSerif === globalViewSettings.sansSerifFont &&
         font.cjk === globalViewSettings.defaultCJKFont,
     )?.id || "comfortable";
-
-  const handleToggleSettingsDropdown = (isOpen: boolean) => {
-    setOpenDropdown(isOpen ? "settings" : null);
-  };
 
   const updateGlobalViewSettings = useCallback(
     (updater: (settings: typeof globalViewSettings) => typeof globalViewSettings) => {
@@ -156,17 +149,156 @@ const SettingsDropdown = () => {
 
   const isCJK = isCJKEnv();
 
-  // 暂时注释掉分栏相关的函数和变量
-  /*
-  const handleSetColumnMode = useCallback(
-    (mode: "auto" | "one" | "two") => {
-      updateGlobalViewSettings((settings) => ({ ...settings, columnMode: mode }));
-    },
-    [updateGlobalViewSettings],
-  );
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="mb-3 font-medium text-sm">字体系列</div>
+        {(() => {
+          const selected = allFonts.find((f) => f.id === currentFontId);
+          const triggerFontFamily = selected ? (isCJK ? selected.cjk : selected.serif) : undefined;
+          const triggerFontWeight = selected?.id === "classic" ? "normal" : undefined;
+          return (
+            <Select value={currentFontId} onValueChange={handleFontChange}>
+              <SelectTrigger
+                className="h-8 w-full focus:outline-none focus:ring-0"
+                style={{ fontFamily: triggerFontFamily, fontWeight: triggerFontWeight }}
+              >
+                <SelectValue placeholder="选择字体" />
+              </SelectTrigger>
+              <SelectContent className="w-full dark:border-neutral-700 dark:bg-neutral-800">
+                {allFonts.map((font) => (
+                  <SelectItem key={font.id} value={font.id}>
+                    <span
+                      className="truncate"
+                      style={{
+                        fontFamily: isCJK ? font.cjk : font.serif,
+                        fontWeight: font.id === "classic" ? "normal" : undefined,
+                      }}
+                    >
+                      {font.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        })()}
+      </div>
 
-  const currentColumnMode = globalViewSettings.columnMode;
-  */
+      <div>
+        <div className="mb-3 font-medium text-sm">字体大小</div>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            className="btn btn-sm size-8 cursor-pointer rounded-md border bg-muted hover:bg-muted/70 disabled:bg-muted disabled:opacity-50"
+            onClick={handleDecrease}
+            disabled={globalViewSettings.defaultFontSize <= FONT_SIZE_MIN}
+            title="减小字体大小"
+          >
+            <span className="flex items-center justify-center text-xs">A</span>
+          </button>
+
+          <FontSizeSlider
+            value={[globalViewSettings.defaultFontSize]}
+            onValueChange={(value: number[]) => handleFontSizeChange(value[0]!)}
+            min={FONT_SIZE_MIN}
+            max={FONT_SIZE_MAX}
+            step={FONT_SIZE_STEP}
+            showTooltip={true}
+            tooltipContent={(value) => `${value}px`}
+          />
+          <button
+            className="btn btn-sm size-8 cursor-pointer rounded-md border bg-muted hover:bg-muted/70 disabled:bg-muted disabled:opacity-50"
+            onClick={handleIncrease}
+            disabled={globalViewSettings.defaultFontSize >= FONT_SIZE_MAX}
+            title="增大字体大小"
+          >
+            <span className="flex items-center justify-center text-lg">A</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-3 font-medium text-sm">阅读模式</div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <button
+              className={`btn btn-sm flex h-8 flex-1 items-center justify-between rounded-md px-3 ${
+                globalViewSettings.scrolled
+                  ? "border-none bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "border bg-muted text-primary hover:bg-muted/70"
+              }`}
+              onClick={() => applyScrolledMode(true)}
+              title="滚动模式"
+            >
+              <span className="text-sm">滚动</span>
+              {globalViewSettings.scrolled && <MdCheck size={16} />}
+            </button>
+            <button
+              className={`btn btn-sm flex h-8 flex-1 items-center justify-between rounded-md px-3 ${
+                !globalViewSettings.scrolled
+                  ? "border-none bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "border bg-muted text-primary hover:bg-muted/70"
+              }`}
+              onClick={() => applyScrolledMode(false)}
+              title="分页模式"
+            >
+              <span className="text-sm">分页</span>
+              {!globalViewSettings.scrolled && <MdCheck size={16} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-3 font-medium text-sm">主题模式</div>
+        <div className="flex items-center gap-4">
+          <button
+            className={`btn btn-sm flex size-8 items-center justify-center rounded-md ${
+              themeMode === "auto"
+                ? "border-none bg-primary text-primary-foreground hover:bg-primary/90"
+                : "border bg-muted text-primary hover:bg-muted/70"
+            }`}
+            onClick={() => setThemeMode("auto")}
+            title="自动模式"
+          >
+            <TbSunMoon size={16} />
+          </button>
+          <button
+            className={`btn btn-sm flex size-8 items-center justify-center rounded-md border ${
+              themeMode === "light"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-muted text-primary hover:bg-muted/70"
+            }`}
+            onClick={() => setThemeMode("light")}
+            title="浅色模式"
+          >
+            <MdOutlineLightMode size={16} />
+          </button>
+          <button
+            className={`btn btn-sm flex size-8 items-center justify-center rounded-md border ${
+              themeMode === "dark"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-muted text-primary hover:bg-muted/70"
+            }`}
+            onClick={() => setThemeMode("dark")}
+            title="深色模式"
+          >
+            <MdOutlineDarkMode size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SettingsDropdown = () => {
+  const openDropdown = useReaderStore((state) => state.openDropdown);
+  const setOpenDropdown = useReaderStore((state) => state.setOpenDropdown);
+  const isSettingsDropdownOpen = openDropdown === "settings";
+
+  const handleToggleSettingsDropdown = (isOpen: boolean) => {
+    setOpenDropdown?.(isOpen ? "settings" : null);
+  };
 
   return (
     <DropdownMenu open={isSettingsDropdownOpen} onOpenChange={handleToggleSettingsDropdown}>
@@ -179,144 +311,7 @@ const SettingsDropdown = () => {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80 p-3" align="end" side="bottom" sideOffset={4}>
-        <div className="space-y-4">
-          <div>
-            <div className="mb-3 font-medium text-sm">字体系列</div>
-            {(() => {
-              const selected = allFonts.find((f) => f.id === currentFontId);
-              const triggerFontFamily = selected ? (isCJK ? selected.cjk : selected.serif) : undefined;
-              const triggerFontWeight = selected?.id === "classic" ? "normal" : (undefined as any);
-              return (
-                <Select value={currentFontId} onValueChange={handleFontChange}>
-                  <SelectTrigger
-                    className="h-8 w-full focus:outline-none focus:ring-0"
-                    style={{ fontFamily: triggerFontFamily, fontWeight: triggerFontWeight }}
-                  >
-                    <SelectValue placeholder="选择字体" />
-                  </SelectTrigger>
-                  <SelectContent className="w-full dark:border-neutral-700 dark:bg-neutral-800">
-                    {allFonts.map((font) => (
-                      <SelectItem key={font.id} value={font.id}>
-                        <span
-                          className="truncate"
-                          style={{
-                            fontFamily: isCJK ? font.cjk : font.serif,
-                            fontWeight: font.id === "classic" ? "normal" : (undefined as any),
-                          }}
-                        >
-                          {font.name}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              );
-            })()}
-          </div>
-
-          <div>
-            <div className="mb-3 font-medium text-sm">字体大小</div>
-            <div className="flex items-center justify-center gap-4">
-              <button
-                className="btn btn-sm size-8 cursor-pointer rounded-md border bg-muted hover:bg-muted/70 disabled:bg-muted disabled:opacity-50"
-                onClick={handleDecrease}
-                disabled={globalViewSettings.defaultFontSize <= FONT_SIZE_MIN}
-                title="减小字体大小"
-              >
-                <span className="flex items-center justify-center text-xs">A</span>
-              </button>
-
-              <FontSizeSlider
-                value={[globalViewSettings.defaultFontSize]}
-                onValueChange={(value: number[]) => handleFontSizeChange(value[0]!)}
-                min={FONT_SIZE_MIN}
-                max={FONT_SIZE_MAX}
-                step={FONT_SIZE_STEP}
-                showTooltip={true}
-                tooltipContent={(value) => `${value}px`}
-              />
-              <button
-                className="btn btn-sm size-8 cursor-pointer rounded-md border bg-muted hover:bg-muted/70 disabled:bg-muted disabled:opacity-50"
-                onClick={handleIncrease}
-                disabled={globalViewSettings.defaultFontSize >= FONT_SIZE_MAX}
-                title="增大字体大小"
-              >
-                <span className="flex items-center justify-center text-lg">A</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-3 font-medium text-sm">阅读模式</div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-4">
-                <button
-                  className={`btn btn-sm flex h-8 flex-1 items-center justify-between rounded-md px-3 ${
-                    globalViewSettings.scrolled
-                      ? "border-none bg-primary text-primary-foreground hover:bg-primary/90"
-                      : "border bg-muted text-primary hover:bg-muted/70"
-                  }`}
-                  onClick={() => applyScrolledMode(true)}
-                  title="滚动模式"
-                >
-                  <span className="text-sm">滚动</span>
-                  {globalViewSettings.scrolled && <MdCheck size={16} />}
-                </button>
-                <button
-                  className={`btn btn-sm flex h-8 flex-1 items-center justify-between rounded-md px-3 ${
-                    !globalViewSettings.scrolled
-                      ? "border-none bg-primary text-primary-foreground hover:bg-primary/90"
-                      : "border bg-muted text-primary hover:bg-muted/70"
-                  }`}
-                  onClick={() => applyScrolledMode(false)}
-                  title="分页模式"
-                >
-                  <span className="text-sm">分页</span>
-                  {!globalViewSettings.scrolled && <MdCheck size={16} />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-3 font-medium text-sm">主题模式</div>
-            <div className="flex items-center gap-4">
-              <button
-                className={`btn btn-sm flex size-8 items-center justify-center rounded-md ${
-                  themeMode === "auto"
-                    ? "border-none bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "border bg-muted text-primary hover:bg-muted/70"
-                }`}
-                onClick={() => setThemeMode("auto")}
-                title="自动模式"
-              >
-                <TbSunMoon size={16} />
-              </button>
-              <button
-                className={`btn btn-sm flex size-8 items-center justify-center rounded-md border ${
-                  themeMode === "light"
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "bg-muted text-primary hover:bg-muted/70"
-                }`}
-                onClick={() => setThemeMode("light")}
-                title="浅色模式"
-              >
-                <MdOutlineLightMode size={16} />
-              </button>
-              <button
-                className={`btn btn-sm flex size-8 items-center justify-center rounded-md border ${
-                  themeMode === "dark"
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "bg-muted text-primary hover:bg-muted/70"
-                }`}
-                onClick={() => setThemeMode("dark")}
-                title="深色模式"
-              >
-                <MdOutlineDarkMode size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
+        <ReaderStylePanel />
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,3 +1,9 @@
+import { NotepadContainer } from "@/components/notepad";
+import SideChat from "@/components/side-chat";
+import { useReaderStore } from "@/pages/reader/components/reader-provider";
+import { ReaderSearchPanel } from "@/pages/reader/components/search-dropdown";
+import { ReaderStylePanel } from "@/pages/reader/components/settings-dropdown";
+import TOCView from "@/pages/reader/components/toc-view";
 import { MobileSheet } from "../components/mobile-sheet";
 import { useMobileShellStore } from "../shell/mobile-shell-store";
 
@@ -9,10 +15,35 @@ const titleBySheet = {
   style: "阅读样式",
 } as const;
 
-export function ReaderSheetHost() {
+function ReaderSheetContent() {
   const activeReaderSheet = useMobileShellStore((state) => state.activeReaderSheet);
   const closeReaderSheet = useMobileShellStore((state) => state.closeReaderSheet);
   const activeBook = useMobileShellStore((state) => state.activeBook);
+  const bookDoc = useReaderStore((state) => state.bookData?.bookDoc);
+
+  if (!activeReaderSheet || !activeBook) return null;
+
+  switch (activeReaderSheet) {
+    case "toc":
+      return bookDoc?.toc ? (
+        <TOCView toc={bookDoc.toc} bookId={activeBook.id} autoExpand onItemSelect={closeReaderSheet} isVisible />
+      ) : (
+        <p className="py-8 text-center text-sm text-[var(--mobile-ink-muted)]">没有可用的目录</p>
+      );
+    case "search":
+      return <ReaderSearchPanel onClose={closeReaderSheet} onResultSelect={closeReaderSheet} />;
+    case "notes":
+      return <NotepadContainer bookId={activeBook.id} />;
+    case "ai":
+      return <SideChat bookId={activeBook.id} />;
+    case "style":
+      return <ReaderStylePanel />;
+  }
+}
+
+export function ReaderSheetHost() {
+  const activeReaderSheet = useMobileShellStore((state) => state.activeReaderSheet);
+  const closeReaderSheet = useMobileShellStore((state) => state.closeReaderSheet);
 
   const open = activeReaderSheet !== null;
 
@@ -25,9 +56,7 @@ export function ReaderSheetHost() {
         if (!nextOpen) closeReaderSheet();
       }}
     >
-      <div className="text-sm text-[var(--mobile-ink-muted)]">
-        {activeBook ? `${activeBook.title} · ${activeReaderSheet ?? ""}` : activeReaderSheet}
-      </div>
+      <ReaderSheetContent />
     </MobileSheet>
   );
 }
