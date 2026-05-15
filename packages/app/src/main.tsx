@@ -3,8 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router";
-import ReaderLayout from "./components/reader-layout.tsx";
 import { flushAllWrites } from "./lib/tauri-storage.ts";
+import AndroidAppShell from "./mobile/app-shell.tsx";
 import { mountFontsToMainApp } from "./utils/font.ts";
 
 const queryClient = new QueryClient();
@@ -22,7 +22,7 @@ window.addEventListener("beforeunload", () => {
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <HashRouter>
-      <ReaderLayout />
+      <AndroidAppShell />
     </HashRouter>
     <Toaster position="top-center" />
   </QueryClientProvider>,
