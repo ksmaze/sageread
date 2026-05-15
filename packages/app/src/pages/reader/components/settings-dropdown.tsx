@@ -1,4 +1,4 @@
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CURATED_FONTS, DEFAULT_BOOK_FONT } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
@@ -165,7 +165,7 @@ export function ReaderStylePanel() {
               >
                 <SelectValue placeholder="选择字体" />
               </SelectTrigger>
-              <SelectContent className="w-full dark:border-neutral-700 dark:bg-neutral-800">
+              <SelectContent className="z-[120] w-full dark:border-neutral-700 dark:bg-neutral-800">
                 {allFonts.map((font) => (
                   <SelectItem key={font.id} value={font.id}>
                     <span
@@ -301,19 +301,19 @@ const SettingsDropdown = () => {
   };
 
   return (
-    <DropdownMenu open={isSettingsDropdownOpen} onOpenChange={handleToggleSettingsDropdown}>
-      <DropdownMenuTrigger asChild>
+    <Popover open={isSettingsDropdownOpen} onOpenChange={handleToggleSettingsDropdown}>
+      <PopoverTrigger asChild>
         <button
           className="btn btn-ghost flex h-8 min-h-8 w-8 items-center justify-center rounded-full p-0 outline-none focus:outline-none focus-visible:ring-0"
           title="字体大小设置"
         >
           <Settings2 size={18} />
         </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80 p-3" align="end" side="bottom" sideOffset={4}>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-3" align="end" side="bottom" sideOffset={4}>
         <ReaderStylePanel />
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverContent>
+    </Popover>
   );
 };
 

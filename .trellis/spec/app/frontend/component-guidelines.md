@@ -70,12 +70,33 @@ interface SettingsDialogProps {
 - UI primitives follow Radix composition with `data-slot` markers and class-variance-authority variants where useful.
 - `Button` defaults to `size="sm"`; pass an explicit size for toolbars or full forms.
 - Input primitives disable browser writing assistance by default.
+- Use `DropdownMenu` for command menus made of menu items. Use `Popover` for interactive panels that contain inputs, sliders, switches, or `Select` controls.
+- Do not nest the shared `Select` inside `DropdownMenuContent`; `SelectContent` portals to the document body and can conflict with dropdown outside-interaction/focus behavior. Wrap the panel in `PopoverContent` instead.
 
 ```tsx
 <Button variant="soft" size="sm" onClick={handleCreate}>
   <Plus className="size-4" />
   New Skill
 </Button>
+```
+
+```tsx
+// Correct: interactive settings panel with a Select.
+<Popover open={open} onOpenChange={setOpen}>
+  <PopoverTrigger asChild>
+    <Button variant="ghost" size="icon" />
+  </PopoverTrigger>
+  <PopoverContent align="end">
+    <Select value={value} onValueChange={setValue}>
+      <SelectTrigger>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="system">System</SelectItem>
+      </SelectContent>
+    </Select>
+  </PopoverContent>
+</Popover>
 ```
 
 ## Android Surface Contracts

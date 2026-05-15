@@ -74,6 +74,7 @@ createRoot(document.getElementById("root")!).render(
 - Interactive Android controls must be at least `--mobile-touch-target` (`44px`) in both dimensions, or be inside a larger fixed-height/wide grid cell.
 - Use `mobile-scroll-area` for sheet and destination scroll containers to contain overscroll.
 - Reader selection popups sit above the dock (`z-[80]`); active sheet content sits above them (`z-[100]`).
+- Portalled controls opened from reader sheets must render above the active sheet layer. For example, a `SelectContent` used inside `ReaderStylePanel` needs a z-index above `z-[100]`, such as `z-[120]`, because the shared select content portals to `document.body`.
 
 ## Color Token Contracts
 
@@ -159,3 +160,4 @@ window.addEventListener("message", handleIframeSingleClick);
 - Forgetting to hide duplicate settings dialogs from legacy pages embedded in the mobile shell.
 - Letting bottom navigation cover chat inputs, settings rows, or sheet content.
 - Using z-index values that put reader selection controls under the dock.
+- Forgetting that portalled option lists/popovers opened from `MobileSheet` need to stack above the sheet, not at the shared primitive default `z-50`.
