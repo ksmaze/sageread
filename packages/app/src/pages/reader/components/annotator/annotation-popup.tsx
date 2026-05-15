@@ -156,7 +156,7 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
         width={isVertical ? popupHeight : popupWidth}
         height={isVertical ? popupWidth : popupHeight}
         position={position}
-        className="selection-popup border border-neutral-200 bg-white text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+        className="selection-popup !z-[80] border border-neutral-200 bg-white text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
       >
         <div
           className={clsx(

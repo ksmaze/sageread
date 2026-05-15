@@ -58,7 +58,7 @@ const HighlightOptions: React.FC<HighlightOptionsProps> = ({
   return (
     <div
       className={clsx(
-        "highlight-options absolute flex items-center justify-between gap-2",
+        "highlight-options absolute z-[80] flex items-center justify-between gap-2",
         isVertical ? "flex-col" : "flex-row",
       )}
       style={style}

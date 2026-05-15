@@ -27,7 +27,7 @@ export function MobileBottomNav({ activeDestination, onDestinationChange, hidden
               aria-label={destination.ariaLabel}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "h-full min-h-[var(--mobile-touch-target)] flex-col gap-1 rounded-none text-xs text-[var(--mobile-ink-muted)]",
+                "h-full min-h-[var(--mobile-touch-target)] min-w-[var(--mobile-touch-target)] flex-col gap-1 rounded-none text-xs text-[var(--mobile-ink-muted)]",
                 isActive && "text-[var(--mobile-ink)]",
               )}
               onClick={() => onDestinationChange(destination.id)}

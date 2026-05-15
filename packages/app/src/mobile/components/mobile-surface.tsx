@@ -10,7 +10,7 @@ export function MobileSurface({ children, className, padded = true }: MobileSurf
   return (
     <section
       className={cn(
-        "mobile-paper flex min-h-0 flex-1 flex-col overflow-hidden",
+        "mobile-paper mobile-scroll-area flex min-h-0 flex-1 flex-col overflow-hidden",
         padded && "px-safe",
         className,
       )}

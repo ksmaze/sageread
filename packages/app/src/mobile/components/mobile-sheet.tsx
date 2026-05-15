@@ -28,7 +28,7 @@ export function MobileSheet({
     <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
       <DrawerContent
         className={cn(
-          "border-[var(--mobile-outline)] bg-[var(--mobile-paper-high)]",
+          "z-[100] border-[var(--mobile-outline)] bg-[var(--mobile-paper-high)]",
           height === "full" && "h-[calc(100dvh_-_env(safe-area-inset-top))]",
         )}
       >
@@ -36,7 +36,7 @@ export function MobileSheet({
           <DrawerTitle>{title}</DrawerTitle>
           {description ? <DrawerDescription>{description}</DrawerDescription> : null}
         </DrawerHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-safe">{children}</div>
+        <div className="mobile-scroll-area min-h-0 flex-1 overflow-y-auto px-4 pb-safe">{children}</div>
       </DrawerContent>
     </Drawer>
   );

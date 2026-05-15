@@ -26,7 +26,7 @@ export function TabletRail({ activeDestination, onDestinationChange, hidden = fa
             aria-label={destination.ariaLabel}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "h-16 w-full flex-col gap-1 rounded-lg text-xs text-[var(--mobile-ink-muted)]",
+              "h-16 min-h-[var(--mobile-touch-target)] min-w-[var(--mobile-touch-target)] w-full flex-col gap-1 rounded-lg text-xs text-[var(--mobile-ink-muted)]",
               isActive && "bg-[var(--mobile-paper-high)] text-[var(--mobile-ink)]",
             )}
             onClick={() => onDestinationChange(destination.id)}

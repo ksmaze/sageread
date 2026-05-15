@@ -42,7 +42,7 @@ const AskAIPopup: React.FC<AskAIPopupProps> = ({ style, selectedText, onClose, o
 
   return (
     <div
-      className="ask-ai-popup absolute z-50 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
+      className="ask-ai-popup absolute z-[80] rounded-lg border border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
       style={style}
     >
       <div className="space-y-3">

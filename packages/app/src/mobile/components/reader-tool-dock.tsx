@@ -28,7 +28,7 @@ export function ReaderToolDock({ visible, onOpenSheet }: ReaderToolDockProps) {
               key={tool.id}
               type="button"
               variant="ghost"
-              className="h-full flex-col gap-0.5 rounded-full text-white text-xs hover:bg-white/10 hover:text-white"
+              className="h-full min-h-[var(--mobile-touch-target)] min-w-[var(--mobile-touch-target)] flex-col gap-0.5 rounded-full text-white text-xs hover:bg-white/10 hover:text-white"
               onClick={() => onOpenSheet(tool.id)}
             >
               <Icon className="size-4" />

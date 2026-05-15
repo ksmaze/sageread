@@ -382,4 +382,19 @@ foliate-view {
   .mobile-tonal-border {
     border-color: var(--mobile-outline);
   }
+
+  .mobile-scroll-area {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-reader-control {
+    min-width: var(--mobile-touch-target);
+    min-height: var(--mobile-touch-target);
+  }
+
+  .mobile-text-fit {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
 }
