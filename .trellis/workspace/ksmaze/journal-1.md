@@ -152,3 +152,37 @@ Fixed reader font-family select options in the Android reader style sheet by rai
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Fix home notes page
+
+**Date**: 2026-05-15
+**Task**: Fix home notes page
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Implemented a reusable unified notes page for home and mobile notes, added note/book annotation mapping tests, and fixed getBooks sort field normalization so the notes page no longer fails when loading books.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e10d25f` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
