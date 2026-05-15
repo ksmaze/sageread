@@ -9,6 +9,7 @@ import { AiDestination } from "./destinations/ai-destination";
 import { LibraryDestination } from "./destinations/library-destination";
 import { NotesDestination } from "./destinations/notes-destination";
 import { StatsDestination } from "./destinations/stats-destination";
+import { MobileReader } from "./reader/mobile-reader";
 import { useMobileShellStore } from "./shell/mobile-shell-store";
 
 function ActiveDestination() {
@@ -48,6 +49,7 @@ export default function AndroidAppShell() {
         <ActiveDestination />
       </main>
       <MobileBottomNav activeDestination={activeDestination} onDestinationChange={setDestination} />
+      <MobileReader />
       <SettingsDialog open={isSettingsDialogOpen} onOpenChange={toggleSettingsDialog} />
     </div>
   );
