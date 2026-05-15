@@ -1,12 +1,12 @@
-# Desktop App Design
+# Legacy Desktop App Design
 
-> Current desktop-first UI contracts for `packages/app`.
+> Legacy desktop-first UI contracts for `packages/app`.
 
 ---
 
 ## Scope / Trigger
 
-This document captures the current app design so future frontend work preserves the desktop reading workspace instead of treating the app as a generic responsive web page.
+This document captures the former desktop app design. It remains useful when maintaining legacy desktop shell files, but the current mounted shell is documented in [Android Mobile Shell](./android-mobile-shell.md).
 
 Primary sources:
 
@@ -85,9 +85,9 @@ window.dispatchEvent(
 );
 ```
 
-### Settings Dialog
+### Legacy Settings Dialog
 
-- Global settings are a desktop modal with a fixed two-column layout.
+- Global settings were a desktop modal with a fixed two-column layout.
 - `SettingsDialog` content must stay `min-w-[800px] max-w-[800px] min-h-[80vh] max-h-[80vh]`.
 - The left settings nav is `w-48`; right content is scrollable and owns its page-specific layout.
 
@@ -175,7 +175,7 @@ Desktop is the base contract. Responsive behavior exists to avoid broken layouts
 
 - Good: A 1440x900 desktop reader with tab strip, active reader tab, chat visible at about `370px`, notepad hidden by default, centered reader pane, hover-visible header/footer controls, and no layout jump when controls fade.
 - Base: No reader tabs open. The home surface is visible, the fixed `w-48` sidebar is present, library refresh completes, and an empty library shows the import surface.
-- Bad: New pages mounted outside `ReaderLayout`, reader panes remounted on tab switches, sidebars without `minWidth`/`maxWidth`, search local to one page instead of `useLibraryStore`, or desktop settings converted to a full-screen mobile sheet.
+- Bad for legacy desktop maintenance: new pages mounted outside `ReaderLayout`, reader panes remounted on tab switches, sidebars without `minWidth`/`maxWidth`, search local to one page instead of `useLibraryStore`, or desktop settings converted to a full-screen mobile sheet.
 
 ## Tests Required
 
@@ -239,7 +239,7 @@ openBook(book.id, book.title);
 
 ## Common Mistakes
 
-- Treating `App.tsx` as the app root. It is currently a stub; `main.tsx` mounts `ReaderLayout`.
+- Treating `App.tsx` as the app root. It is currently a stub; Android builds mount `AndroidAppShell`, while this legacy document describes the old `ReaderLayout` shell.
 - Removing `min-w-0` from flex children, causing long titles, chat text, or reader content to overflow.
 - Adding full-page hero/marketing layouts inside the app. This project is a dense desktop productivity reader.
 - Updating persisted reader settings without applying styles to the live foliate renderer.

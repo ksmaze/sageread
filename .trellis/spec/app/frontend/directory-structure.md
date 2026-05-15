@@ -6,7 +6,7 @@
 
 ## Overview
 
-`packages/app` is a Tauri + React desktop reader. The real UI entrypoint is `src/main.tsx`, which mounts `ReaderLayout`; `src/App.tsx` is still a Vite starter stub and must not be treated as the app shell.
+`packages/app` is a Tauri + React Android phone/tablet reader. The real UI entrypoint is `src/main.tsx`, which mounts `AndroidAppShell`; `src/App.tsx` is still a Vite starter stub and must not be treated as the app shell. The previous desktop `ReaderLayout` remains in the tree as legacy reference code.
 
 The codebase is organized by app surface first, with shared primitives under `components/`, persisted state under `store/`, service boundaries under `services/`, and cross-cutting helpers under `hooks/`, `utils/`, and `types/`.
 
@@ -27,6 +27,7 @@ packages/app/src/
 +-- helpers/             # Small cross-cutting helpers
 +-- hooks/               # Shared React hooks
 +-- lib/                 # App infrastructure wrappers
++-- mobile/              # Android phone/tablet shell, destinations, reader sheets, notes, and AI adapters
 +-- pages/               # Routed top-level surfaces and feature-local modules
 |   +-- library/
 |   +-- reader/
@@ -40,17 +41,18 @@ packages/app/src/
 +-- types/               # Shared TypeScript domain types
 +-- utils/               # Pure utilities and platform helpers
 +-- index.css            # Tailwind v4, theme mapping, global app styles
-+-- main.tsx             # Actual React entrypoint
++-- main.tsx             # Actual React entrypoint; mounts AndroidAppShell
 ```
 
 ## Module Organization
 
 ### App Shell
 
-- `main.tsx` mounts `ReaderLayout` inside `QueryClientProvider` and `HashRouter`.
-- `components/reader-layout.tsx` owns the desktop shell: top tab strip, home view, reader tabs, resizable sidebars, settings dialog, notifications, and native window controls.
-- `components/home-layout.tsx` owns the home/library routed frame and fixed sidebar.
-- `components/sidebar.tsx` owns primary navigation, library search, tag selection, and settings access.
+- `main.tsx` mounts `AndroidAppShell` inside `QueryClientProvider` and `HashRouter`.
+- `mobile/app-shell.tsx` owns the Android shell: Library/Notes/AI/Stats destinations, phone bottom navigation, tablet rail, global settings entry, and single-active-book reader overlay.
+- `mobile/shell/mobile-shell-store.ts` owns Android presentation state.
+- `mobile/reader/**` owns the reader overlay, dock, sheets, and Android back behavior.
+- `components/reader-layout.tsx`, `components/home-layout.tsx`, and `components/sidebar.tsx` are legacy desktop shell components unless they are reintroduced intentionally.
 
 ### Feature Pages
 

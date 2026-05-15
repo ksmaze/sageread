@@ -18,6 +18,7 @@ Use `src/store/*-store.ts` for state that crosses pages, shell components, or re
 - `app-settings-store.ts`: persisted system settings and global reader settings.
 - `theme-store.ts`: theme mode, dark mode, system UI flags, chat auto-scroll, sidebar swapping.
 - `library-store.ts`: library data, search query, refresh functions.
+- `mobile/shell/mobile-shell-store.ts`: Android presentation state for active destination, active book, reader open state, reader chrome, and active reader sheet.
 
 ### Feature Local State
 
@@ -54,7 +55,29 @@ Promote state to a store only when one of these is true:
 
 Do not promote purely local dialog or input state.
 
-## Reader Layout Contract
+## Android Reader Shell Contract
+
+The current Android shell uses `useMobileShellStore` for presentation state and supports one active reader book at a time.
+
+- `activeDestination`: `"library" | "notes" | "ai" | "stats"`.
+- `activeBook`: `{ id: string; title: string } | null`.
+- `isReaderOpen`: whether the reader overlay is mounted.
+- `isReaderChromeVisible`: whether the dock/chrome is visible.
+- `activeReaderSheet`: `"toc" | "search" | "notes" | "ai" | "style" | null`.
+
+Opening a book from Android library code should route through `useMobileShellStore.openBook`. If reusing legacy library components that call `useLayoutStore.openBook`, adapt that call at the mobile destination boundary instead of rewriting book cards.
+
+```ts
+useLayoutStore.setState({
+  openBook: (bookId: string, title: string) => {
+    openMobileBook({ id: bookId, title });
+  },
+});
+```
+
+`MobileReader` creates the existing per-book reader store with `createReaderStore(activeBook.id)` and provides it through `ReaderProvider`.
+
+## Legacy Reader Layout Contract
 
 Reader tabs are managed by `useLayoutStore`. Opening a book creates or activates a tab and creates a per-tab reader store keyed by `reader-${bookId}`.
 

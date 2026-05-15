@@ -6,11 +6,11 @@
 
 ## Overview
 
-Quality in this package means preserving the desktop reader workflow, keeping state boundaries clear, and using existing UI/service/store patterns. The app is not a generic website; changes should be verified against the shell, library, reader, side panels, settings, and dark mode when those surfaces are touched.
+Quality in this package means preserving the Android phone/tablet reader workflow, keeping state boundaries clear, and using existing UI/service/store patterns. The app is not a generic website; changes should be verified against the shell, library, reader, sheets, settings, and dark mode when those surfaces are touched.
 
 ## Required Patterns
 
-- Keep `ReaderLayout` as the mounted app shell.
+- Keep `AndroidAppShell` as the mounted app shell for the current Android build.
 - Use semantic theme tokens and existing UI primitives.
 - Keep service calls behind `src/services/*`.
 - Keep persistent cross-surface state in Zustand stores.
@@ -34,6 +34,13 @@ return () => {
 ```tsx
 // Wrong
 createRoot(root).render(<App />);
+```
+
+### Do Not Reintroduce Desktop App Tabs As Root
+
+```tsx
+// Wrong for the current Android build
+createRoot(root).render(<ReaderLayout />);
 ```
 
 ### Do Not Create One-Off Theme Systems
@@ -66,7 +73,7 @@ If a setting affects the foliate view, update persisted settings and the live re
 | Missing reader data/config | Render `null`, do not mount foliate. |
 | Sidebar resize | Show overlay during resize; dispatch `foliate-resize-update` on stop. |
 | Invalid edit info form | Disable save and show invalid input styling. |
-| Settings dialog | Keep the `800px` two-column desktop modal. |
+| Settings dialog | Use full-screen content on phones and the bounded `800px` two-column modal from `sm` upward. |
 
 ## Testing Requirements
 
@@ -78,19 +85,20 @@ pnpm --filter app build
 
 For docs-only changes, verify the edited docs have no placeholders and links point to existing files.
 
-When UI behavior changes, manually or with Playwright verify the relevant surfaces:
+When UI behavior changes, manually or with device emulation verify the relevant Android surfaces:
 
-- desktop shell at about `1440x900`
-- library empty, search, drag overlay, and grid card truncation
-- reader open book, header/footer hover controls, chat/notepad toggles, sidebar resize
-- `swapSidebars` behavior
-- settings modal size and scroll behavior
+- `390x844` phone portrait
+- `844x390` phone landscape
+- `800x1280` tablet portrait
+- `1280x800` tablet landscape
+- library empty, upload, search, tag filters, and grid card truncation
+- reader open book, dock tools, sheets, text selection popups, and Android back behavior
+- notes, AI, stats, settings size, and scroll behavior
 - light and dark modes
-- compact portrait reader width below `900px`
 
 ## Code Review Checklist
 
-- Does the change preserve `ReaderLayout` shell ownership?
+- Does the change preserve `AndroidAppShell` shell ownership?
 - Are existing primitives, hooks, stores, and services reused?
 - Are long text and flex panes protected with `min-w-0`, truncation, or scrolling?
 - Does dark mode use semantic tokens?
@@ -101,7 +109,7 @@ When UI behavior changes, manually or with Playwright verify the relevant surfac
 
 ## Common Mistakes
 
-- Treating desktop-first responsive support as permission to redesign the desktop shell for mobile.
+- Treating legacy desktop shell code as the current app root.
 - Adding a new component abstraction when a feature-local component is enough.
 - Duplicating service calls in components.
 - Forgetting that `BookItem` list mode is not implemented even though the prop exists.

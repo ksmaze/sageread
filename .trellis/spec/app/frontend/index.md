@@ -6,7 +6,7 @@
 
 ## Overview
 
-This directory contains the current frontend conventions for `packages/app`.
+This directory contains the current frontend conventions for `packages/app`. The active app shell is Android mobile/tablet first; legacy desktop shell documents remain as reference for code that is still present but not mounted by default.
 
 ---
 
@@ -14,7 +14,8 @@ This directory contains the current frontend conventions for `packages/app`.
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Desktop App Design](./desktop-app-design.md) | Current desktop-first app shell, reader workspace, visual tokens, and UI contracts | Captured |
+| [Android Mobile Shell](./android-mobile-shell.md) | Current Android phone/tablet app shell, reader dock/sheets, safe areas, and verification matrix | Captured |
+| [Desktop App Design](./desktop-app-design.md) | Legacy desktop-first app shell, reader workspace, visual tokens, and UI contracts | Legacy reference |
 | [Directory Structure](./directory-structure.md) | Module organization and file layout | Captured |
 | [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | Captured |
 | [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | Captured |
@@ -26,7 +27,7 @@ This directory contains the current frontend conventions for `packages/app`.
 
 ## Maintenance Rule
 
-When the app shell, reader workspace, services, stores, or shared UI primitives change, update the matching spec file in the same task. Document actual current behavior, not aspirational patterns.
+When the Android shell, reader workspace, services, stores, or shared UI primitives change, update the matching spec file in the same task. Document actual current behavior, not aspirational patterns.
 
 ---
 

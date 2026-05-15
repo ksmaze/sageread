@@ -6,9 +6,10 @@
 
 ## Overview
 
-Components are dense desktop app surfaces, not marketing sections. The primary composition model is:
+Components are dense Android mobile/tablet app surfaces, not marketing sections. The primary composition model is:
 
-- desktop shell components under `components/`
+- Android shell components under `mobile/`
+- legacy desktop shell components under `components/`
 - route and feature components under `pages/<feature>/`
 - Radix/shadcn-style primitives under `components/ui/`
 - stateful behavior extracted into hooks and Zustand stores
@@ -77,12 +78,13 @@ interface SettingsDialogProps {
 </Button>
 ```
 
-## Desktop Surface Contracts
+## Android Surface Contracts
 
-- `ReaderLayout` is the app shell. Components that need active reader tabs, home visibility, sidebars, settings, notifications, or window controls belong under that shell.
-- Home/library pages render inside a bordered rounded frame next to a fixed `w-48` sidebar.
-- Reader pages render as a center pane with optional resizable chat and notepad sidebars.
-- Settings are a desktop modal, not a full-screen mobile route: keep the `800px` two-column contract.
+- `AndroidAppShell` is the current app shell. Components that need Android destination state, active book, reader chrome, reader sheets, or mobile settings access belong under `src/mobile/`.
+- Phone uses `MobileBottomNav`; tablet uses `TabletRail`.
+- Destination pages render in `MobileSurface` and must account for bottom navigation and safe areas.
+- Reader pages use a single active book, `ReaderToolDock`, and `MobileSheet` surfaces for TOC, search, notes, AI, and style.
+- Settings are full-screen on phones and keep the bounded `800px` two-column modal from `sm` upward.
 - Library empty state is an import tool, not a landing page.
 
 ## Accessibility
