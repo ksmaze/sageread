@@ -67,6 +67,7 @@ createRoot(document.getElementById("root")!).render(
 - Keep type labels and filters in the shared model (`UNIFIED_NOTE_TYPE_LABELS`, `UNIFIED_NOTE_FILTERS`) instead of duplicating `"笔记"`, `"标注"`, `"摘录"`, or `"书签"` labels in page components.
 - `UnifiedNotesPage` owns destination-level filter state and may be reused by `NotesDestination` and legacy `HomeLayout` `/notes`; do not create a second app-level notes page with separate mapping logic.
 - Unified notes cards should expose enough content to identify the record: title, body preview, type label, source book/author when available, and updated time. Full content belongs in the detail dialog.
+- Unified notes detail dialogs may offer `打开原文` / `打开书籍` for book-linked items. Use `getUnifiedNoteReaderTarget` plus the shared reader navigation target contract from `state-management.md`; do not call foliate `view.goTo` directly from the notes page.
 
 ## Settings Contract
 

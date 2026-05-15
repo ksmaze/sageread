@@ -11,6 +11,8 @@ export function MobileReader() {
   const activeBook = useMobileShellStore((state) => state.activeBook);
   const isReaderOpen = useMobileShellStore((state) => state.isReaderOpen);
   const isReaderChromeVisible = useMobileShellStore((state) => state.isReaderChromeVisible);
+  const pendingReaderNavigationTarget = useMobileShellStore((state) => state.pendingReaderNavigationTarget);
+  const clearPendingReaderNavigationTarget = useMobileShellStore((state) => state.clearPendingReaderNavigationTarget);
   const toggleReaderChrome = useMobileShellStore((state) => state.toggleReaderChrome);
   const openReaderSheet = useMobileShellStore((state) => state.openReaderSheet);
   const activeBookId = activeBook?.id;
@@ -49,6 +51,17 @@ export function MobileReader() {
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [activeBookId, isReaderOpen, toggleReaderChrome]);
+
+  useEffect(() => {
+    if (!activeBookId || !readerStore || pendingReaderNavigationTarget?.bookId !== activeBookId) return;
+
+    readerStore.getState().requestNavigation({
+      cfi: pendingReaderNavigationTarget.cfi,
+      requestedAt: pendingReaderNavigationTarget.requestedAt,
+      source: pendingReaderNavigationTarget.source,
+    });
+    clearPendingReaderNavigationTarget(activeBookId);
+  }, [activeBookId, clearPendingReaderNavigationTarget, pendingReaderNavigationTarget, readerStore]);
 
   if (!activeBook || !isReaderOpen || !readerStore) return null;
 

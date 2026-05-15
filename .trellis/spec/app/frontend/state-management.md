@@ -98,6 +98,73 @@ openBook: (bookId: string, title: string) => {
 
 Persist only serializable layout state. Recreate `readerStores` in the persisted store `merge` function.
 
+## Reader Navigation Target Contract
+
+### 1. Scope / Trigger
+
+Use this contract when UI outside the mounted reader needs to open a book and then navigate to a precise foliate location, such as unified notes opening a source annotation.
+
+### 2. Signatures
+
+```ts
+interface ReaderNavigationTarget {
+  cfi: string;
+  requestedAt: number;
+  source?: "unified-notes";
+}
+
+useMobileShellStore.openBook(book: ActiveBookRef, navigationTarget?: ReaderNavigationTarget): void;
+useLayoutStore.openBook(bookId: string, title: string, navigationTarget?: ReaderNavigationTarget): void;
+
+readerStore.getState().requestNavigation(target: ReaderNavigationTarget): void;
+readerStore.getState().clearNavigationTarget(target: ReaderNavigationTarget): void;
+```
+
+### 3. Contracts
+
+- The navigation target carries only reader-local data. Mobile shell may attach `bookId` internally while handing the target to `MobileReader`.
+- Callers pass `undefined` when they only need to open the book at the existing saved location.
+- `ReaderViewer` must wait for the foliate view to be ready before calling `view.goTo(target.cfi)`.
+- Clearing a completed target must only clear the same `{ cfi, requestedAt }` target so a newer request cannot be accidentally removed by an older effect.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Note has no `bookId` | Do not show an open-reader action. |
+| Note has `bookId` but no `cfi` | Open the book without a navigation target. |
+| Reader view is not ready | Keep the target pending in the reader store. |
+| A newer target arrives before an older target clears | Keep the newer target. |
+| `view.goTo(cfi)` throws | Log the failure and leave the reader mounted. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: Unified notes opens a book with `{ cfi, requestedAt, source: "unified-notes" }`; the reader mounts, becomes ready, and then consumes the target.
+- Base: Library opens a book without a target and resumes the saved location.
+- Bad: Calling `view.goTo` directly from a notes page before the reader exists, or clearing `pendingNavigationTarget` without checking which request completed.
+
+### 6. Tests Required
+
+- `reader-navigation.test.ts` must cover stale-target clearing behavior.
+- Unified note model tests must cover whether a display item can produce a reader target.
+- Run `pnpm --filter app build` after signature changes to stores or reader hooks.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+openBook({ id, title });
+view.goTo(cfi); // view may not exist yet
+```
+
+#### Correct
+
+```ts
+openBook({ id, title }, { cfi, requestedAt: Date.now(), source: "unified-notes" });
+// ReaderViewer consumes the target after foliate initialization.
+```
+
 ## Settings Contract
 
 `useAppSettingsStore.settings` contains `globalReadSettings` and `globalViewSettings`. When reader settings change, update both persisted settings and the live foliate renderer when available.

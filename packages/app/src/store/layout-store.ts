@@ -1,6 +1,6 @@
 import { tauriStorageKey } from "@/constants/tauri-storage";
 import { tauriStorage } from "@/lib/tauri-storage";
-import type { ReaderStore } from "@/pages/reader/store/create-reader-store";
+import type { ReaderNavigationTarget, ReaderStore } from "@/pages/reader/store/create-reader-store";
 import { createReaderStore } from "@/pages/reader/store/create-reader-store";
 import type { TabProperties } from "app-tabs";
 import { create } from "zustand";
@@ -19,7 +19,7 @@ interface LayoutStore {
   isChatVisible: boolean;
   isNotepadVisible: boolean;
 
-  openBook: (bookId: string, title: string) => void;
+  openBook: (bookId: string, title: string, navigationTarget?: ReaderNavigationTarget) => void;
   removeTab: (tabId: string) => void;
   activateTab: (tabId: string) => void;
   navigateToHome: () => void;
@@ -39,19 +39,24 @@ export const useLayoutStore = create<LayoutStore>()(
       isChatVisible: true,
       isNotepadVisible: false,
 
-      openBook: (bookId: string, title: string) => {
+      openBook: (bookId: string, title: string, navigationTarget?: ReaderNavigationTarget) => {
         const tabId = `reader-${bookId}`;
         const { tabs, activateTab, readerStores } = get();
+
+        if (!readerStores.has(tabId)) {
+          const store = createReaderStore(bookId);
+          readerStores.set(tabId, store);
+        }
+
+        const readerStore = readerStores.get(tabId);
+        if (navigationTarget) {
+          readerStore?.getState().requestNavigation(navigationTarget);
+        }
 
         const existingTab = tabs.find((t) => t.id === tabId);
         if (existingTab) {
           activateTab(tabId);
           return;
-        }
-
-        if (!readerStores.has(tabId)) {
-          const store = createReaderStore(bookId);
-          readerStores.set(tabId, store);
         }
 
         const newTab: Tab = {

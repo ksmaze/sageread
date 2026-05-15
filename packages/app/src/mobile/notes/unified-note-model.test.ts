@@ -7,6 +7,7 @@ import {
   createUnifiedNoteFromBookNote,
   createUnifiedNoteFromStandaloneNote,
   filterUnifiedNotesByType,
+  getUnifiedNoteReaderTarget,
 } from "./unified-note-model";
 
 describe("unified note model", () => {
@@ -85,5 +86,33 @@ describe("unified note model", () => {
       ["annotation"],
     );
     assert.equal(filterUnifiedNotesByType(items, "all").length, 4);
+  });
+
+  it("builds reader targets only for book-linked notes", () => {
+    const standalone = createUnifiedNoteFromStandaloneNote({
+      id: "note-1",
+      title: "Loose note",
+      content: "Not tied to a book",
+      createdAt: 100,
+      updatedAt: 200,
+    });
+    const bookNote = createUnifiedNoteFromBookNote(
+      {
+        id: "bookmark-1",
+        type: "bookmark",
+        cfi: "epubcfi(/6/4)",
+        text: "",
+        createdAt: 300,
+        updatedAt: 400,
+      },
+      { id: "book-1", title: "The Culture Map", author: "Erin Meyer" },
+    );
+
+    assert.equal(getUnifiedNoteReaderTarget(standalone), null);
+    assert.deepEqual(getUnifiedNoteReaderTarget(bookNote), {
+      bookId: "book-1",
+      title: "The Culture Map",
+      cfi: "epubcfi(/6/4)",
+    });
   });
 });

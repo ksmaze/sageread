@@ -1,4 +1,5 @@
 import LibraryPage from "@/pages/library";
+import type { ReaderNavigationTarget } from "@/pages/reader/store/create-reader-store";
 import { useLayoutStore } from "@/store/layout-store";
 import { useEffect } from "react";
 import { MobileSurface } from "../components/mobile-surface";
@@ -10,8 +11,8 @@ export function LibraryDestination() {
   useEffect(() => {
     const originalOpenBook = useLayoutStore.getState().openBook;
     useLayoutStore.setState({
-      openBook: (bookId: string, title: string) => {
-        openMobileBook({ id: bookId, title });
+      openBook: (bookId: string, title: string, navigationTarget?: ReaderNavigationTarget) => {
+        openMobileBook({ id: bookId, title }, navigationTarget);
       },
     });
 

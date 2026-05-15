@@ -10,6 +10,9 @@ import type { Thread } from "@/types/thread";
 import type { FoliateView } from "@/types/view";
 import { appDataDir } from "@tauri-apps/api/path";
 import { createStore } from "zustand";
+import { type ReaderNavigationTarget, clearReaderNavigationTarget } from "./reader-navigation";
+
+export type { ReaderNavigationTarget } from "./reader-navigation";
 
 export interface BookDataState {
   id: string;
@@ -27,6 +30,8 @@ export interface ReaderState {
   bookData: BookDataState | null;
   view: FoliateView | null;
   location: string | null;
+  pendingNavigationTarget: ReaderNavigationTarget | null;
+  isViewerReady: boolean;
   isLoading: boolean;
   error: string | null;
   progress: BookProgress | undefined;
@@ -42,6 +47,9 @@ export interface ReaderState {
   saveConfig: (config: BookConfig) => Promise<void>;
   updateBooknotes: (booknotes: BookNote[]) => BookConfig | undefined;
   setView: (view: FoliateView) => void;
+  setViewerReady: (ready: boolean) => void;
+  requestNavigation: (target: ReaderNavigationTarget) => void;
+  clearNavigationTarget: (target: ReaderNavigationTarget) => void;
   setLocation: (location: string) => void;
   setProgress: (progress: BookProgress) => void;
   setSessionStats: (stats: SessionStats | null) => void;
@@ -60,6 +68,8 @@ export const createReaderStore = (bookId: string) => {
     bookData: null,
     view: null,
     location: null,
+    pendingNavigationTarget: null,
+    isViewerReady: false,
     isLoading: false,
     error: null,
     progress: undefined,
@@ -163,6 +173,12 @@ export const createReaderStore = (bookId: string) => {
       return updatedConfig;
     },
     setView: (view) => set({ view }),
+    setViewerReady: (ready) => set({ isViewerReady: ready }),
+    requestNavigation: (target) => set({ pendingNavigationTarget: target }),
+    clearNavigationTarget: (target) =>
+      set((state) => ({
+        pendingNavigationTarget: clearReaderNavigationTarget(state.pendingNavigationTarget, target),
+      })),
     setLocation: (location) => set({ location }),
     setProgress: (progress) => set({ progress }),
     setSessionStats: (stats) => set({ sessionStats: stats }),

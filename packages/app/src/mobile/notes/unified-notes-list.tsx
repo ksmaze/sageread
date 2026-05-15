@@ -1,11 +1,19 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
+import { BookOpen } from "lucide-react";
 import { useState } from "react";
-import { UNIFIED_NOTE_FILTERS } from "./unified-note-model";
+import { UNIFIED_NOTE_FILTERS, type UnifiedNoteReaderTarget, getUnifiedNoteReaderTarget } from "./unified-note-model";
 import type { UnifiedNoteItem, UnifiedNoteType } from "./use-unified-notes";
 import { useUnifiedNotes } from "./use-unified-notes";
 
@@ -14,6 +22,7 @@ export type UnifiedNotesListVariant = "mobile" | "desktop";
 interface UnifiedNotesListProps {
   bookId?: string;
   activeType: UnifiedNoteType | "all";
+  onOpenReaderTarget?: (target: UnifiedNoteReaderTarget) => void;
   onTypeChange: (type: UnifiedNoteType | "all") => void;
   variant?: UnifiedNotesListVariant;
 }
@@ -92,10 +101,12 @@ function UnifiedNoteCard({
 
 function UnifiedNoteDetailDialog({
   item,
+  onOpenReaderTarget,
   onOpenChange,
   open,
 }: {
   item: UnifiedNoteItem | null;
+  onOpenReaderTarget?: (target: UnifiedNoteReaderTarget) => void;
   onOpenChange: (open: boolean) => void;
   open: boolean;
 }) {
@@ -104,31 +115,57 @@ function UnifiedNoteDetailDialog({
   const sourceText = getSourceText(item);
   const createdAt = formatTime(item.createdAt);
   const updatedAt = formatTime(item.updatedAt);
+  const readerTarget = getUnifiedNoteReaderTarget(item);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-2xl overflow-hidden">
-        <DialogHeader>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <DialogTitle className="min-w-0 truncate">{item.title}</DialogTitle>
+      <DialogContent className="!flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col overflow-hidden p-0 sm:max-h-[calc(100dvh-2rem)]">
+        <DialogHeader className="shrink-0">
+          <div className="min-w-0 space-y-2 pr-2">
+            <DialogTitle className="whitespace-normal break-words text-base leading-6 sm:text-lg">
+              {item.title}
+            </DialogTitle>
             <Badge variant="secondary">{item.typeLabel}</Badge>
           </div>
         </DialogHeader>
-        <DialogDescription className="space-y-1 py-3">
-          {sourceText ? <div>{sourceText}</div> : null}
-          {createdAt ? <div>创建于 {createdAt}</div> : null}
-          {updatedAt ? <div>更新于 {updatedAt}</div> : null}
-          {item.cfi ? <div className="break-all">位置: {item.cfi}</div> : null}
+        <DialogDescription asChild>
+          <div className="shrink-0 space-y-1 px-4 py-3 text-muted-foreground text-sm">
+            {sourceText ? <div className="break-words">{sourceText}</div> : null}
+            {createdAt ? <div>创建于 {createdAt}</div> : null}
+            {updatedAt ? <div>更新于 {updatedAt}</div> : null}
+            {item.cfi ? <div className="break-all">位置: {item.cfi}</div> : null}
+          </div>
         </DialogDescription>
-        <ScrollArea className="max-h-[60dvh] min-h-40 px-4 pb-4">
-          <div className="whitespace-pre-wrap break-words text-foreground text-sm leading-7">{item.body}</div>
+        <ScrollArea className="min-h-0 flex-1 px-4">
+          <div className="whitespace-pre-wrap break-words pb-4 text-foreground text-sm leading-7">{item.body}</div>
         </ScrollArea>
+        {readerTarget && onOpenReaderTarget ? (
+          <DialogFooter className="shrink-0 border-t p-3 pt-3">
+            <Button
+              type="button"
+              className="h-11 w-full sm:w-auto"
+              onClick={() => {
+                onOpenChange(false);
+                onOpenReaderTarget(readerTarget);
+              }}
+            >
+              <BookOpen className="size-4" />
+              {readerTarget.cfi ? "打开原文" : "打开书籍"}
+            </Button>
+          </DialogFooter>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
 }
 
-export function UnifiedNotesList({ activeType, bookId, onTypeChange, variant = "mobile" }: UnifiedNotesListProps) {
+export function UnifiedNotesList({
+  activeType,
+  bookId,
+  onOpenReaderTarget,
+  onTypeChange,
+  variant = "mobile",
+}: UnifiedNotesListProps) {
   const { data = [], isLoading, error } = useUnifiedNotes({ bookId, type: activeType });
   const [selectedItem, setSelectedItem] = useState<UnifiedNoteItem | null>(null);
   const styles = LIST_STYLES[variant];
@@ -171,6 +208,7 @@ export function UnifiedNotesList({ activeType, bookId, onTypeChange, variant = "
 
       <UnifiedNoteDetailDialog
         item={selectedItem}
+        onOpenReaderTarget={onOpenReaderTarget}
         open={selectedItem !== null}
         onOpenChange={(open) => {
           if (!open) setSelectedItem(null);

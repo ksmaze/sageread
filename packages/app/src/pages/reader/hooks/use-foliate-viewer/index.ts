@@ -42,6 +42,7 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
 
     console.log("[useFoliateViewer] Starting initialization");
     isInitialized.current = true;
+    store.getState().setViewerReady(false);
 
     const manager = new FoliateViewerManager({
       bookId,
@@ -73,6 +74,7 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
     manager
       .initialize()
       .then(() => {
+        store.getState().setViewerReady(true);
         forceUpdate({});
       })
       .catch((error) => {
@@ -85,6 +87,7 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
         managerRef.current = null;
       }
       viewRef.current = null;
+      store.getState().setViewerReady(false);
       isInitialized.current = false;
     };
   }, []);

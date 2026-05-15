@@ -29,6 +29,12 @@ export interface UnifiedNoteItem {
   source: Note | BookNote;
 }
 
+export interface UnifiedNoteReaderTarget {
+  bookId: string;
+  title: string;
+  cfi?: string;
+}
+
 export const UNIFIED_NOTE_FILTERS: UnifiedNoteFilter[] = [
   { id: "all", label: "全部" },
   { id: "note", label: "笔记" },
@@ -96,4 +102,14 @@ export function filterUnifiedNotesByType(items: UnifiedNoteItem[], type: Unified
   }
 
   return items.filter((item) => item.type === type);
+}
+
+export function getUnifiedNoteReaderTarget(item: UnifiedNoteItem): UnifiedNoteReaderTarget | null {
+  if (!item.bookId) return null;
+
+  return {
+    bookId: item.bookId,
+    title: cleanText(item.bookTitle) || item.title,
+    ...(item.cfi ? { cfi: item.cfi } : {}),
+  };
 }

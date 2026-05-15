@@ -17,6 +17,9 @@ const ReaderViewerContent: React.FC = () => {
   const bookId = useReaderStore((state) => state.bookId);
   const bookData = useReaderStore((state) => state.bookData);
   const config = useReaderStore((state) => state.config);
+  const view = useReaderStore((state) => state.view);
+  const isViewerReady = useReaderStore((state) => state.isViewerReady);
+  const pendingNavigationTarget = useReaderStore((state) => state.pendingNavigationTarget);
   const { settings } = useAppSettingsStore();
 
   const screenInsets = useSafeAreaInsets();
@@ -51,6 +54,17 @@ const ReaderViewerContent: React.FC = () => {
   }
 
   const foliateViewer = useFoliateViewer(bookId, bookData.bookDoc, config, contentInsets);
+
+  useEffect(() => {
+    if (!view || !isViewerReady || !pendingNavigationTarget) return;
+
+    try {
+      view.goTo(pendingNavigationTarget.cfi);
+      store.getState().clearNavigationTarget(pendingNavigationTarget);
+    } catch (error) {
+      console.error("[ReaderViewer] Failed to navigate to pending note target:", error);
+    }
+  }, [isViewerReady, pendingNavigationTarget, view]);
 
   return (
     <div ref={foliateViewer.containerRef} className="flex-1" data-book-id={bookId} {...foliateViewer.mouseHandlers} />
