@@ -30,6 +30,7 @@ dist-ssr
 .cursor/mcp.json
 .mcp-feedback-port
 target/
+.worktrees/
 
 .mcp-feedback-port
 
