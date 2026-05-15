@@ -22,7 +22,7 @@ export function LibraryDestination() {
 
   return (
     <MobileSurface className="pb-20 md:pb-0">
-      <LibraryPage />
+      <LibraryPage renderSettingsDialog={false} />
     </MobileSurface>
   );
 }

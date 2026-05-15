@@ -21,7 +21,11 @@ import { useLibraryUI } from "./hooks/use-library-ui";
 import { useTagsManagement } from "./hooks/use-tags-management";
 import { useTagsOperations } from "./hooks/use-tags-operations";
 
-export default function NewLibraryPage() {
+interface LibraryPageProps {
+  renderSettingsDialog?: boolean;
+}
+
+export default function NewLibraryPage({ renderSettingsDialog = true }: LibraryPageProps) {
   const { searchQuery, booksWithStatus, isLoading, refreshBooks } = useLibraryStore();
   const { isSettingsDialogOpen, toggleSettingsDialog } = useAppSettingsStore();
   const insets = useSafeAreaInsets();
@@ -211,7 +215,7 @@ export default function NewLibraryPage() {
         onRefreshBooks={refreshBooks}
       />
 
-      <SettingsDialog open={isSettingsDialogOpen} onOpenChange={toggleSettingsDialog} />
+      {renderSettingsDialog && <SettingsDialog open={isSettingsDialogOpen} onOpenChange={toggleSettingsDialog} />}
     </div>
   );
 }
