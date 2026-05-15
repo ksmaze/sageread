@@ -67,19 +67,7 @@ Use `pnpm --filter app build` as the main automated verification gate because th
 * Modify: `packages/app/src/index.css`
 * Test: `pnpm --filter app build`
 
-- [ ] **Step 1: Add mobile imports to force the first compile gate**
-
-Modify `packages/app/src/main.tsx` temporarily to import the future shell:
-
-```tsx
-import AndroidAppShell from "./mobile/app-shell.tsx";
-```
-
-Run: `pnpm --filter app build`
-
-Expected: FAIL with a TypeScript module resolution error for `./mobile/app-shell.tsx`. This confirms the build gate will catch missing mobile layer files.
-
-- [ ] **Step 2: Create shared mobile types**
+- [ ] **Step 1: Create shared mobile types**
 
 Create `packages/app/src/mobile/types.ts`:
 
@@ -106,7 +94,7 @@ export interface MobileDestinationDefinition {
 }
 ```
 
-- [ ] **Step 3: Create destination constants**
+- [ ] **Step 2: Create destination constants**
 
 Create `packages/app/src/mobile/constants.ts`:
 
@@ -132,7 +120,7 @@ export function isMobileDestination(value: string): value is MobileDestination {
 }
 ```
 
-- [ ] **Step 4: Add mobile design tokens**
+- [ ] **Step 3: Add mobile design tokens**
 
 Append this block to `packages/app/src/index.css`:
 
@@ -180,16 +168,16 @@ Append this block to `packages/app/src/index.css`:
 }
 ```
 
-- [ ] **Step 5: Run the build gate**
+- [ ] **Step 4: Run the build gate**
 
 Run: `pnpm --filter app build`
 
-Expected: still FAIL only because `AndroidAppShell` does not exist yet. If additional type or CSS errors appear, fix them before proceeding.
+Expected: PASS.
 
-- [ ] **Step 6: Commit Task 1**
+- [ ] **Step 5: Commit Task 1**
 
 ```bash
-git add packages/app/src/mobile/types.ts packages/app/src/mobile/constants.ts packages/app/src/index.css packages/app/src/main.tsx
+git add packages/app/src/mobile/types.ts packages/app/src/mobile/constants.ts packages/app/src/index.css
 git commit -m "feat: add Android mobile design foundations"
 ```
 
@@ -441,7 +429,7 @@ export function MobileSheet({
 
 Run: `pnpm --filter app build`
 
-Expected: FAIL only because `packages/app/src/mobile/app-shell.tsx` is still missing from Task 1's temporary import.
+Expected: PASS.
 
 - [ ] **Step 7: Commit Task 2**
 
