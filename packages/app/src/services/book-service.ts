@@ -24,6 +24,7 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { appDataDir, tempDir } from "@tauri-apps/api/path";
 import { join } from "@tauri-apps/api/path";
 import { writeFile } from "@tauri-apps/plugin-fs";
+import { toGetBooksBackendOptions } from "./book-query-options";
 
 export async function uploadBook(file: File): Promise<SimpleBook> {
   try {
@@ -102,7 +103,7 @@ async function extractMetadataOnly(file: File): Promise<any> {
 
 export async function getBooks(options: BookQueryOptions = {}): Promise<SimpleBook[]> {
   try {
-    const result = await invoke<SimpleBook[]>("get_books", { options });
+    const result = await invoke<SimpleBook[]>("get_books", { options: toGetBooksBackendOptions(options) });
     return result;
   } catch (error) {
     console.error("获取书籍列表失败:", error);

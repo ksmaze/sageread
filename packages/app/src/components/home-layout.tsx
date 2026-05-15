@@ -1,6 +1,7 @@
 import SettingsDialog from "@/components/settings/settings-dialog";
 import { useBookUpload } from "@/hooks/use-book-upload";
 import { useSafeAreaInsets } from "@/hooks/use-safe-areaInsets";
+import { UnifiedNotesPage } from "@/mobile/notes/unified-notes-page";
 import ChatPage from "@/pages/chat";
 import LibraryPage from "@/pages/library";
 import SkillsPage from "@/pages/skills";
@@ -13,15 +14,6 @@ import { Upload as UploadIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Route, Routes } from "react-router";
 import Sidebar from "./sidebar";
-
-const NotesPage = () => (
-  <div className="flex-1 space-y-6 p-4">
-    <div className="space-y-2">
-      <h1 className="font-bold text-3xl text-neutral-900 dark:text-neutral-100">笔记</h1>
-      <p className="text-neutral-600 dark:text-neutral-400">笔记功能开发中...</p>
-    </div>
-  </div>
-);
 
 const HomeLayout = () => {
   const { refreshBooks } = useLibraryStore();
@@ -120,7 +112,7 @@ const HomeLayout = () => {
               path="/notes"
               element={
                 <div className="flex h-full flex-1 flex-col rounded-xl border bg-background shadow-around">
-                  <NotesPage />
+                  <UnifiedNotesPage className="p-4" variant="desktop" />
                 </div>
               }
             />

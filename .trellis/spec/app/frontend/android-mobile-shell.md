@@ -61,6 +61,13 @@ createRoot(document.getElementById("root")!).render(
 - `ReaderSheetHost` renders real reader tool content in `MobileSheet`.
 - Android/browser back should close the active reader sheet, then hide reader chrome, then close the reader.
 
+## Unified Notes Contracts
+
+- `mobile/notes/unified-note-model.ts` is the source of truth for mapping standalone `Note` records and `BookNote` records into display items.
+- Keep type labels and filters in the shared model (`UNIFIED_NOTE_TYPE_LABELS`, `UNIFIED_NOTE_FILTERS`) instead of duplicating `"笔记"`, `"标注"`, `"摘录"`, or `"书签"` labels in page components.
+- `UnifiedNotesPage` owns destination-level filter state and may be reused by `NotesDestination` and legacy `HomeLayout` `/notes`; do not create a second app-level notes page with separate mapping logic.
+- Unified notes cards should expose enough content to identify the record: title, body preview, type label, source book/author when available, and updated time. Full content belongs in the detail dialog.
+
 ## Settings Contract
 
 - Settings are shared with the existing `SettingsDialog`.
@@ -121,6 +128,7 @@ Manual or device-emulated checks should cover:
 - Reader TOC/search/style/notes/AI sheets and text selection popups.
 - Global AI chat and reader-scoped AI chat.
 - Unified Notes filters and reader-scoped notes.
+- Unified Notes model mapping with a focused `tsx --test` regression when display fields or supported note types change.
 - Stats scroll behavior.
 - Settings access for general, providers, models, fonts, TTS, and vector model settings.
 

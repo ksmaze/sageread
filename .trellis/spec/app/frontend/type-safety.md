@@ -64,6 +64,10 @@ const validation = useMemo(() => {
 
 For uploaded files, validate against `FILE_ACCEPT_FORMATS` / `SUPPORTED_FILE_EXTS` before calling `uploadBook`.
 
+## Service Boundary Mapping
+
+Keep frontend-friendly domain options separate from backend command payloads when the backend expects database-shaped names. For `getBooks`, `BookQueryOptions.sortBy` uses camelCase values such as `"updatedAt"` and `"createdAt"`, while the Tauri `get_books` command orders by SQLite columns such as `updated_at` and `created_at`. Use `toGetBooksBackendOptions` in `services/book-service.ts` instead of passing UI query options directly to `invoke("get_books")`.
+
 ## Common Patterns
 
 ### Union Types for UI Modes
