@@ -341,3 +341,45 @@ foliate-view {
       1px 1px 3px 0 rgba(0, 0, 0, 0.15);
   }
 }
+
+@layer base {
+  :root {
+    --mobile-paper: #f6faff;
+    --mobile-paper-low: #ecf5fe;
+    --mobile-paper-high: #ffffff;
+    --mobile-ink: #141d23;
+    --mobile-ink-muted: #44474a;
+    --mobile-outline: #c5c6ca;
+    --mobile-ai: #3a5a40;
+    --mobile-ai-soft: #c7ecca;
+    --mobile-danger: #ba1a1a;
+    --mobile-radius-sm: 0.25rem;
+    --mobile-radius-md: 0.5rem;
+    --mobile-radius-lg: 0.75rem;
+    --mobile-touch-target: 44px;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .px-safe {
+    padding-left: max(env(safe-area-inset-left), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+
+  .mobile-paper {
+    background: var(--mobile-paper);
+    color: var(--mobile-ink);
+  }
+
+  .mobile-tonal-border {
+    border-color: var(--mobile-outline);
+  }
+}
