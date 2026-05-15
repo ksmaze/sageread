@@ -118,3 +118,37 @@ Redesigned the app frontend around the Android phone/tablet shell, connected exi
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Fix reader font select options
+
+**Date**: 2026-05-15
+**Task**: Fix reader font select options
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Fixed reader font-family select options in the Android reader style sheet by raising the portalled select content above the reader sheet and documented Radix/reader sheet stacking conventions.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `080c1c5` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

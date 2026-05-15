@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 3
+- **Total Sessions**: 4
 - **Last Active**: 2026-05-15
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~120 | Active |
+| `journal-1.md` | ~154 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 4 | 2026-05-15 | Fix reader font select options | `080c1c5` | `main` |
 | 3 | 2026-05-15 | Android mobile frontend redesign | `b84aae6`, `ef59f92`, `62fffb5`, `4ea349b`, `6945132`, `cc81042`, `0b7e86f`, `4c3250b`, `a7395d2`, `80c6efd`, `e384709`, `72e1fe1` | `main` |
 | 2 | 2026-05-14 | Bootstrap app frontend specs | `eb54263` | `main` |
 | 1 | 2026-05-13 | Capture desktop app design spec | `896a07b` | `main` |
