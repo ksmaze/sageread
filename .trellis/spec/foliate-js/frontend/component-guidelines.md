@@ -1,59 +1,95 @@
 # Component Guidelines
 
-> How components are built in this project.
+> How UI components and custom elements are built in `packages/foliate-js`.
 
 ---
 
 ## Overview
 
-<!--
-Document your project's component conventions here.
+`foliate-js` components are native custom elements and DOM helper factories, not React components. Public renderer components are registered with `customElements.define()` and communicate through methods, attributes, parts, and `CustomEvent` details.
 
-Questions to answer:
-- What component patterns do you use?
-- How are props defined?
-- How do you handle composition?
-- What accessibility standards apply?
--->
+Core custom elements:
 
-(To be filled by the team)
-
----
+- `foliate-view` from `view.js`
+- `foliate-paginator` from `paginator.js`
+- `foliate-fxl` from `fixed-layout.js`
+- `foliate-quoteimage` from `quote-image.js`
 
 ## Component Structure
 
-<!-- Standard structure of a component file -->
+Use classes extending `HTMLElement` for custom elements. Keep private state in class private fields and expose a small method/attribute surface.
 
-(To be filled by the team)
+```js
+export class View extends HTMLElement {
+    #root = this.attachShadow({ mode: 'closed' })
+    #sectionProgress
+    #tocProgress
+    #pageProgress
+    #searchResults = new Map()
 
----
+    async open(book) {
+        if (typeof book === 'string' || typeof book.arrayBuffer === 'function' || book.isDirectory)
+            book = await makeBook(book)
+        this.book = book
+        // initialize renderer and progress helpers
+    }
+}
+
+customElements.define('foliate-view', View)
+```
+
+For non-custom-element UI helpers, return plain DOM elements and methods. `ui/tree.js` returns `{ element, setCurrentHref }`; `ui/menu.js` returns a menu element.
 
 ## Props Conventions
 
-<!-- How props should be defined and typed -->
+There are no React props. Use these surfaces instead:
 
-(To be filled by the team)
+- Methods for actions: `open(book)`, `goTo(target)`, `prev()`, `next()`.
+- Attributes for renderer configuration, such as `animated`, `flow`, `margin`, `gap`, `max-inline-size`, `max-block-size`, and `max-column-count` on the paginator.
+- Custom events for outbound state: `load`, `relocate`, `create-overlayer`, and renderer-specific progress events.
+- CSS parts for styling controlled internals: `filter`, `head`, and `foot`.
 
----
+Do not add a JS property API where the README says an attribute API is the current contract.
+
+## Composition Patterns
+
+`foliate-view` composes lower-level renderers based on book layout:
+
+```js
+if (this.isFixedLayout) {
+    await import('./fixed-layout.js')
+    this.renderer = document.createElement('foliate-fxl')
+} else {
+    await import('./paginator.js')
+    this.renderer = document.createElement('foliate-paginator')
+}
+```
+
+Keep optional format and renderer modules dynamically imported so the library stays modular and avoids hard dependencies until a file type needs them.
 
 ## Styling Patterns
 
-<!-- How styles are applied (CSS modules, styled-components, Tailwind, etc.) -->
+- Custom elements attach shadow roots where internals need encapsulation.
+- Expose styling through CSS parts instead of requiring consumers to pierce internals.
+- Use inline styles only for generated DOM helpers or layout state calculated at runtime.
+- Preserve the `::part(filter)` contract for book-content filters and overlayer separation.
 
-(To be filled by the team)
-
----
+```css
+foliate-view::part(filter) {
+    filter: invert(1) hue-rotate(180deg);
+}
+```
 
 ## Accessibility
 
-<!-- A11y requirements and patterns -->
-
-(To be filled by the team)
-
----
+- Demo UI helpers should use semantic roles where they implement widgets. `ui/tree.js` uses `role="tree"`, `role="treeitem"`, `role="group"`, `aria-expanded`, and `aria-current`.
+- Keyboard behavior belongs with the DOM helper that creates the interactive structure.
+- Renderer internals must preserve selection and text ranges because annotation, search, TTS, and CFI features depend on DOM `Range` fidelity.
+- Do not hide book content from assistive technologies unless the rendering mode has a documented reason.
 
 ## Common Mistakes
 
-<!-- Component-related mistakes your team has made -->
-
-(To be filled by the team)
+- Adding React components or JSX to `foliate-js`; framework wrappers belong in consumers.
+- Emitting plain `Event` when consumers need structured details. Use `CustomEvent` with a documented `detail` shape.
+- Breaking `customElements.define()` side effects by moving registration out of module load without updating consumers.
+- Styling internals through undocumented selectors instead of public parts or generated element contracts.

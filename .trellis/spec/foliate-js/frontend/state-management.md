@@ -1,51 +1,104 @@
 # State Management
 
-> How state is managed in this project.
+> How state is managed in `packages/foliate-js`.
 
 ---
 
 ## Overview
 
-<!--
-Document your project's state management conventions here.
-
-Questions to answer:
-- What state management solution do you use?
-- How is local vs global state decided?
-- How do you handle server state?
-- What are the patterns for derived state?
--->
-
-(To be filled by the team)
-
----
+`foliate-js` uses instance-local state, private class fields, maps, DOM attributes, and custom events. It has no global app store and no persisted application state. Consumers such as `packages/app` own persistence, user settings, note state, and reader tab state.
 
 ## State Categories
 
-<!-- Local state, global state, server state, URL state -->
+### Custom Element Instance State
 
-(To be filled by the team)
+Custom elements keep state on the element instance:
 
----
+- `View` stores `book`, `renderer`, `history`, progress helpers, search results, current layout flags, and last location.
+- `Paginator` stores iframe/view state, selection state, pagination dimensions, anchors, and animation state.
+- `FixedLayout` stores fixed-page rendering state.
+
+Prefer private fields for internal state:
+
+```js
+export class View extends HTMLElement {
+    #sectionProgress
+    #tocProgress
+    #pageProgress
+    #searchResults = new Map()
+    history = new History()
+}
+```
+
+### Interface State
+
+Book state is represented by plain objects that implement the README-documented book interface:
+
+- `sections`
+- `metadata`
+- `toc`
+- `pageList`
+- `rendition`
+- `resolveHref(href)`
+- `resolveCFI(cfi)`
+- optional transform and TOC helper methods
+
+Do not introduce a shared base class just to satisfy this interface; current adapters return compatible objects.
+
+### DOM and Attribute State
+
+Renderer configuration is often stored as attributes because custom elements are configured from the DOM:
+
+- paginator `flow`
+- `animated`
+- margin and gap attributes
+- maximum inline/block size and column count
+
+Selection and location state often uses live DOM `Range`, `Element`, and `Document` objects. Preserve those shapes because CFI, annotations, search, and TTS consume them.
+
+### Event State
+
+Outbound state changes are published with events. Use event detail objects for structured state:
+
+- `relocate` reports current reading location
+- `load` reports loaded document and section index
+- `create-overlayer` lets consumers attach an overlayer to a page
 
 ## When to Use Global State
 
-<!-- Criteria for promoting state to global -->
+Do not add global state to `foliate-js`. If a value is user preference or application workflow state, it belongs in the consumer.
 
-(To be filled by the team)
+Appropriate local state:
 
----
+- current renderer instance
+- current book object
+- pending animation or resize observers
+- per-view history
+- in-memory search result map
+
+Inappropriate local state:
+
+- last-opened book list
+- app theme settings
+- reader tab order
+- annotation database
 
 ## Server State
 
-<!-- How server data is cached and synchronized -->
+The package has no server-state cache. Network access is direct `fetch` for URL inputs and OPDS/helper consumers. Callers are responsible for request policy, caching, authentication, offline storage, and retry behavior.
 
-(To be filled by the team)
+## Derived State
 
----
+Keep derived state close to its source:
+
+- `SectionProgress` derives location/time progress from section sizes.
+- `TOCProgress` derives current TOC item from section IDs and DOM ranges.
+- `languageInfo()` derives locale, CJK, and direction data from book metadata.
+- `getDirection()` derives writing mode and RTL state from rendered document styles.
 
 ## Common Mistakes
 
-<!-- State management mistakes your team has made -->
-
-(To be filled by the team)
+- Persisting app settings in a custom element. Consumers must store settings and set attributes or call methods.
+- Replacing `Range` or `Element` values with serialized strings too early. Many features need live DOM objects.
+- Sharing one mutable singleton across multiple reader instances.
+- Making format adapters depend on `View` internals instead of the documented book interface.

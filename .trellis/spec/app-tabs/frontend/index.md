@@ -1,12 +1,12 @@
 # Frontend Development Guidelines
 
-> Best practices for frontend development in this project.
+> Best practices for frontend development in `packages/app-tabs`.
 
 ---
 
 ## Overview
 
-This directory contains guidelines for frontend development. Fill in each file with your project's specific conventions.
+This directory contains the current frontend conventions for `packages/app-tabs`, the private React tab-strip bridge used by the desktop app shell.
 
 ---
 
@@ -14,25 +14,18 @@ This directory contains guidelines for frontend development. Fill in each file w
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization and file layout | To fill |
-| [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | To fill |
-| [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | To fill |
-| [State Management](./state-management.md) | Local state, global state, server state | To fill |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
-| [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
+| [Directory Structure](./directory-structure.md) | Module organization and file layout | Captured |
+| [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | Captured |
+| [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | Captured |
+| [State Management](./state-management.md) | Local state, global state, server state | Captured |
+| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | Captured |
+| [Type Safety](./type-safety.md) | Type patterns, validation | Captured |
 
 ---
 
-## How to Fill These Guidelines
+## Maintenance Rule
 
-For each guideline file:
-
-1. Document your project's **actual conventions** (not ideals)
-2. Include **code examples** from your codebase
-3. List **forbidden patterns** and why
-4. Add **common mistakes** your team has made
-
-The goal is to help AI assistants and new team members understand how YOUR project works.
+When the `app-tabs` public API, DOM controller, hook bridge, CSS selectors, or app integration contract changes, update the matching spec file in the same task. Document actual current behavior, not aspirational patterns.
 
 ---
 
