@@ -73,3 +73,48 @@ Filled the app frontend spec files from the generated desktop design doc and cur
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Android mobile frontend redesign
+
+**Date**: 2026-05-15
+**Task**: Android mobile frontend redesign
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Redesigned the app frontend around the Android phone/tablet shell, connected existing library, reader, notes, AI, stats, and settings workflows, documented the shell contracts, and fixed mobile dark-mode rendering tokens.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b84aae6` | (see git log) |
+| `ef59f92` | (see git log) |
+| `62fffb5` | (see git log) |
+| `4ea349b` | (see git log) |
+| `6945132` | (see git log) |
+| `cc81042` | (see git log) |
+| `0b7e86f` | (see git log) |
+| `4c3250b` | (see git log) |
+| `a7395d2` | (see git log) |
+| `80c6efd` | (see git log) |
+| `e384709` | (see git log) |
+| `72e1fe1` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
