@@ -53,7 +53,7 @@ export function UnifiedNotesList({ bookId, activeType, onTypeChange }: UnifiedNo
             className={cn(
               "h-8 shrink-0 rounded-full border px-3 text-sm mobile-tonal-border",
               activeType === filter.id &&
-                "bg-[var(--mobile-ink)] text-white hover:bg-[var(--mobile-ink)] hover:text-white",
+                "bg-[var(--mobile-control-fill)] text-[var(--mobile-on-control)] hover:bg-[var(--mobile-control-fill)] hover:text-[var(--mobile-on-control)]",
             )}
             onClick={() => onTypeChange(filter.id)}
           >

@@ -75,6 +75,12 @@ createRoot(document.getElementById("root")!).render(
 - Use `mobile-scroll-area` for sheet and destination scroll containers to contain overscroll.
 - Reader selection popups sit above the dock (`z-[80]`); active sheet content sits above them (`z-[100]`).
 
+## Color Token Contracts
+
+- Mobile shell colors live in `packages/app/src/index.css` as `--mobile-*` tokens.
+- Every mobile surface token used for backgrounds and text must have a `.dark` override. Otherwise legacy child pages with `dark:text-*` classes can render light text on light mobile surfaces.
+- Do not reuse `--mobile-ink` as a filled-control background. In dark mode `--mobile-ink` is the foreground text color. Use `--mobile-control-fill` with `--mobile-on-control` for reader docks, selected chips, and other filled Android controls.
+
 ## Validation & Error Matrix
 
 | Condition | Required behavior |

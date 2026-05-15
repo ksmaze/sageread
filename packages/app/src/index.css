@@ -352,11 +352,27 @@ foliate-view {
     --mobile-outline: #c5c6ca;
     --mobile-ai: #3a5a40;
     --mobile-ai-soft: #c7ecca;
+    --mobile-control-fill: #141d23;
+    --mobile-on-control: #ffffff;
     --mobile-danger: #ba1a1a;
     --mobile-radius-sm: 0.25rem;
     --mobile-radius-md: 0.5rem;
     --mobile-radius-lg: 0.75rem;
     --mobile-touch-target: 44px;
+  }
+
+  .dark {
+    --mobile-paper: #101412;
+    --mobile-paper-low: #171c18;
+    --mobile-paper-high: #1d211e;
+    --mobile-ink: #edf2ec;
+    --mobile-ink-muted: #b7c0b8;
+    --mobile-outline: #3f4941;
+    --mobile-ai: #a7d4aa;
+    --mobile-ai-soft: #263528;
+    --mobile-control-fill: #c7ecca;
+    --mobile-on-control: #102015;
+    --mobile-danger: #ffb4ab;
   }
 }
 
