@@ -175,6 +175,8 @@ Redesign the application frontend as an Android mobile/tablet-only reading app w
 * Design section approved: Stitch-derived visual/component language. User confirmed calm paper surfaces, reader-first typography, restrained chat UI, chips/progress, low borders, and muted AI green look good.
 * Design section approved: workflow/data-flow. User confirmed the Android shell state model, single active reader flow, unified notes flow, chat-first AI context flow, and inline/retry error handling look good.
 * Design section approved: testing/acceptance. User confirmed build/type quality, behavior preservation checks, responsive visual checks, and reachable Android flows for all current user-facing features look good.
+* Written design spec approved by user.
+* Implementation plan written: `docs/superpowers/plans/2026-05-15-android-mobile-frontend-redesign.md`.
 
 ## Decision (ADR-lite)
 
