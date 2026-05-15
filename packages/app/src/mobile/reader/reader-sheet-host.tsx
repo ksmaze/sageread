@@ -1,9 +1,9 @@
 import { NotepadContainer } from "@/components/notepad";
-import SideChat from "@/components/side-chat";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { ReaderSearchPanel } from "@/pages/reader/components/search-dropdown";
 import { ReaderStylePanel } from "@/pages/reader/components/settings-dropdown";
 import TOCView from "@/pages/reader/components/toc-view";
+import { MobileAiChat } from "../ai/mobile-ai-chat";
 import { MobileSheet } from "../components/mobile-sheet";
 import { useMobileShellStore } from "../shell/mobile-shell-store";
 
@@ -35,7 +35,7 @@ function ReaderSheetContent() {
     case "notes":
       return <NotepadContainer bookId={activeBook.id} />;
     case "ai":
-      return <SideChat bookId={activeBook.id} />;
+      return <MobileAiChat bookId={activeBook.id} />;
     case "style":
       return <ReaderStylePanel />;
   }
