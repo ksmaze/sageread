@@ -57,7 +57,11 @@ const ReaderViewerContent: React.FC = () => {
   );
 };
 
-export default function ReaderViewer() {
+interface ReaderViewerProps {
+  mobileChrome?: boolean;
+}
+
+export default function ReaderViewer({ mobileChrome = false }: ReaderViewerProps) {
   const store = useReaderStoreApi();
   useBookShortcuts();
 
@@ -73,7 +77,7 @@ export default function ReaderViewer() {
   // 判断当前 tab 是否可见（不在首页 && 当前激活的 tab）
   const { activeTabId, isHomeActive } = useLayoutStore();
   const tabId = `reader-${bookId}`;
-  const isTabVisible = !isHomeActive && activeTabId === tabId;
+  const isTabVisible = mobileChrome || (!isHomeActive && activeTabId === tabId);
 
   const { sessionStats, isInitialized: isSessionInitialized } = useReadingSession(bookId, {
     saveInterval: 5 * 1000,
@@ -115,9 +119,9 @@ export default function ReaderViewer() {
 
   return (
     <div id={`gridcell-${bookId}`} className="relative flex h-full w-full flex-col rounded-md bg-background">
-      <HeaderBar />
+      {!mobileChrome && <HeaderBar />}
       <ReaderViewerContent />
-      <FooterBar />
+      {!mobileChrome && <FooterBar />}
       <Annotator />
     </div>
   );

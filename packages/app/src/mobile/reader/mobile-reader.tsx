@@ -1,24 +1,63 @@
 import ReaderViewer from "@/pages/reader";
 import { ReaderProvider } from "@/pages/reader/components/reader-provider";
 import { createReaderStore } from "@/pages/reader/store/create-reader-store";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { ReaderToolDock } from "../components/reader-tool-dock";
 import { useMobileShellStore } from "../shell/mobile-shell-store";
+import { handleMobileReaderBack } from "./reader-back-handlers";
+import { ReaderSheetHost } from "./reader-sheet-host";
 
 export function MobileReader() {
   const activeBook = useMobileShellStore((state) => state.activeBook);
   const isReaderOpen = useMobileShellStore((state) => state.isReaderOpen);
+  const isReaderChromeVisible = useMobileShellStore((state) => state.isReaderChromeVisible);
+  const toggleReaderChrome = useMobileShellStore((state) => state.toggleReaderChrome);
+  const openReaderSheet = useMobileShellStore((state) => state.openReaderSheet);
+  const activeBookId = activeBook?.id;
 
   const readerStore = useMemo(() => {
-    if (!activeBook || !isReaderOpen) return null;
-    return createReaderStore(activeBook.id);
-  }, [activeBook, isReaderOpen]);
+    if (!activeBookId || !isReaderOpen) return null;
+    return createReaderStore(activeBookId);
+  }, [activeBookId, isReaderOpen]);
+
+  useEffect(() => {
+    if (!activeBookId || !isReaderOpen) return;
+
+    const onPopState = () => {
+      if (handleMobileReaderBack()) {
+        window.history.pushState({ mobileReader: true }, "");
+      }
+    };
+
+    window.history.pushState({ mobileReader: true }, "");
+    window.addEventListener("popstate", onPopState);
+
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [activeBookId, isReaderOpen]);
+
+  useEffect(() => {
+    if (!activeBookId || !isReaderOpen) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "iframe-single-click" && event.data?.bookId === activeBookId) {
+        toggleReaderChrome();
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [activeBookId, isReaderOpen, toggleReaderChrome]);
 
   if (!activeBook || !isReaderOpen || !readerStore) return null;
 
   return (
     <ReaderProvider store={readerStore}>
       <div className="fixed inset-0 z-50 bg-[var(--mobile-paper-high)]">
-        <ReaderViewer />
+        <ReaderViewer mobileChrome />
+        <ReaderToolDock visible={isReaderChromeVisible} onOpenSheet={openReaderSheet} />
+        <ReaderSheetHost />
       </div>
     </ReaderProvider>
   );
