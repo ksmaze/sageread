@@ -186,3 +186,37 @@ Implemented a reusable unified notes page for home and mobile notes, added note/
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: Fix notes detail reader navigation
+
+**Date**: 2026-05-15
+**Task**: Fix notes detail reader navigation
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Fixed unified notes detail dialogs so long content scrolls instead of clipping, added reader actions for book-linked notes, and introduced a pending reader navigation target so notes can open books and jump to CFI after foliate is ready.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f4f4f04` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
