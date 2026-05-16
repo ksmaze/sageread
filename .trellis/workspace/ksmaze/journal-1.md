@@ -254,3 +254,37 @@ Fixed mobile AI blank initialization, replaced desktop chat shell with a mobile-
 ### Next Steps
 
 - None - task complete
+
+
+## Session 8: Fix mobile settings surfaces
+
+**Date**: 2026-05-15
+**Task**: Fix mobile settings surfaces
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Removed duplicate AI settings entry and made the settings dialog viewport-constrained for tablet portrait.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f58d6f4` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
