@@ -67,17 +67,6 @@
         }
       ]
     },
-    "epub:default",
-    "shell:allow-execute",
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "binaries/woff2_compress",
-          "sidecar": true,
-          "args": true
-        }
-      ]
-    }
+    "epub:default"
   ]
 }

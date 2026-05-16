@@ -75,8 +75,6 @@ max_journal_lines: 2000
 packages:
   app:
     path: packages/app
-  app-tabs:
-    path: packages/app-tabs
   foliate-js:
     path: packages/foliate-js
 default_package: app

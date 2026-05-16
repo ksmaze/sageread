@@ -2,7 +2,7 @@ import { tauriStorageKey } from "@/constants/tauri-storage";
 import { tauriStorage } from "@/lib/tauri-storage";
 import type { ReaderNavigationTarget, ReaderStore } from "@/pages/reader/store/create-reader-store";
 import { createReaderStore } from "@/pages/reader/store/create-reader-store";
-import type { TabProperties } from "app-tabs";
+import type { TabProperties } from "@/types/tabs";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 

@@ -1,6 +1,5 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useLayoutStore } from "@/store/layout-store";
-import { useThemeStore } from "@/store/theme-store";
 import { TableOfContents } from "lucide-react";
 import { useRef } from "react";
 import {
@@ -26,7 +25,6 @@ const HeaderBar = () => {
   const section = progress?.sectionLabel || "";
 
   const { isChatVisible, isNotepadVisible, toggleChatSidebar, toggleNotepadSidebar } = useLayoutStore();
-  const { swapSidebars } = useThemeStore();
 
   const isTocDropdownOpen = openDropdown === "toc";
 
@@ -61,9 +59,9 @@ const HeaderBar = () => {
         >
           <div
             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full"
-            onClick={swapSidebars ? toggleChatSidebar : toggleNotepadSidebar}
+            onClick={toggleNotepadSidebar}
           >
-            {(swapSidebars ? isChatVisible : isNotepadVisible) ? (
+            {isNotepadVisible ? (
               <TbLayoutSidebarLeftCollapseFilled className="size-5 text-neutral-700 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200" />
             ) : (
               <TbLayoutSidebarLeftCollapse className="size-5 text-neutral-700 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200" />
@@ -131,9 +129,9 @@ const HeaderBar = () => {
           <SettingsDropdown />
           <div
             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full"
-            onClick={swapSidebars ? toggleNotepadSidebar : toggleChatSidebar}
+            onClick={toggleChatSidebar}
           >
-            {(swapSidebars ? isNotepadVisible : isChatVisible) ? (
+            {isChatVisible ? (
               <TbLayoutSidebarRightCollapseFilled className="size-5 text-neutral-700 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200" />
             ) : (
               <TbLayoutSidebarRightCollapse className="size-5 text-neutral-700 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200" />

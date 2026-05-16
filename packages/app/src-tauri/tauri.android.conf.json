@@ -11,15 +11,9 @@
   },
   "bundle": {
     "active": true,
-    "createUpdaterArtifacts": false,
     "externalBin": [],
     "android": {
       "minSdkVersion": 28
-    }
-  },
-  "plugins": {
-    "updater": {
-      "active": false
     }
   }
 }

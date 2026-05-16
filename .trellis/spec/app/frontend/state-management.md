@@ -14,9 +14,9 @@ The app uses Zustand for client state, TanStack React Query for async/server-lik
 
 Use `src/store/*-store.ts` for state that crosses pages, shell components, or reader tabs.
 
-- `layout-store.ts`: open reader tabs, active tab, home visibility, per-tab reader store map, chat/notepad visibility.
+- `layout-store.ts`: compatibility bridge for reused reader/library components that still call `openBook`, plus per-book reader store creation and chat/notepad visibility used by shared reader components.
 - `app-settings-store.ts`: persisted system settings and global reader settings.
-- `theme-store.ts`: theme mode, dark mode, system UI flags, chat auto-scroll, sidebar swapping.
+- `theme-store.ts`: theme mode, dark mode, system UI flags, and chat auto-scroll.
 - `library-store.ts`: library data, search query, refresh functions.
 - `mobile/shell/mobile-shell-store.ts`: Android presentation state for active destination, active book, reader open state, reader chrome, and active reader sheet.
 
@@ -77,9 +77,9 @@ useLayoutStore.setState({
 
 `MobileReader` creates the existing per-book reader store with `createReaderStore(activeBook.id)` and provides it through `ReaderProvider`.
 
-## Legacy Reader Layout Contract
+## Legacy Layout Store Compatibility Contract
 
-Reader tabs are managed by `useLayoutStore`. Opening a book creates or activates a tab and creates a per-tab reader store keyed by `reader-${bookId}`.
+The desktop tab/sidebar shell was removed, but `useLayoutStore` remains because reused library, reader, and annotation components still call the older `openBook` and tab-shaped reader APIs. Opening a book creates or activates a tab-shaped record and creates a per-book reader store keyed by `reader-${bookId}`. Android destinations adapt this call to `useMobileShellStore.openBook` at the mobile boundary.
 
 ```ts
 openBook: (bookId: string, title: string) => {

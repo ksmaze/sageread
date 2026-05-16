@@ -19,10 +19,10 @@ export type ToolProps = {
   defaultOpen?: boolean;
   className?: string;
   onViewDetail?: (toolPart: ToolPart) => void;
-  isChatPage?: boolean;
+  isStandaloneChat?: boolean;
 };
 
-const Tool = ({ toolPart, defaultOpen = false, className, onViewDetail, isChatPage = false }: ToolProps) => {
+const Tool = ({ toolPart, defaultOpen = false, className, onViewDetail, isStandaloneChat = false }: ToolProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { state, input, output, type } = toolPart;
   const { stopScroll } = useStickToBottomContext();
@@ -138,7 +138,7 @@ const Tool = ({ toolPart, defaultOpen = false, className, onViewDetail, isChatPa
                     <Eye className="h-4 w-4" />
                   </div>
                 )}
-                {isRagTool && isChatPage && state === "output-available" && onViewDetail && (
+                {isRagTool && isStandaloneChat && state === "output-available" && onViewDetail && (
                   <div
                     onClick={(e) => {
                       e.stopPropagation();

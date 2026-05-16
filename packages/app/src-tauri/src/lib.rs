@@ -24,7 +24,6 @@ use crate::core::{
         update_reading_session,
     },
     database,
-    fonts::commands::{upload_and_convert_font, upload_font_data},
     llama::commands::{
         delete_local_model, download_llama_server, download_model_file,
         ensure_llamacpp_directories, get_app_data_dir, get_llamacpp_backend_path, greet,
@@ -64,16 +63,8 @@ async fn app_ready(app: tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_os::init());
-
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    {
-        builder = builder
-            .plugin(tauri_plugin_updater::Builder::new().build())
-            .plugin(tauri_plugin_global_shortcut::Builder::new().build());
-    }
 
     builder
         .manage(AppState::default())
@@ -99,33 +90,6 @@ pub fn run() {
                         eprintln!("Failed to set window decorations: {}", e);
                     }
                 }
-            }
-            
-            // Check for updates on startup
-            #[cfg(all(not(debug_assertions), not(any(target_os = "android", target_os = "ios"))))]
-            {
-                let handle = app.handle().clone();
-                tauri::async_runtime::spawn(async move {
-                    use tauri_plugin_updater::UpdaterExt;
-                    match handle.updater() {
-                        Ok(updater) => match updater.check().await {
-                            Ok(Some(update)) => {
-                                if let Err(e) = update.download_and_install(|_, _| {}, || {}).await {
-                                    log::error!("Failed to install update: {}", e);
-                                }
-                            }
-                            Ok(None) => {
-                                log::info!("No update available");
-                            }
-                            Err(e) => {
-                                log::error!("Failed to check for updates: {}", e);
-                            }
-                        },
-                        Err(e) => {
-                            log::error!("Failed to get updater: {}", e);
-                        }
-                    }
-                });
             }
             
             tauri::async_runtime::spawn(async move {
@@ -187,9 +151,6 @@ pub fn run() {
             update_skill,
             delete_skill,
             toggle_skill_active,
-            // fonts
-            upload_and_convert_font,
-            upload_font_data,
             // llama
             greet,
             get_app_data_dir,

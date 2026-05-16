@@ -1,4 +1,4 @@
-import { useIsChatPage } from "@/hooks/use-is-chat-page";
+import { useIsStandaloneChatSurface } from "@/components/side-chat/chat-surface-context";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { useChatReaderStore } from "@/store/chat-reader-store";
 import type { BookSearchConfig, BookSearchResult } from "@/types/book";
@@ -14,7 +14,7 @@ export function useAnnotationSearch() {
   const [chunkData, setChunkData] = useState<DocumentChunk | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
-  const isChatPage = useIsChatPage();
+  const isStandaloneChat = useIsStandaloneChatSurface();
 
   const chatActiveBookId = useChatReaderStore((state) => state.activeBookId);
   const chatBookData = useChatReaderStore((state) => state.bookData);
@@ -26,11 +26,11 @@ export function useAnnotationSearch() {
   const readerView = useReaderStore((state) => state.view);
   const readerProgress = useReaderStore((state) => state.progress);
 
-  const activeBookId = isChatPage ? chatActiveBookId : readerBookId;
-  const bookData = isChatPage ? chatBookData : readerBookData;
-  const config = isChatPage ? chatConfig : readerConfig;
-  const view = isChatPage ? null : readerView;
-  const progress = isChatPage ? null : readerProgress;
+  const activeBookId = isStandaloneChat ? chatActiveBookId : readerBookId;
+  const bookData = isStandaloneChat ? chatBookData : readerBookData;
+  const config = isStandaloneChat ? chatConfig : readerConfig;
+  const view = isStandaloneChat ? null : readerView;
+  const progress = isStandaloneChat ? null : readerProgress;
 
   const fetchChunkData = useCallback(
     async (chunkId: string) => {

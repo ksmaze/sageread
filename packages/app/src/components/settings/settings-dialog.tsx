@@ -5,39 +5,17 @@ import { cn } from "@/lib/utils";
 import { useProviderStore } from "@/store/provider-store";
 import { ChevronRight, Server } from "lucide-react";
 import { useState } from "react";
-import FontManager from "./font-manager";
 import GeneralSettings from "./general";
 import LlamaSettings from "./llama";
 import ProviderDetailSettings from "./provider-detail";
 import ProvidersSettings from "./providers";
 import { SETTINGS_DIALOG_CONTENT_CLASS_NAME } from "./settings-dialog-layout";
-import ShortcutsSettings from "./shortcuts";
+import { SETTINGS_NAVIGATION_ITEMS, type SettingsKey, type SettingsNavigationItem } from "./settings-navigation";
 import TTSSettings from "./tts-settings";
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-type SettingsKey =
-  | "general"
-  | "font-manager"
-  | "llama"
-  | "tts"
-  | "model-providers"
-  | "shortcuts"
-  | "provider-openai"
-  | "provider-anthropic"
-  | "provider-openrouter"
-  | "provider-gemini"
-  | "provider-deepseek"
-  | "provider-grok";
-
-interface SettingsItem {
-  key: SettingsKey;
-  label: string;
-  icon?: React.ComponentType<{ className?: string }> | null;
-  children?: SettingsItem[];
 }
 
 export function ProviderIcons({ providerId }: { providerId: string }): React.ReactNode {
@@ -64,21 +42,17 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(["model-providers"]));
   const { modelProviders } = useProviderStore();
 
-  const settingsItems: SettingsItem[] = [
-    { key: "general", label: "常规" },
-    { key: "font-manager", label: "字体管理" },
-    { key: "llama", label: "向量模型" },
-    { key: "tts", label: "语音模型" },
-    {
-      key: "model-providers",
-      label: "模型提供商",
-      children: modelProviders.map((provider) => ({
-        key: `provider-${provider.provider}` as SettingsKey,
-        label: provider.name,
-      })),
-    },
-    // { key: "shortcuts", label: "快捷键" },
-  ];
+  const settingsItems: SettingsNavigationItem[] = SETTINGS_NAVIGATION_ITEMS.map((item) =>
+    item.key === "model-providers"
+      ? {
+          ...item,
+          children: modelProviders.map((provider) => ({
+            key: `provider-${provider.provider}` as SettingsKey,
+            label: provider.name,
+          })),
+        }
+      : item,
+  );
 
   const getProviderStatus = (providerId: string) => {
     const provider = modelProviders.find((p) => p.provider === providerId);
@@ -107,10 +81,6 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         return (
           <ProvidersSettings onProviderSelect={(providerId) => setActiveKey(`provider-${providerId}` as SettingsKey)} />
         );
-      case "font-manager":
-        return <FontManager />;
-      case "shortcuts":
-        return <ShortcutsSettings />;
       default:
         if (activeKey.startsWith("provider-")) {
           const providerId = activeKey.replace("provider-", "");
@@ -120,7 +90,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     }
   };
 
-  const renderSidebarItem = (item: SettingsItem, level = 0) => {
+  const renderSidebarItem = (item: SettingsNavigationItem, level = 0) => {
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedItems.has(item.key);
     const isActive = activeKey === item.key;

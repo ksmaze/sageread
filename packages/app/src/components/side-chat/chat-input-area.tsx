@@ -1,9 +1,9 @@
 import { PromptInput, PromptInputAction, PromptInputTextarea } from "@/components/prompt-kit/prompt-input";
 import { Button } from "@/components/ui/button";
-import { useIsChatPage } from "@/hooks/use-is-chat-page";
 import type { ChatReference } from "@/types/message";
 import { ArrowUp, BookOpen, Brain, Notebook, Paperclip, Quote, X } from "lucide-react";
 import { useRef } from "react";
+import { useIsStandaloneChatSurface } from "./chat-surface-context";
 import { ContextPopover } from "./context-popover";
 
 interface ChatInputAreaProps {
@@ -44,11 +44,11 @@ export function ChatInputArea({
   setInput,
 }: ChatInputAreaProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isChatPage = useIsChatPage();
-  const shouldShowContextPicker = showContextPicker ?? isChatPage;
+  const isStandaloneChat = useIsStandaloneChatSurface();
+  const shouldShowContextPicker = showContextPicker ?? isStandaloneChat;
   const shouldShowQuickActions = showQuickActions ?? true;
-  const shouldShowQuickActionsAboveInput = shouldShowQuickActions && !isChatPage;
-  const shouldShowQuickActionsInInput = shouldShowQuickActions && isChatPage;
+  const shouldShowQuickActionsAboveInput = shouldShowQuickActions && !isStandaloneChat;
+  const shouldShowQuickActionsInInput = shouldShowQuickActions && isStandaloneChat;
   const handleQuickPrompt = (prompt: string) => {
     setInput(prompt);
     if (status === "ready") {

@@ -1,8 +1,7 @@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CURATED_FONTS, DEFAULT_BOOK_FONT } from "@/services/constants";
+import { DEFAULT_BOOK_FONT } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
-import { useFontStore } from "@/store/font-store";
 import { useThemeStore } from "@/store/theme-store";
 import { getMaxInlineSize } from "@/utils/config";
 import { isCJKEnv } from "@/utils/misc";
@@ -13,6 +12,7 @@ import { MdCheck, MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
 import { TbSunMoon } from "react-icons/tb";
 import { FontSizeSlider } from "./font-size-slider";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
+import { getReaderStyleFontOptions } from "./reader-style-font-options";
 
 const FONT_SIZE_MIN = 12;
 const FONT_SIZE_MAX = 32;
@@ -22,31 +22,10 @@ export function ReaderStylePanel() {
   const store = useReaderStoreApi();
   const { themeMode, setThemeMode } = useThemeStore();
   const { settings, setSettings } = useAppSettingsStore();
-  const { fonts: customFontList, loadFonts } = useFontStore();
 
   const globalViewSettings = settings.globalViewSettings;
   const view = store.getState().view;
-
-  const customFonts = useMemo(
-    () =>
-      customFontList.map((font) => {
-        const fontFamily = font.fontFamily || font.name;
-        return {
-          id: `custom-${font.name}`,
-          name: font.displayName || font.name,
-          serif: fontFamily,
-          sansSerif: fontFamily,
-          cjk: fontFamily,
-        };
-      }),
-    [customFontList],
-  );
-
-  const allFonts = useMemo(() => [...CURATED_FONTS, ...customFonts], [customFonts]);
-
-  useEffect(() => {
-    loadFonts();
-  }, [loadFonts]);
+  const allFonts = useMemo(() => getReaderStyleFontOptions(), []);
 
   useEffect(() => {
     const currentFontExists = allFonts.some(
@@ -56,7 +35,7 @@ export function ReaderStylePanel() {
         font.cjk === globalViewSettings.defaultCJKFont,
     );
 
-    if (!currentFontExists && customFonts.length > 0) {
+    if (!currentFontExists) {
       const { settings: currentSettings } = useAppSettingsStore.getState();
       setSettings({
         ...currentSettings,
@@ -68,7 +47,7 @@ export function ReaderStylePanel() {
         },
       });
     }
-  }, [allFonts, customFonts.length, globalViewSettings, setSettings]);
+  }, [allFonts, globalViewSettings, setSettings]);
 
   const currentFontId =
     allFonts.find(

@@ -1,9 +1,9 @@
-import { useIsChatPage } from "@/hooks/use-is-chat-page";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { type BookDataState, useChatReaderStore } from "@/store/chat-reader-store";
 import { Check, Copy, NotebookPen, Quote } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNotepad } from "../notepad/hooks";
+import { useIsStandaloneChatSurface } from "./chat-surface-context";
 
 interface ChatSelectionPopupProps {
   selectedText: string;
@@ -14,13 +14,10 @@ interface ChatSelectionPopupProps {
 }
 
 export const ChatSelectionPopup = ({ selectedText, position, onClose, onAskAi, popupRef }: ChatSelectionPopupProps) => {
-  let bookData: BookDataState | null;
-  const isChatPage = useIsChatPage();
-  if (isChatPage) {
-    bookData = useChatReaderStore((state) => state.bookData);
-  } else {
-    bookData = useReaderStore((state) => state.bookData);
-  }
+  const isStandaloneChat = useIsStandaloneChatSurface();
+  const chatBookData = useChatReaderStore((state) => state.bookData);
+  const readerBookData = useReaderStore((state) => state.bookData);
+  const bookData: BookDataState | null = isStandaloneChat ? chatBookData : readerBookData;
   const { handleCreateNote } = useNotepad();
   const [copied, setCopied] = useState(false);
 

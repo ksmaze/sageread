@@ -1,6 +1,5 @@
 pub mod books;
 pub mod database;
-pub mod fonts;
 pub mod llama;
 pub mod notes;
 pub mod skills;

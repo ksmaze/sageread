@@ -2,6 +2,7 @@ import { ChatContainerRoot } from "@/components/prompt-kit/chat-container";
 import { ScrollButton } from "@/components/prompt-kit/scroll-button";
 import { ChatInputArea } from "@/components/side-chat/chat-input-area";
 import { ChatMessages } from "@/components/side-chat/chat-messages";
+import { ChatSurfaceProvider } from "@/components/side-chat/chat-surface-context";
 import { ChatThreads } from "@/components/side-chat/chat-threads";
 import ModelSelector from "@/components/side-chat/model-selector";
 import { MindmapDialog } from "@/components/tools/mindmap-dialog";
@@ -155,108 +156,110 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
   };
 
   return (
-    <main id="chat-sidebar" className={cn("flex h-full min-h-0 flex-col overflow-hidden", className)}>
-      <div className="shrink-0 pb-2">
-        <div className="flex min-h-11 items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <ModelSelector
-              selectedModel={selectedModel}
-              onModelSelect={setSelectedModel}
-              className="h-11 max-w-[calc(100vw-10rem)] rounded-full text-sm md:max-w-72"
-            />
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              title="新对话"
-              className="mobile-reader-control size-11 rounded-full hover:bg-muted"
-              onClick={handleCreateThread}
-            >
-              <MessageCirclePlus className="size-5" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              title="历史对话"
-              className="mobile-reader-control size-11 rounded-full hover:bg-muted"
-              onClick={handleShowThreads}
-            >
-              <History className="size-5" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              title="设置"
-              className="mobile-reader-control size-11 rounded-full hover:bg-muted"
-              onClick={toggleSettingsDialog}
-            >
-              <Settings className="size-5" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {showThreads ? (
-        <div className="min-h-0 flex-1 overflow-hidden">
-          <ChatThreads
-            key={`threads-${threadsKey}`}
-            bookId={readerScoped ? bookId : undefined}
-            onBack={handleBackFromThreads}
-            onSelectThread={handleSelectThread}
-          />
-        </div>
-      ) : !isInit.current ? (
-        <MobileChatLoadingState />
-      ) : messages.length === 0 ? (
-        <MobileChatEmptyState onPrompt={handlePrompt} />
-      ) : (
-        <ChatContainerRoot className="relative min-h-0 flex-1" autoScroll={autoScroll}>
-          <ChatMessages
-            messages={messages}
-            status={status}
-            error={displayError}
-            autoScroll={autoScroll}
-            scrollKey={resolvedCurrentThread?.id ?? (readerScoped ? `reader-${bookId}` : "__mobile_global__")}
-            onReasoningTimesUpdate={handleReasoningTimesUpdate}
-            onRetry={handleRetry}
-            canRetry={status === "ready" && !!displayError}
-            onAskSelection={handleAskSelection}
-            onViewToolDetail={handleViewToolDetail}
-          />
-          <div className="-translate-x-1/2 pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl justify-end px-5">
-            <div className="pointer-events-auto">
-              <ScrollButton />
+    <ChatSurfaceProvider surface={readerScoped ? "reader" : "standalone"}>
+      <main id="chat-sidebar" className={cn("flex h-full min-h-0 flex-col overflow-hidden", className)}>
+        <div className="shrink-0 pb-2">
+          <div className="flex min-h-11 items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <ModelSelector
+                selectedModel={selectedModel}
+                onModelSelect={setSelectedModel}
+                className="h-11 max-w-[calc(100vw-10rem)] rounded-full text-sm md:max-w-72"
+              />
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                title="新对话"
+                className="mobile-reader-control size-11 rounded-full hover:bg-muted"
+                onClick={handleCreateThread}
+              >
+                <MessageCirclePlus className="size-5" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                title="历史对话"
+                className="mobile-reader-control size-11 rounded-full hover:bg-muted"
+                onClick={handleShowThreads}
+              >
+                <History className="size-5" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                title="设置"
+                className="mobile-reader-control size-11 rounded-full hover:bg-muted"
+                onClick={toggleSettingsDialog}
+              >
+                <Settings className="size-5" />
+              </Button>
             </div>
           </div>
-        </ChatContainerRoot>
-      )}
+        </div>
 
-      {!showThreads && (
-        <ChatInputArea
-          input={input}
-          setInput={setInput}
-          references={references}
-          onRemoveReference={handleRemoveReference}
-          onSubmit={handleSubmit}
-          onStop={stop}
-          status={status}
-          activeBookId={activeBookId}
-          setActiveBookId={(nextBookId) => {
-            if (nextBookId) {
-              setActiveBookId(nextBookId);
-            } else if (!readerScoped) {
-              globalSetActiveBookId(undefined);
-            }
-          }}
-          showContextPicker={!readerScoped}
-        />
-      )}
+        {showThreads ? (
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <ChatThreads
+              key={`threads-${threadsKey}`}
+              bookId={readerScoped ? bookId : undefined}
+              onBack={handleBackFromThreads}
+              onSelectThread={handleSelectThread}
+            />
+          </div>
+        ) : !isInit.current ? (
+          <MobileChatLoadingState />
+        ) : messages.length === 0 ? (
+          <MobileChatEmptyState onPrompt={handlePrompt} />
+        ) : (
+          <ChatContainerRoot className="relative min-h-0 flex-1" autoScroll={autoScroll}>
+            <ChatMessages
+              messages={messages}
+              status={status}
+              error={displayError}
+              autoScroll={autoScroll}
+              scrollKey={resolvedCurrentThread?.id ?? (readerScoped ? `reader-${bookId}` : "__mobile_global__")}
+              onReasoningTimesUpdate={handleReasoningTimesUpdate}
+              onRetry={handleRetry}
+              canRetry={status === "ready" && !!displayError}
+              onAskSelection={handleAskSelection}
+              onViewToolDetail={handleViewToolDetail}
+            />
+            <div className="-translate-x-1/2 pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl justify-end px-5">
+              <div className="pointer-events-auto">
+                <ScrollButton />
+              </div>
+            </div>
+          </ChatContainerRoot>
+        )}
 
-      <MindmapDialog open={showMindmapDialog} onOpenChange={setShowMindmapDialog} toolPart={toolDetail} />
-    </main>
+        {!showThreads && (
+          <ChatInputArea
+            input={input}
+            setInput={setInput}
+            references={references}
+            onRemoveReference={handleRemoveReference}
+            onSubmit={handleSubmit}
+            onStop={stop}
+            status={status}
+            activeBookId={activeBookId}
+            setActiveBookId={(nextBookId) => {
+              if (nextBookId) {
+                setActiveBookId(nextBookId);
+              } else if (!readerScoped) {
+                globalSetActiveBookId(undefined);
+              }
+            }}
+            showContextPicker={!readerScoped}
+          />
+        )}
+
+        <MindmapDialog open={showMindmapDialog} onOpenChange={setShowMindmapDialog} toolPart={toolDetail} />
+      </main>
+    </ChatSurfaceProvider>
   );
 }

@@ -27,7 +27,6 @@ export interface SystemSettings {
   autoUpload: boolean;
   alwaysOnTop: boolean;
   openBookInNewWindow: boolean;
-  autoCheckUpdates: boolean;
   screenWakeLock: boolean;
   alwaysShowStatusBar: boolean;
   openLastBooks: boolean;

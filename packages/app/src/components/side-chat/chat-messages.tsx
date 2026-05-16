@@ -3,7 +3,6 @@ import { Message, MessageAction, MessageActions, MessageContent } from "@/compon
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/prompt-kit/reasoning";
 import { Tool } from "@/components/prompt-kit/tool";
 import { Button } from "@/components/ui/button";
-import { useIsChatPage } from "@/hooks/use-is-chat-page";
 import { type ReasoningTimes, useReasoningTimer } from "@/hooks/use-reasoning-timer";
 import { useTextSelection } from "@/hooks/use-text-selection";
 import { cn } from "@/lib/utils";
@@ -16,6 +15,7 @@ import { Brain, Check, Copy, Loader2, Pause, Quote, RefreshCw, Volume2 } from "l
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useStickToBottomContext } from "use-stick-to-bottom";
+import { useIsStandaloneChatSurface } from "./chat-surface-context";
 import { ChatSelectionPopup } from "./chat-selection-popup";
 
 export const TOOL_NAME_MAP: Record<string, string> = {
@@ -76,7 +76,7 @@ export function ChatMessages({
   onViewToolDetail,
 }: ChatMessagesProps) {
   const { scrollToBottom } = useStickToBottomContext();
-  const isChatPage = useIsChatPage();
+  const isStandaloneChat = useIsStandaloneChatSurface();
   const lastMessage = reorderTextAndReasoning(messages[messages.length - 1]);
   const reasoningPart = lastMessage?.parts?.findLast((part: UIMessagePart<any, any>) => part.type === "reasoning");
   const isStreaming = status === "streaming";
@@ -327,7 +327,7 @@ export function ChatMessages({
               errorText: part.errorText,
             }}
             onViewDetail={onViewToolDetail}
-            isChatPage={isChatPage}
+            isStandaloneChat={isStandaloneChat}
           />,
         );
         continue;
@@ -359,7 +359,10 @@ export function ChatMessages({
         return (
           <Message
             key={message.id}
-            className={cn("mx-auto flex w-full max-w-3xl flex-col items-start gap-2", isChatPage ? "px-4" : "px-2")}
+            className={cn(
+              "mx-auto flex w-full max-w-3xl flex-col items-start gap-2",
+              isStandaloneChat ? "px-4" : "px-2",
+            )}
           >
             {isAssistant ? (
               <div className="group flex w-full flex-col gap-0">
@@ -522,7 +525,7 @@ export function ChatMessages({
       })}
 
       {(status === "submitted" || status === "streaming") && (
-        <div className={cn("mx-auto flex w-full max-w-3xl flex-col items-start gap-2", isChatPage && "px-6")}>
+        <div className={cn("mx-auto flex w-full max-w-3xl flex-col items-start gap-2", isStandaloneChat && "px-6")}>
           <div className="group flex w-full flex-col gap-0 px-2">
             <div className="flex items-center gap-2">Thinking...</div>
           </div>

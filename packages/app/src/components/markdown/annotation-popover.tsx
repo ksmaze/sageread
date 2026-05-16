@@ -1,10 +1,9 @@
 import { Markdown } from "@/components/prompt-kit/markdown";
+import { useIsStandaloneChatSurface } from "@/components/side-chat/chat-surface-context";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useIsChatPage } from "@/hooks/use-is-chat-page";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { useChatReaderStore } from "@/store/chat-reader-store";
-import { useThemeStore } from "@/store/theme-store";
 import { Loader, SquareArrowOutUpRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAnnotationSearch } from "./hooks/use-annotation-search";
@@ -12,17 +11,16 @@ import { useAnnotationSearch } from "./hooks/use-annotation-search";
 export function AnnotationPopover({ chunkId, children }: { chunkId: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [sideOffset, setSideOffset] = useState(16);
-  const isChatPage = useIsChatPage();
+  const isStandaloneChat = useIsStandaloneChatSurface();
   const triggerRef = useRef<HTMLSpanElement>(null);
 
   const chatActiveBookId = useChatReaderStore((state) => state.activeBookId);
   const readerBookId = useReaderStore((state) => state.bookId);
-  const activeBookId = isChatPage ? chatActiveBookId : readerBookId;
+  const activeBookId = isStandaloneChat ? chatActiveBookId : readerBookId;
 
-  const { swapSidebars } = useThemeStore();
   const { loading, chunkData, error, searching, fetchChunkData, searchAndNavigate, resetError } = useAnnotationSearch();
 
-  const shouldShowRight = isChatPage || swapSidebars;
+  const shouldShowRight = isStandaloneChat;
 
   const handleSearchInReader = useCallback(async () => {
     const success = await searchAndNavigate();
@@ -37,7 +35,7 @@ export function AnnotationPopover({ chunkId, children }: { chunkId: string; chil
     try {
       const triggerRect = triggerRef.current.getBoundingClientRect();
       const chatSidebar = document.getElementById("chat-sidebar");
-      if (!chatSidebar && !isChatPage) {
+      if (!chatSidebar && !isStandaloneChat) {
         return;
       }
 
@@ -60,7 +58,7 @@ export function AnnotationPopover({ chunkId, children }: { chunkId: string; chil
     } catch (error) {
       console.error("计算偏移量失败:", error);
     }
-  }, [isChatPage, shouldShowRight]);
+  }, [isStandaloneChat, shouldShowRight]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -129,7 +127,7 @@ export function AnnotationPopover({ chunkId, children }: { chunkId: string; chil
                 >
                   {chunkData.related_chapter_titles}
                 </div>
-                {!isChatPage && (
+                {!isStandaloneChat && (
                   <Button
                     size="sm"
                     variant="ghost"

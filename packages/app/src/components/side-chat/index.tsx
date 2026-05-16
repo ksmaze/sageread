@@ -21,6 +21,7 @@ import { ScrollButton } from "../prompt-kit/scroll-button";
 import { MindmapDialog } from "../tools/mindmap-dialog";
 import { ChatInputArea } from "./chat-input-area";
 import { ChatMessages } from "./chat-messages";
+import { ChatSurfaceProvider } from "./chat-surface-context";
 import { ChatThreads } from "./chat-threads";
 import ModelSelector from "./model-selector";
 
@@ -132,91 +133,93 @@ function ChatContent({ bookId }: ChatContentProps) {
   );
 
   return (
-    <main id="chat-sidebar" className="flex h-full flex-col overflow-hidden ">
-      <div className="ml-1 flex-shrink-0 border-neutral-300 dark:border-neutral-700">
-        <div className="flex h-8 items-center justify-between">
-          <div className="min-w-0 flex-1 pl-0.5">
-            <ModelSelector
-              selectedModel={selectedModel}
-              onModelSelect={setSelectedModel}
-              className="z-40 w-full max-w-[12rem]"
-            />
-          </div>
-          <div className="flex items-center gap-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="z-40 size-7 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
-              onClick={handleNewThread}
-            >
-              <MessageCirclePlus className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="z-40 size-7 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
-              onClick={handleShowThreads}
-            >
-              <History className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="z-40 size-7 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
-              onClick={toggleSettingsDialog}
-            >
-              <Settings className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </div>
-      {showThreads && bookId ? (
-        <ChatThreads
-          key={`threads-${threadsKey}`}
-          bookId={bookId}
-          onBack={handleBackFromThreads}
-          onSelectThread={handleSelectThread}
-        />
-      ) : messages.length === 0 && isInit.current ? (
-        <EmptyState />
-      ) : (
-        <ChatContainerRoot className="relative flex-1" autoScroll={autoScroll}>
-          <ChatMessages
-            messages={messages}
-            status={status}
-            error={displayError}
-            autoScroll={autoScroll}
-            scrollKey={currentThread?.id ?? "__init__"}
-            onReasoningTimesUpdate={handleReasoningTimesUpdate}
-            onRetry={handleRetry}
-            canRetry={status === "ready" && !!displayError}
-            onAskSelection={handleAskSelection}
-            onViewToolDetail={handleViewToolDetail}
-          />
-          <div className="-translate-x-1/2 pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl justify-end px-5">
-            <div className="pointer-events-auto">
-              <ScrollButton />
+    <ChatSurfaceProvider surface="reader">
+      <main id="chat-sidebar" className="flex h-full flex-col overflow-hidden ">
+        <div className="ml-1 flex-shrink-0 border-neutral-300 dark:border-neutral-700">
+          <div className="flex h-8 items-center justify-between">
+            <div className="min-w-0 flex-1 pl-0.5">
+              <ModelSelector
+                selectedModel={selectedModel}
+                onModelSelect={setSelectedModel}
+                className="z-40 w-full max-w-[12rem]"
+              />
+            </div>
+            <div className="flex items-center gap-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="z-40 size-7 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                onClick={handleNewThread}
+              >
+                <MessageCirclePlus className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="z-40 size-7 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                onClick={handleShowThreads}
+              >
+                <History className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="z-40 size-7 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                onClick={toggleSettingsDialog}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
             </div>
           </div>
-        </ChatContainerRoot>
-      )}
+        </div>
+        {showThreads && bookId ? (
+          <ChatThreads
+            key={`threads-${threadsKey}`}
+            bookId={bookId}
+            onBack={handleBackFromThreads}
+            onSelectThread={handleSelectThread}
+          />
+        ) : messages.length === 0 && isInit.current ? (
+          <EmptyState />
+        ) : (
+          <ChatContainerRoot className="relative flex-1" autoScroll={autoScroll}>
+            <ChatMessages
+              messages={messages}
+              status={status}
+              error={displayError}
+              autoScroll={autoScroll}
+              scrollKey={currentThread?.id ?? "__init__"}
+              onReasoningTimesUpdate={handleReasoningTimesUpdate}
+              onRetry={handleRetry}
+              canRetry={status === "ready" && !!displayError}
+              onAskSelection={handleAskSelection}
+              onViewToolDetail={handleViewToolDetail}
+            />
+            <div className="-translate-x-1/2 pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl justify-end px-5">
+              <div className="pointer-events-auto">
+                <ScrollButton />
+              </div>
+            </div>
+          </ChatContainerRoot>
+        )}
 
-      {!showThreads && bookId && (
-        <ChatInputArea
-          input={input}
-          setInput={setInput}
-          references={references}
-          onRemoveReference={handleRemoveReference}
-          onSubmit={handleSubmit}
-          onStop={stop}
-          status={status}
-          activeBookId={bookId}
-          setActiveBookId={() => {}}
-        />
-      )}
+        {!showThreads && bookId && (
+          <ChatInputArea
+            input={input}
+            setInput={setInput}
+            references={references}
+            onRemoveReference={handleRemoveReference}
+            onSubmit={handleSubmit}
+            onStop={stop}
+            status={status}
+            activeBookId={bookId}
+            setActiveBookId={() => {}}
+          />
+        )}
 
-      <MindmapDialog open={showMindmapDialog} onOpenChange={setShowMindmapDialog} toolPart={toolDetail} />
-    </main>
+        <MindmapDialog open={showMindmapDialog} onOpenChange={setShowMindmapDialog} toolPart={toolDetail} />
+      </main>
+    </ChatSurfaceProvider>
   );
 }
 

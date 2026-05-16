@@ -9,7 +9,7 @@ import { getBaseFilename, getPrimaryLanguage } from "@/utils/book";
 import { updateToc } from "@/utils/toc";
 import { appDataDir } from "@tauri-apps/api/path";
 import { readTextFile } from "@tauri-apps/plugin-fs";
-import type { TabProperties } from "app-tabs";
+import type { TabProperties } from "@/types/tabs";
 import { create } from "zustand";
 import { useAppSettingsStore } from "./app-settings-store";
 import { useLibraryStore } from "./library-store";

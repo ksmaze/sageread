@@ -29,7 +29,7 @@ return () => {
 
 ### Do Not Mount Around `App.tsx`
 
-`src/App.tsx` is still a Vite stub. The real app is `ReaderLayout`.
+`src/App.tsx` is still a Vite stub. The real app is `AndroidAppShell` mounted from `src/main.tsx`.
 
 ```tsx
 // Wrong
@@ -109,7 +109,7 @@ When UI behavior changes, manually or with device emulation verify the relevant 
 
 ## Common Mistakes
 
-- Treating legacy desktop shell code as the current app root.
+- Treating deleted desktop shell code or `app-tabs` as the current app root.
 - Adding a new component abstraction when a feature-local component is enough.
 - Duplicating service calls in components.
 - Forgetting that `BookItem` list mode is not implemented even though the prop exists.

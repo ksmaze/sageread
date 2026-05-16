@@ -1,6 +1,5 @@
-import { listFonts } from "@/services/font-service";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { appDataDir, resourceDir } from "@tauri-apps/api/path";
+import { resourceDir } from "@tauri-apps/api/path";
 import { isCJKEnv } from "./misc";
 
 let cachedBuiltInFontUrl: string | null = null;
@@ -42,45 +41,8 @@ const getBuiltInFontFaces = async (): Promise<string> => {
 `;
 };
 
-async function loadAllCustomFonts(): Promise<string> {
-  try {
-    const fonts = await listFonts();
-    const dataDir = await appDataDir();
-
-    const fontFaces = fonts
-      .map((font) => {
-        const fontPath = `${dataDir}/fonts/${font.filename}`;
-        const fontUrl = convertFileSrc(fontPath);
-        const fontFamily = font.fontFamily || font.name;
-
-        return `
-  @font-face {
-    font-family: "${fontFamily}";
-    font-display: swap;
-    src: url("${fontUrl}") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-  }`;
-      })
-      .join("\n");
-
-    return fontFaces;
-  } catch (error) {
-    console.error("[Font] Failed to load custom fonts:", error);
-    return "";
-  }
-}
-
 export const mountAdditionalFonts = async (document: Document, isCJK = false) => {
   const mountCJKFonts = isCJK || isCJKEnv();
-
-  const customFontsFaces = await loadAllCustomFonts();
-
-  if (customFontsFaces) {
-    const customFontsStyle = document.createElement("style");
-    customFontsStyle.textContent = customFontsFaces;
-    document.head.appendChild(customFontsStyle);
-  }
 
   if (mountCJKFonts) {
     const builtInFontFaces = await getBuiltInFontFaces();
@@ -93,15 +55,6 @@ export const mountAdditionalFonts = async (document: Document, isCJK = false) =>
 export const mountFontsToMainApp = async () => {
   try {
     const isCJK = isCJKEnv();
-
-    const customFontsFaces = await loadAllCustomFonts();
-
-    if (customFontsFaces) {
-      const customFontsStyle = document.createElement("style");
-      customFontsStyle.id = "custom-fonts-main-app";
-      customFontsStyle.textContent = customFontsFaces;
-      document.head.appendChild(customFontsStyle);
-    }
 
     if (isCJK) {
       const builtInFontFaces = await getBuiltInFontFaces();

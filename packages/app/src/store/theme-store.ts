@@ -12,7 +12,6 @@ interface ThemeState {
   statusBarHeight: number;
   systemUIAlwaysHidden: boolean;
   autoScroll: boolean;
-  swapSidebars: boolean;
   setSystemUIAlwaysHidden: (hidden: boolean) => void;
   setStatusBarHeight: (height: number) => void;
   showSystemUI: () => void;
@@ -20,7 +19,6 @@ interface ThemeState {
   getIsDarkMode: () => boolean;
   setThemeMode: (mode: ThemeMode) => void;
   setAutoScroll: (enabled: boolean) => void;
-  setSwapSidebars: (enabled: boolean) => void;
   updateAppTheme: (color: keyof Palette) => void;
   saveCustomTheme: (settings: SystemSettings, theme: CustomTheme, isDelete?: boolean) => void;
 }
@@ -40,22 +38,12 @@ const getInitialAutoScroll = (): boolean => {
   return true;
 };
 
-const getInitialSwapSidebars = (): boolean => {
-  if (typeof window !== "undefined" && localStorage) {
-    const stored = localStorage.getItem("swapSidebars");
-    return stored !== null ? stored === "true" : false;
-  }
-  return false;
-};
-
 export const useThemeStore = create<ThemeState>((set, get) => {
   const initialThemeMode = getInitialThemeMode();
   const initialAutoScroll = getInitialAutoScroll();
-  const initialSwapSidebars = getInitialSwapSidebars();
 
   console.log("initialThemeMode", initialThemeMode);
   console.log("initialAutoScroll", initialAutoScroll);
-  console.log("initialSwapSidebars", initialSwapSidebars);
 
   const systemIsDarkMode = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
   const isDarkMode = initialThemeMode === "dark" || (initialThemeMode === "auto" && systemIsDarkMode);
@@ -90,7 +78,6 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     statusBarHeight: 24,
     systemUIAlwaysHidden: false,
     autoScroll: initialAutoScroll,
-    swapSidebars: initialSwapSidebars,
     showSystemUI: () => set({ systemUIVisible: true }),
     dismissSystemUI: () => set({ systemUIVisible: false }),
     setStatusBarHeight: (height: number) => set({ statusBarHeight: height }),
@@ -121,12 +108,6 @@ export const useThemeStore = create<ThemeState>((set, get) => {
         localStorage.setItem("autoScroll", enabled.toString());
       }
       set({ autoScroll: enabled });
-    },
-    setSwapSidebars: (enabled) => {
-      if (typeof window !== "undefined" && localStorage) {
-        localStorage.setItem("swapSidebars", enabled.toString());
-      }
-      set({ swapSidebars: enabled });
     },
     updateAppTheme: (color) => {
       const { palette } = get().themeCode;

@@ -13,7 +13,6 @@ export default defineConfig(async () => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@pdfjs": path.resolve(__dirname, "./public/vendor/pdfjs"),
-      "app-tabs": path.resolve(__dirname, "../app-tabs/src/index.tsx"),
     },
   },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

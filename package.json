@@ -8,8 +8,7 @@
     "build": "cd packages/app && pnpm build && pnpm tauri build",
     "preview": "pnpm --filter app preview",
     "tauri": "cd packages/app && pnpm tauri",
-    "build:foliate": "pnpm --filter foliate-js build",
-    "build:app-tabs": "pnpm --filter app-tabs build"
+    "build:foliate": "pnpm --filter foliate-js build"
   },
   "devDependencies": {
     "typescript": "~5.8.3"

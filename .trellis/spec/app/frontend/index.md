@@ -6,7 +6,7 @@
 
 ## Overview
 
-This directory contains the current frontend conventions for `packages/app`. The active app shell is Android mobile/tablet first; legacy desktop shell documents remain as reference for code that is still present but not mounted by default.
+This directory contains the current frontend conventions for `packages/app`. The active app shell is Android mobile/tablet first; the former desktop tab/sidebar shell and `app-tabs` package have been removed.
 
 ---
 
@@ -15,7 +15,6 @@ This directory contains the current frontend conventions for `packages/app`. The
 | Guide | Description | Status |
 |-------|-------------|--------|
 | [Android Mobile Shell](./android-mobile-shell.md) | Current Android phone/tablet app shell, reader dock/sheets, safe areas, and verification matrix | Captured |
-| [Desktop App Design](./desktop-app-design.md) | Legacy desktop-first app shell, reader workspace, visual tokens, and UI contracts | Legacy reference |
 | [Directory Structure](./directory-structure.md) | Module organization and file layout | Captured |
 | [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | Captured |
 | [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | Captured |

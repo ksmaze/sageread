@@ -6,7 +6,7 @@
 
 ## Scope / Trigger
 
-`packages/app` is currently Android mobile/tablet first. The active UI root is the Android shell, while the former desktop shell remains as legacy reference code unless it is imported again intentionally.
+`packages/app` is currently Android mobile/tablet first. The active UI root is the Android shell. The former desktop tab/sidebar shell and `app-tabs` package were removed in the Android-only cleanup.
 
 Primary sources:
 
@@ -24,7 +24,7 @@ Primary sources:
 
 ## Design Decision: Android Mobile Shell First
 
-**Context**: The app is a Tauri reader targeting Android phone and tablet layouts. The previous desktop tab/sidebar shell does not fit the target interaction model.
+**Context**: The app is a Tauri reader targeting Android phone and tablet layouts. The previous desktop tab/sidebar shell did not fit the target interaction model and is no longer part of the app package.
 
 **Decision**: `main.tsx` mounts `AndroidAppShell`. Phone uses bottom navigation; tablet uses a navigation rail. The reader is a single active book surface with reveal-on-tap chrome and bottom dock tools.
 
@@ -65,7 +65,7 @@ createRoot(document.getElementById("root")!).render(
 
 - `mobile/notes/unified-note-model.ts` is the source of truth for mapping standalone `Note` records and `BookNote` records into display items.
 - Keep type labels and filters in the shared model (`UNIFIED_NOTE_TYPE_LABELS`, `UNIFIED_NOTE_FILTERS`) instead of duplicating `"笔记"`, `"标注"`, `"摘录"`, or `"书签"` labels in page components.
-- `UnifiedNotesPage` owns destination-level filter state and may be reused by `NotesDestination` and legacy `HomeLayout` `/notes`; do not create a second app-level notes page with separate mapping logic.
+- `UnifiedNotesPage` owns destination-level filter state and may be reused by `NotesDestination`; do not create a second app-level notes page with separate mapping logic.
 - Unified notes cards should expose enough content to identify the record: title, body preview, type label, source book/author when available, and updated time. Full content belongs in the detail dialog.
 - Unified notes detail dialogs may offer `打开原文` / `打开书籍` for book-linked items. Use `getUnifiedNoteReaderTarget` plus the shared reader navigation target contract from `state-management.md`; do not call foliate `view.goTo` directly from the notes page.
 
@@ -74,7 +74,7 @@ createRoot(document.getElementById("root")!).render(
 - Settings are shared with the existing `SettingsDialog`.
 - On phones, settings content is full-screen using `100dvh` and stacked navigation/content.
 - From `sm` upward, settings keep a two-column layout with a viewport-constrained modal: `width: calc(100vw - 2rem)`, max `800px`, and no fixed `800px` minimum width. Tablet portrait must not clip the sidebar or content horizontally.
-- Pages embedded in the Android shell should not mount duplicate settings dialogs. Pass an opt-out prop when a legacy page already owns a settings dialog.
+- Pages embedded in the Android shell should not mount duplicate settings dialogs. Pass an opt-out prop when a reused page already owns a settings dialog.
 - The standalone AI destination must hide the shell-level floating `MobileSettingsEntry` because `MobileAiChat` owns its own settings button alongside model, new-thread, and history controls.
 
 ## Safe Area And Touch Contracts
@@ -92,6 +92,7 @@ createRoot(document.getElementById("root")!).render(
 - `MobileAiChat` is the Android AI surface for both the standalone AI destination and reader-scoped AI sheet.
 - The standalone mobile AI destination must not render the desktop `ChatPage`/`Resizable` chrome directly. Keep the mobile surface as a `min-h-0 flex` column with a stable header, scrollable messages/empty state, and bottom input.
 - Reader-scoped AI runs inside `MobileSheet` and must preserve the `MobileSheet z-[100]` stacking contract. Header controls must keep at least `44px` touch targets.
+- Shared chat components must get their surface context from `ChatSurfaceProvider`, not from router paths such as `/chat`. The standalone AI destination uses `surface="standalone"`; reader-scoped AI uses `surface="reader"`.
 - A newly opened or empty book-scoped chat must show a loading or empty state. It must not leave the message container blank while thread initialization completes.
 - Settings opened from mobile AI must appear above the AI sheet, and model/history popups must remain tappable without closing the sheet first.
 - Do not show both the shell-level floating settings shortcut and the `MobileAiChat` header settings button on the standalone AI destination.
@@ -144,7 +145,7 @@ Manual or device-emulated checks should cover:
 - Unified Notes filters and reader-scoped notes.
 - Unified Notes model mapping with a focused `tsx --test` regression when display fields or supported note types change.
 - Stats scroll behavior.
-- Settings access for general, providers, models, fonts, TTS, and vector model settings.
+- Settings access for general, providers, models, TTS, and vector model settings.
 
 ## Wrong vs Correct
 
@@ -177,9 +178,10 @@ window.addEventListener("message", handleIframeSingleClick);
 
 ## Common Mistakes
 
-- Treating desktop `ReaderLayout` and app-tabs as the current shell contract.
+- Treating deleted desktop `ReaderLayout` code or `app-tabs` as the current shell contract.
+- Reintroducing route checks such as `location.pathname === "/chat"` for Android AI behavior.
 - Adding a mobile sheet that contains placeholder content instead of existing reader tools.
-- Forgetting to hide duplicate settings dialogs from legacy pages embedded in the mobile shell.
+- Forgetting to hide duplicate settings dialogs from reused pages embedded in the mobile shell.
 - Letting bottom navigation cover chat inputs, settings rows, or sheet content.
 - Using z-index values that put reader selection controls under the dock.
 - Forgetting that portalled option lists/popovers opened from `MobileSheet` need to stack above the sheet, not at the shared primitive default `z-50`.

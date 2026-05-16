@@ -9,7 +9,6 @@
 Components are dense Android mobile/tablet app surfaces, not marketing sections. The primary composition model is:
 
 - Android shell components under `mobile/`
-- legacy desktop shell components under `components/`
 - route and feature components under `pages/<feature>/`
 - Radix/shadcn-style primitives under `components/ui/`
 - stateful behavior extracted into hooks and Zustand stores
@@ -55,7 +54,7 @@ interface SettingsDialogProps {
 - Use Tailwind classes with semantic tokens: `bg-background`, `bg-muted`, `text-foreground`, `text-muted-foreground`, `border`, `shadow-around`.
 - Merge reusable primitive classes with `cn` from `@/lib/utils`.
 - Use `clsx` for local conditional classes where merge semantics are not needed.
-- Keep desktop controls compact: common icon buttons use `size-7`, `size-8`, `size-9`, or `size-11`.
+- Keep toolbar controls compact: common icon buttons use `size-7`, `size-8`, `size-9`, or `size-11`.
 - Use `min-w-0` on flex children that contain long text, chat content, book titles, or reader content.
 
 ```tsx
@@ -107,6 +106,7 @@ interface SettingsDialogProps {
 - Reader pages use a single active book, `ReaderToolDock`, and `MobileSheet` surfaces for TOC, search, notes, AI, and style.
 - Settings are full-screen on phones and keep the bounded `800px` two-column modal from `sm` upward.
 - Library empty state is an import tool, not a landing page.
+- Do not add desktop tab/sidebar shell components or depend on `app-tabs` for Android-only work.
 
 ## Accessibility
 
@@ -120,6 +120,6 @@ interface SettingsDialogProps {
 
 - Creating a new button/input/dialog style instead of extending existing `components/ui` primitives.
 - Using hard-coded `bg-white text-black` surfaces that fail dark mode.
-- Removing `min-w-0`, causing desktop panes to overflow.
-- Making large hero/card layouts inside the desktop app shell.
+- Removing `min-w-0`, causing mobile sheets, reader panes, or chat content to overflow.
+- Making large hero/card layouts inside the app shell.
 - Treating `BookItem` list mode as implemented. The prop exists, but the current implementation renders card-first.
