@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 15
+- **Total Sessions**: 16
 - **Last Active**: 2026-05-16
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~532 | Active |
+| `journal-1.md` | ~566 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 16 | 2026-05-16 | Fix reader note marker interaction | `a8c863c` | `main` |
 | 15 | 2026-05-16 | Shrink reader note marker | `3ce2cb6` | `main` |
 | 14 | 2026-05-16 | Source-bound reader notes | `a534586`, `60fb21b`, `90557f0`, `4b5bd22` | `main` |
 | 13 | 2026-05-16 | Fix AI annotation popover overflow | `17bf3c9`, `f2b929a` | `main` |

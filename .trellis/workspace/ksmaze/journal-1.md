@@ -530,3 +530,37 @@ Changed reader note markers from large labeled badges to compact semi-transparen
 ### Next Steps
 
 - None - task complete
+
+
+## Session 16: Fix reader note marker interaction
+
+**Date**: 2026-05-16
+**Task**: Fix reader note marker interaction
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Fixed reader note marker taps by enlarging the invisible hit area, consuming annotation clicks before reader chrome handlers, avoiding stale foliate event closures, and syncing source-bound note editor state after saves.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a8c863c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
