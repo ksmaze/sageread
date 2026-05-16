@@ -564,3 +564,37 @@ Fixed reader note marker taps by enlarging the invisible hit area, consuming ann
 ### Next Steps
 
 - None - task complete
+
+
+## Session 17: Fix reader note marker hit area and save
+
+**Date**: 2026-05-16
+**Task**: Fix reader note marker hit area and save
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Resolved the unresolved Android reader note regression by fixing sqlx dynamic note updates, preserving backend string errors in note services/toasts, and making foliate note marker hit testing use explicit transparent hit areas. Added focused Rust, TypeScript, and overlayer regression coverage and updated Trellis specs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4c85fa7` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
