@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 8
+- **Total Sessions**: 9
 - **Last Active**: 2026-05-15
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~290 | Active |
+| `journal-1.md` | ~324 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 9 | 2026-05-15 | Fix reader paragraph-start selection | `096ae9b` | `main` |
 | 8 | 2026-05-15 | Fix mobile settings surfaces | `f58d6f4` | `main` |
 | 7 | 2026-05-15 | Stabilize mobile AI chat | `bebd018` | `main` |
 | 6 | 2026-05-15 | Fix notes detail reader navigation | `f4f4f04` | `main` |

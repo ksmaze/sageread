@@ -288,3 +288,37 @@ Removed duplicate AI settings entry and made the settings dialog viewport-constr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 9: Fix reader paragraph-start selection
+
+**Date**: 2026-05-15
+**Task**: Fix reader paragraph-start selection
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Prevented foliate paginator touch gestures from hijacking active Android text selections, added a regression helper test, and documented the text-selection touch contract.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `096ae9b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
