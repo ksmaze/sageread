@@ -1,4 +1,4 @@
-import { useReaderStore } from "@/store/reader-store";
+import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { useEffect, useRef } from "react";
 import { AnnotationItem } from "./annotation-item";
 import { useAnnotations, useNotepad } from "./hooks";
@@ -11,13 +11,22 @@ interface NotepadContentProps {
 }
 
 export const NotepadContent = ({ activeTab, bookId }: NotepadContentProps) => {
-  const { notesData, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, status } = useNotepad({
-    bookId,
-  });
+  const {
+    notesData,
+    error,
+    fetchNextPage,
+    handleDeleteNote,
+    handleUpdateNote,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+  } = useNotepad({ bookId });
 
   const { annotations, status: annotationStatus, handleDeleteAnnotation } = useAnnotations({ bookId });
 
-  const { activeBook } = useReaderStore();
+  const activeBook = useReaderStore((state) => state.bookData?.book);
+  const view = useReaderStore((state) => state.view);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // 使用 Intersection Observer 实现无限滚动
@@ -65,7 +74,15 @@ export const NotepadContent = ({ activeTab, bookId }: NotepadContentProps) => {
                 {notesData?.pages.map((group, i) => (
                   <div key={i} className="space-y-2">
                     {group.data.map((note) => (
-                      <NoteItem key={note.id} note={note} />
+                      <NoteItem
+                        key={note.id}
+                        note={note}
+                        onDelete={handleDeleteNote}
+                        onSave={handleUpdateNote}
+                        onOpenOriginal={(item) => {
+                          if (item.cfi) view?.goTo(item.cfi);
+                        }}
+                      />
                     ))}
                   </div>
                 ))}

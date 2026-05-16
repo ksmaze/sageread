@@ -165,6 +165,106 @@ openBook({ id, title }, { cfi, requestedAt: Date.now(), source: "unified-notes" 
 // ReaderViewer consumes the target after foliate initialization.
 ```
 
+## Source-Bound Independent Notes Contract
+
+### 1. Scope / Trigger
+
+Use this contract when reader-selected text creates or displays an independent `Note`. These notes are not `BookNote` annotations: highlights, bookmarks, and excerpts stay in `book_notes`, while user-editable reader notes stay in `notes`.
+
+### 2. Signatures
+
+```sql
+notes(
+  id TEXT PRIMARY KEY,
+  book_id TEXT,
+  book_meta TEXT,
+  title TEXT,
+  content TEXT,
+  cfi TEXT,
+  source_text TEXT,
+  context_before TEXT,
+  context_after TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+)
+CREATE INDEX IF NOT EXISTS idx_notes_book_id_cfi ON notes(book_id, cfi);
+```
+
+```ts
+interface Note {
+  bookId?: string;
+  bookMeta?: { title: string; author: string };
+  title?: string;
+  content?: string;
+  cfi?: string;
+  sourceText?: string;
+  contextBefore?: string;
+  contextAfter?: string;
+}
+
+getNotes({ bookId, cfi, limit: 1 }): Promise<Note[]>;
+getNoteByBookLocation(bookId: string, cfi: string): Promise<Note | null>;
+```
+
+### 3. Contracts
+
+- Creating a note from selected reader text stores `bookId`, `bookMeta`, exact `cfi`, `sourceText`, and nearby context. `content` starts empty so note creation does not force immediate editing.
+- Duplicate creation checks `{ bookId, cfi }` first. If an existing note is found, reuse/open it instead of creating another row.
+- Display helpers must treat source-bound empty notes as meaningful: show the source excerpt in reader notes and unified notes even when `content` is empty.
+- Editing writes only the user's `content` unless the caller explicitly updates source fields. Do not expose manual title editing for source-bound notes.
+- Mutations through `useNotepad` must invalidate `["notes"]`, per-note detail, and `["mobile-unified-notes"]` so reader sheets and management screens stay in sync.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| `bookId` is provided without `bookMeta` | Reject the create/update request. |
+| `title`, `content`, and `sourceText` are all blank on create | Reject the create request. |
+| Selected range cannot produce a CFI | Show an error and do not create a note. |
+| `{ bookId, cfi }` already has a note | Open/reuse the existing note instead of inserting. |
+| Source-bound note has empty `content` | Display the source excerpt, not an empty-state label. |
+| Note is deleted | Remove/invalidate list state without touching `book_notes` highlights. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: Select text, tap the note action, create an empty `Note` with source fields, close the selection popup, and later edit it from the note marker or notes list.
+- Base: A loose standalone note with no `bookId` continues to display title/content and has no reader target.
+- Bad: Storing user note text inside `BookNote.note`, creating a highlight to represent a note, or using title/content-only rows for reader-created notes.
+
+### 6. Tests Required
+
+- Unified note model tests must assert that source-bound notes use `sourceText` for title/body and include a reader target with `cfi`.
+- Note display helper tests must assert empty source-bound notes display the source excerpt.
+- Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml` after schema/model/command changes.
+- Run `pnpm --filter app build` after TypeScript contracts, reader hooks, or mobile notes screens change.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+await createNote({ bookId, bookMeta, title: selectedText, content: selectedText });
+setActiveNote(newNote); // forces editing immediately and loses source/context fields
+```
+
+#### Correct
+
+```ts
+const existing = await getNoteByBookLocation(bookId, cfi);
+if (existing) return setActiveNote(existing);
+
+await createNote({
+  bookId,
+  bookMeta,
+  title: sourceText,
+  content: "",
+  cfi,
+  sourceText,
+  contextBefore,
+  contextAfter,
+});
+```
+
 ## Settings Contract
 
 `useAppSettingsStore.settings` contains `globalReadSettings` and `globalViewSettings`. When reader settings change, update both persisted settings and the live foliate renderer when available.

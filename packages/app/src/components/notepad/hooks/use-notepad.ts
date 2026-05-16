@@ -11,6 +11,17 @@ interface UseNotepadProps {
 export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
   const queryClient = useQueryClient();
 
+  const invalidateNoteQueries = useCallback(
+    (noteId?: string) => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["mobile-unified-notes"] });
+      if (noteId) {
+        queryClient.invalidateQueries({ queryKey: ["note", noteId] });
+      }
+    },
+    [queryClient],
+  );
+
   // 分页获取笔记列表
   const {
     data: notesData,
@@ -52,12 +63,7 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
         const newNote = await createNote(data);
         toast.success("笔记创建成功");
 
-        // 刷新笔记列表
-        if (data.bookId) {
-          queryClient.invalidateQueries({ queryKey: ["notes", data.bookId] });
-        } else {
-          queryClient.invalidateQueries({ queryKey: ["notes"] });
-        }
+        invalidateNoteQueries(newNote.id);
 
         return newNote;
       } catch (error) {
@@ -66,7 +72,7 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
         throw error;
       }
     },
-    [queryClient],
+    [invalidateNoteQueries],
   );
 
   // 更新笔记
@@ -76,9 +82,7 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
         const updatedNote = await updateNote(data);
         toast.success("笔记更新成功");
 
-        // 刷新笔记列表
-        queryClient.invalidateQueries({ queryKey: ["notes", bookId] });
-        queryClient.invalidateQueries({ queryKey: ["note", data.id] });
+        invalidateNoteQueries(data.id);
 
         return updatedNote;
       } catch (error) {
@@ -87,7 +91,7 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
         throw error;
       }
     },
-    [queryClient, bookId],
+    [invalidateNoteQueries],
   );
 
   // 删除笔记
@@ -97,16 +101,14 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
         await deleteNote(noteId);
         toast.success("笔记删除成功");
 
-        // 刷新笔记列表
-        queryClient.invalidateQueries({ queryKey: ["notes", bookId] });
-        queryClient.invalidateQueries({ queryKey: ["note", noteId] });
+        invalidateNoteQueries(noteId);
       } catch (error) {
         console.error("删除笔记失败:", error);
         toast.error("删除笔记失败");
         throw error;
       }
     },
-    [queryClient, bookId],
+    [invalidateNoteQueries],
   );
 
   // 转换笔记数据用于显示

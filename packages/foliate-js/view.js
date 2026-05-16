@@ -377,7 +377,7 @@ export class View extends HTMLElement {
     });
   }
   async addAnnotation(annotation, remove) {
-    const { value, indicatorType = 'outline', indicatorOptions = {} } = annotation;
+    const { value, overlayKey = value, indicatorType = 'outline', indicatorOptions = {} } = annotation;
     if (value.startsWith(SEARCH_PREFIX)) {
       const cfi = value.replace(SEARCH_PREFIX, "");
       const { index, anchor } = await this.resolveNavigation(cfi);
@@ -410,10 +410,10 @@ export class View extends HTMLElement {
     const obj = this.#getOverlayer(index);
     if (obj) {
       const { overlayer, doc } = obj;
-      overlayer.remove(value);
+      overlayer.remove(overlayKey);
       if (!remove) {
         const range = doc ? anchor(doc) : anchor;
-        const draw = (func, opts) => overlayer.add(value, range, func, opts);
+        const draw = (func, opts) => overlayer.add(overlayKey, range, func, opts);
         this.#emit("draw-annotation", { draw, annotation, doc, range });
       }
     }

@@ -1,3 +1,4 @@
+import { getNoteDisplayBody, getNoteDisplayTitle } from "@/components/notepad/note-utils";
 import type { BookNote, BookNoteType } from "@/types/book";
 import type { Note } from "@/types/note";
 
@@ -55,8 +56,8 @@ function cleanText(value: string | undefined | null): string {
 }
 
 export function createUnifiedNoteFromStandaloneNote(note: Note): UnifiedNoteItem {
-  const title = cleanText(note.title) || cleanText(note.bookMeta?.title) || "未命名笔记";
-  const body = cleanText(note.content) || "无正文";
+  const title = getNoteDisplayTitle(note);
+  const body = getNoteDisplayBody(note);
 
   return {
     id: note.id,
@@ -67,6 +68,7 @@ export function createUnifiedNoteFromStandaloneNote(note: Note): UnifiedNoteItem
     bookAuthor: note.bookMeta?.author,
     title,
     body,
+    cfi: note.cfi,
     createdAt: note.createdAt,
     updatedAt: note.updatedAt,
     source: note,

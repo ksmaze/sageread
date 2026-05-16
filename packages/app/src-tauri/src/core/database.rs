@@ -1,7 +1,8 @@
-use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
+use serde::{Deserialize, Serialize};
+use sqlx::{migrate::MigrateDatabase, Row, Sqlite, SqlitePool};
+use std::collections::HashSet;
 use std::fs;
 use tauri::{AppHandle, Manager};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -28,7 +29,7 @@ pub async fn initialize(app_handle: &AppHandle) -> Result<SqlitePool, Box<dyn st
     );
 
     let is_new_db = !Sqlite::database_exists(&db_url).await.unwrap_or(false);
-    
+
     if is_new_db {
         Sqlite::create_database(&db_url).await?;
         println!("Database created at: {}", db_url);
@@ -41,6 +42,7 @@ pub async fn initialize(app_handle: &AppHandle) -> Result<SqlitePool, Box<dyn st
     sqlx::query(include_str!("./schema.sql"))
         .execute(&pool)
         .await?;
+    ensure_note_location_columns(&pool).await?;
     println!("Database schema initialized.");
 
     if is_new_db {
@@ -48,6 +50,38 @@ pub async fn initialize(app_handle: &AppHandle) -> Result<SqlitePool, Box<dyn st
     }
 
     Ok(pool)
+}
+
+async fn ensure_note_location_columns(pool: &SqlitePool) -> Result<(), sqlx::Error> {
+    let rows = sqlx::query("PRAGMA table_info(notes)")
+        .fetch_all(pool)
+        .await?;
+    let existing: HashSet<String> = rows
+        .iter()
+        .filter_map(|row| row.try_get::<String, _>("name").ok())
+        .collect();
+
+    for (column, definition) in [
+        ("cfi", "TEXT"),
+        ("source_text", "TEXT"),
+        ("context_before", "TEXT"),
+        ("context_after", "TEXT"),
+    ] {
+        if !existing.contains(column) {
+            sqlx::query(&format!(
+                "ALTER TABLE notes ADD COLUMN {} {}",
+                column, definition
+            ))
+            .execute(pool)
+            .await?;
+        }
+    }
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_notes_book_id_cfi ON notes(book_id, cfi)")
+        .execute(pool)
+        .await?;
+
+    Ok(())
 }
 
 async fn initialize_default_skills(pool: &SqlitePool) -> Result<(), Box<dyn std::error::Error>> {

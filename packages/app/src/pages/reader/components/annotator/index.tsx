@@ -1,6 +1,8 @@
+import { NoteEditorDialog } from "@/components/notepad/note-editor-dialog";
 import { HIGHLIGHT_COLOR_HEX } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { BookNote } from "@/types/book";
+import type { ReaderNoteMarker } from "@/types/view";
 import { eventDispatcher } from "@/utils/event";
 import { getOSPlatform } from "@/utils/misc";
 import { Overlayer } from "foliate-js/overlayer.js";
@@ -12,7 +14,7 @@ import { PiHighlighterFill } from "react-icons/pi";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { useAnnotator } from "../../hooks/use-annotator";
 import { useFoliateEvents } from "../../hooks/use-foliate-events";
-import { listenToNativeTouchEvents, type NativeTouchEventType, useTextSelector } from "../../hooks/use-text-selector";
+import { type NativeTouchEventType, listenToNativeTouchEvents, useTextSelector } from "../../hooks/use-text-selector";
 import { useReaderStore, useReaderStoreApi } from "../reader-provider";
 import AnnotationPopup from "./annotation-popup";
 import AskAIPopup from "./ask-ai-popup";
@@ -51,6 +53,11 @@ const Annotator: React.FC = () => {
     handleAskAI,
     handleCloseAskAI,
     handleSendAIQuery,
+    activeNote,
+    setActiveNote,
+    sourceBoundNotes,
+    handleDeleteNote,
+    handleUpdateNote,
   } = useAnnotator({ bookId });
 
   const {
@@ -97,6 +104,11 @@ const Annotator: React.FC = () => {
   const onDrawAnnotation = (event: Event) => {
     const detail = (event as CustomEvent).detail;
     const { draw, annotation, doc, range } = detail;
+    if ((annotation as ReaderNoteMarker).markerType === "note") {
+      draw(Overlayer.noteMarker, { color: "#2563eb", hitElementOnly: true, textColor: "#ffffff", label: "笔" });
+      return;
+    }
+
     const { style, color } = annotation as BookNote;
     const hexColor = color ? HIGHLIGHT_COLOR_HEX[color] : color;
     if (style === "highlight") {
@@ -118,6 +130,16 @@ const Annotator: React.FC = () => {
   const onShowAnnotation = (event: Event) => {
     const detail = (event as CustomEvent).detail;
     const { value: cfi, index, range } = detail;
+    const value = String(cfi);
+    if (value.startsWith("note:")) {
+      const noteId = value.slice("note:".length);
+      const note = sourceBoundNotes.find((item) => item.id === noteId);
+      if (note) {
+        setActiveNote(note);
+      }
+      return;
+    }
+
     const currentConfig = store.getState().config;
 
     const { booknotes = [] } = currentConfig!;
@@ -214,6 +236,34 @@ const Annotator: React.FC = () => {
           onSendQuery={handleSendAIQuery}
         />
       )}
+      <NoteEditorDialog
+        note={activeNote}
+        open={activeNote !== null}
+        onDelete={async (noteId) => {
+          const note = activeNote;
+          await handleDeleteNote(noteId);
+          if (note?.cfi) {
+            view?.addAnnotation(
+              {
+                id: note.id,
+                cfi: note.cfi,
+                value: note.cfi,
+                overlayKey: `note:${note.id}`,
+                markerType: "note",
+                noteId: note.id,
+              },
+              true,
+            );
+          }
+        }}
+        onOpenChange={(open) => {
+          if (!open) setActiveNote(null);
+        }}
+        onOpenOriginal={(note) => {
+          if (note.cfi) view?.goTo(note.cfi);
+        }}
+        onSave={handleUpdateNote}
+      />
     </div>
   );
 };

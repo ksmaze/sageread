@@ -9,6 +9,7 @@ declare module "foliate-js/epubcfi.js" {
 declare module "foliate-js/overlayer.js" {
   export const Overlayer: {
     highlight: any;
+    noteMarker: any;
     underline: any;
     squiggly: any;
   };

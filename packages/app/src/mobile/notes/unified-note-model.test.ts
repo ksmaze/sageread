@@ -34,6 +34,33 @@ describe("unified note model", () => {
     assert.equal(item.updatedAt, 200);
   });
 
+  it("maps source-bound notes to source excerpt display and reader target", () => {
+    const note: Note = {
+      id: "note-source-1",
+      bookId: "book-1",
+      bookMeta: { title: "Effective Reading", author: "Ada" },
+      title: "",
+      content: "",
+      cfi: "epubcfi(/6/8)",
+      sourceText: "Selected source text",
+      contextBefore: "Before",
+      contextAfter: "After",
+      createdAt: 100,
+      updatedAt: 200,
+    };
+
+    const item = createUnifiedNoteFromStandaloneNote(note);
+
+    assert.equal(item.title, "Selected source text");
+    assert.equal(item.body, "Selected source text");
+    assert.equal(item.cfi, "epubcfi(/6/8)");
+    assert.deepEqual(getUnifiedNoteReaderTarget(item), {
+      bookId: "book-1",
+      title: "Effective Reading",
+      cfi: "epubcfi(/6/8)",
+    });
+  });
+
   it("maps book annotations to complete display content", () => {
     const annotation: BookNote = {
       id: "annotation-1",

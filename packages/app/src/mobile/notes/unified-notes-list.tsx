@@ -1,3 +1,5 @@
+import { useNotepad } from "@/components/notepad/hooks";
+import { NoteEditorDialog } from "@/components/notepad/note-editor-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import type { Note } from "@/types/note";
 import dayjs from "dayjs";
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
@@ -167,8 +170,10 @@ export function UnifiedNotesList({
   variant = "mobile",
 }: UnifiedNotesListProps) {
   const { data = [], isLoading, error } = useUnifiedNotes({ bookId, type: activeType });
+  const { handleDeleteNote, handleUpdateNote } = useNotepad({ bookId });
   const [selectedItem, setSelectedItem] = useState<UnifiedNoteItem | null>(null);
   const styles = LIST_STYLES[variant];
+  const selectedNote = selectedItem?.type === "note" ? (selectedItem.source as Note) : null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -206,14 +211,38 @@ export function UnifiedNotesList({
         ))}
       </div>
 
-      <UnifiedNoteDetailDialog
-        item={selectedItem}
-        onOpenReaderTarget={onOpenReaderTarget}
-        open={selectedItem !== null}
-        onOpenChange={(open) => {
-          if (!open) setSelectedItem(null);
-        }}
-      />
+      {selectedNote ? (
+        <NoteEditorDialog
+          note={selectedNote}
+          open={selectedItem !== null}
+          onDelete={async (noteId) => {
+            await handleDeleteNote(noteId);
+          }}
+          onOpenChange={(open) => {
+            if (!open) setSelectedItem(null);
+          }}
+          onOpenOriginal={(note) => {
+            if (!selectedItem) return;
+            const target = getUnifiedNoteReaderTarget({
+              ...selectedItem,
+              cfi: note.cfi,
+            });
+            if (!target || !onOpenReaderTarget) return;
+            setSelectedItem(null);
+            onOpenReaderTarget(target);
+          }}
+          onSave={handleUpdateNote}
+        />
+      ) : (
+        <UnifiedNoteDetailDialog
+          item={selectedItem}
+          onOpenReaderTarget={onOpenReaderTarget}
+          open={selectedItem !== null}
+          onOpenChange={(open) => {
+            if (!open) setSelectedItem(null);
+          }}
+        />
+      )}
     </div>
   );
 }

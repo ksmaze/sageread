@@ -11,6 +11,10 @@ export interface Note {
   bookMeta?: BookMeta;
   title?: string;
   content?: string;
+  cfi?: string;
+  sourceText?: string;
+  contextBefore?: string;
+  contextAfter?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -21,6 +25,10 @@ export interface CreateNoteData {
   bookMeta?: BookMeta;
   title?: string;
   content?: string;
+  cfi?: string;
+  sourceText?: string;
+  contextBefore?: string;
+  contextAfter?: string;
 }
 
 // 更新笔记时的输入数据
@@ -30,6 +38,10 @@ export interface UpdateNoteData {
   bookMeta?: BookMeta | null; // null表示清空书籍信息
   title?: string | null; // null表示清空标题
   content?: string | null; // null表示清空内容
+  cfi?: string | null; // null表示清空原文位置
+  sourceText?: string | null; // null表示清空原文摘录
+  contextBefore?: string | null; // null表示清空前文上下文
+  contextAfter?: string | null; // null表示清空后文上下文
 }
 
 // 查询笔记时的选项
@@ -37,6 +49,7 @@ export interface NoteQueryOptions {
   limit?: number;
   offset?: number;
   bookId?: string;
+  cfi?: string;
   sortBy?: "updated_at" | "created_at" | "title";
   sortOrder?: "asc" | "desc";
 }

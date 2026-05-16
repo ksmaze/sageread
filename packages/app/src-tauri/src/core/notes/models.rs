@@ -17,6 +17,13 @@ pub struct Note {
     pub book_meta: Option<BookMeta>,
     pub title: Option<String>,
     pub content: Option<String>,
+    pub cfi: Option<String>,
+    #[serde(rename = "sourceText")]
+    pub source_text: Option<String>,
+    #[serde(rename = "contextBefore")]
+    pub context_before: Option<String>,
+    #[serde(rename = "contextAfter")]
+    pub context_after: Option<String>,
     #[serde(rename = "createdAt")]
     pub created_at: i64,
     #[serde(rename = "updatedAt")]
@@ -32,6 +39,13 @@ pub struct CreateNoteData {
     pub book_meta: Option<BookMeta>,
     pub title: Option<String>,
     pub content: Option<String>,
+    pub cfi: Option<String>,
+    #[serde(rename = "sourceText")]
+    pub source_text: Option<String>,
+    #[serde(rename = "contextBefore")]
+    pub context_before: Option<String>,
+    #[serde(rename = "contextAfter")]
+    pub context_after: Option<String>,
 }
 
 // 更新笔记时的输入数据
@@ -44,6 +58,13 @@ pub struct UpdateNoteData {
     pub book_meta: Option<Option<BookMeta>>, // Option<Option<BookMeta>> 支持清空book_meta
     pub title: Option<Option<String>>, // Option<Option<String>> 支持清空title
     pub content: Option<Option<String>>, // Option<Option<String>> 支持清空content
+    pub cfi: Option<Option<String>>,   // Option<Option<String>> 支持清空cfi
+    #[serde(rename = "sourceText")]
+    pub source_text: Option<Option<String>>, // Option<Option<String>> 支持清空source_text
+    #[serde(rename = "contextBefore")]
+    pub context_before: Option<Option<String>>, // Option<Option<String>> 支持清空context_before
+    #[serde(rename = "contextAfter")]
+    pub context_after: Option<Option<String>>, // Option<Option<String>> 支持清空context_after
 }
 
 // 查询笔记时的选项
@@ -53,6 +74,7 @@ pub struct NoteQueryOptions {
     pub offset: Option<i64>,
     #[serde(rename = "bookId")]
     pub book_id: Option<String>,
+    pub cfi: Option<String>,
     #[serde(rename = "sortBy")]
     pub sort_by: Option<String>, // "updated_at", "created_at", "title"
     #[serde(rename = "sortOrder")]
@@ -66,6 +88,10 @@ impl Note {
         book_meta: Option<BookMeta>,
         title: Option<String>,
         content: Option<String>,
+        cfi: Option<String>,
+        source_text: Option<String>,
+        context_before: Option<String>,
+        context_after: Option<String>,
         created_at: i64,
         updated_at: i64,
     ) -> Self {
@@ -75,6 +101,10 @@ impl Note {
             book_meta,
             title,
             content,
+            cfi,
+            source_text,
+            context_before,
+            context_after,
             created_at,
             updated_at,
         }
@@ -93,6 +123,10 @@ impl Note {
             book_meta,
             title: row.try_get("title")?,
             content: row.try_get("content")?,
+            cfi: row.try_get("cfi")?,
+            source_text: row.try_get("source_text")?,
+            context_before: row.try_get("context_before")?,
+            context_after: row.try_get("context_after")?,
             created_at: row.try_get("created_at")?,
             updated_at: row.try_get("updated_at")?,
         })
@@ -106,11 +140,15 @@ impl CreateNoteData {
             return Err("关联书籍时必须提供书籍信息".to_string());
         }
 
-        // title和content不能都为空
+        // title、content和source_text不能都为空
         if self.title.as_ref().map_or(true, |t| t.trim().is_empty())
             && self.content.as_ref().map_or(true, |c| c.trim().is_empty())
+            && self
+                .source_text
+                .as_ref()
+                .map_or(true, |source| source.trim().is_empty())
         {
-            return Err("标题和内容不能都为空".to_string());
+            return Err("标题、内容和原文摘录不能都为空".to_string());
         }
 
         Ok(())
@@ -143,6 +181,7 @@ impl Default for NoteQueryOptions {
             limit: Some(50),
             offset: Some(0),
             book_id: None,
+            cfi: None,
             sort_by: Some("updated_at".to_string()),
             sort_order: Some("desc".to_string()),
         }

@@ -1,6 +1,15 @@
 import type { BookDoc } from "@/lib/document";
 import type { BookNote, BookSearchConfig, BookSearchResult } from "@/types/book";
 
+export interface ReaderNoteMarker {
+  id: string;
+  cfi: string;
+  value: string;
+  overlayKey: string;
+  markerType: "note";
+  noteId: string;
+}
+
 export interface FoliateView extends HTMLElement {
   open: (book: BookDoc) => Promise<void>;
   close: () => void;
@@ -13,7 +22,7 @@ export interface FoliateView extends HTMLElement {
   goRight: () => void;
   getCFI: (index: number, range: Range) => string;
   resolveCFI: (cfi: string) => { index: number; anchor: (doc: Document) => Range };
-  addAnnotation: (note: BookNote, remove?: boolean) => { index: number; label: string };
+  addAnnotation: (note: BookNote | ReaderNoteMarker, remove?: boolean) => { index: number; label: string };
   search: (config: BookSearchConfig) => AsyncGenerator<BookSearchResult | string, void, void>;
   clearSearch: () => void;
   setSearchIndicator: (type: string, options: any) => void;
@@ -58,8 +67,7 @@ export interface FoliateView extends HTMLElement {
 
 export const wrappedFoliateView = (originalView: FoliateView): FoliateView => {
   const originalAddAnnotation = originalView.addAnnotation.bind(originalView);
-  originalView.addAnnotation = (note: BookNote, remove = false) => {
-    // transform BookNote to foliate annotation
+  originalView.addAnnotation = (note: BookNote | ReaderNoteMarker, remove = false) => {
     const annotation = {
       value: note.cfi,
       ...note,

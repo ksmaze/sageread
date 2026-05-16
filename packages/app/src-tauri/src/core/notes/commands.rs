@@ -22,8 +22,8 @@ pub async fn create_note(app_handle: AppHandle, data: CreateNoteData) -> Result<
     sqlx::query(
         r#"
         INSERT INTO notes (
-            id, book_id, book_meta, title, content, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            id, book_id, book_meta, title, content, cfi, source_text, context_before, context_after, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
     )
     .bind(&id)
@@ -31,6 +31,10 @@ pub async fn create_note(app_handle: AppHandle, data: CreateNoteData) -> Result<
     .bind(&book_meta_json)
     .bind(&data.title)
     .bind(&data.content)
+    .bind(&data.cfi)
+    .bind(&data.source_text)
+    .bind(&data.context_before)
+    .bind(&data.context_after)
     .bind(now)
     .bind(now)
     .execute(&db_pool)
@@ -43,6 +47,10 @@ pub async fn create_note(app_handle: AppHandle, data: CreateNoteData) -> Result<
         data.book_meta,
         data.title,
         data.content,
+        data.cfi,
+        data.source_text,
+        data.context_before,
+        data.context_after,
         now,
         now,
     ))
@@ -84,6 +92,32 @@ pub async fn update_note(app_handle: AppHandle, data: UpdateNoteData) -> Result<
     if let Some(content_opt) = &data.content {
         has_updates = true;
         separated.push("content = ").push_bind(content_opt.clone());
+    }
+
+    if let Some(cfi_opt) = &data.cfi {
+        has_updates = true;
+        separated.push("cfi = ").push_bind(cfi_opt.clone());
+    }
+
+    if let Some(source_text_opt) = &data.source_text {
+        has_updates = true;
+        separated
+            .push("source_text = ")
+            .push_bind(source_text_opt.clone());
+    }
+
+    if let Some(context_before_opt) = &data.context_before {
+        has_updates = true;
+        separated
+            .push("context_before = ")
+            .push_bind(context_before_opt.clone());
+    }
+
+    if let Some(context_after_opt) = &data.context_after {
+        has_updates = true;
+        separated
+            .push("context_after = ")
+            .push_bind(context_after_opt.clone());
     }
 
     if !has_updates {
@@ -195,8 +229,19 @@ async fn execute_normal_query(
 ) -> Result<Vec<sqlx::sqlite::SqliteRow>, sqlx::Error> {
     let mut query_builder = sqlx::QueryBuilder::new("SELECT * FROM notes");
 
+    let mut has_where = false;
     if let Some(ref book_id) = opts.book_id {
         query_builder.push(" WHERE book_id = ").push_bind(book_id);
+        has_where = true;
+    }
+
+    if let Some(ref cfi) = opts.cfi {
+        query_builder.push(if has_where {
+            " AND cfi = "
+        } else {
+            " WHERE cfi = "
+        });
+        query_builder.push_bind(cfi);
     }
 
     query_builder.push(&format!(" ORDER BY {} {}", sort_field, order));

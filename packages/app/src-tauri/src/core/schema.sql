@@ -91,6 +91,10 @@ CREATE TABLE IF NOT EXISTS notes (
     book_meta TEXT,                         -- JSON 存储书籍信息（title, author）
     title TEXT,                             -- 笔记标题（可选）
     content TEXT,                           -- 笔记内容（可选，支持markdown）
+    cfi TEXT,                               -- 可选原文位置信息
+    source_text TEXT,                       -- 可选原文摘录
+    context_before TEXT,                    -- 可选前文上下文
+    context_after TEXT,                     -- 可选后文上下文
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE SET NULL
@@ -98,6 +102,7 @@ CREATE TABLE IF NOT EXISTS notes (
 
 -- notes 表的索引
 CREATE INDEX IF NOT EXISTS idx_notes_book_id ON notes(book_id);
+CREATE INDEX IF NOT EXISTS idx_notes_book_id_cfi ON notes(book_id, cfi);
 CREATE INDEX IF NOT EXISTS idx_notes_updated_at ON notes(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
 

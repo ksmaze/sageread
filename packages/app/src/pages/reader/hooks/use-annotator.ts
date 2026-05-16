@@ -1,13 +1,15 @@
 import { useNotepad } from "@/components/notepad/hooks";
 import { createBookNote, deleteBookNote, updateBookNote } from "@/services/book-note-service";
 import { iframeService } from "@/services/iframe-service";
+import { getNoteByBookLocation } from "@/services/note-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { HighlightColor, HighlightStyle } from "@/types/book";
-import type { BookMeta } from "@/types/note";
+import type { BookMeta, Note } from "@/types/note";
+import type { ReaderNoteMarker } from "@/types/view";
 import { type Position, type TextSelection, getPopupPosition, getPosition } from "@/utils/sel";
 import { useQueryClient } from "@tanstack/react-query";
 import * as CFI from "foliate-js/epubcfi.js";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useReaderStore, useReaderStoreApi } from "../components/reader-provider";
 
@@ -37,6 +39,19 @@ interface UseAnnotatorProps {
   bookId: string;
 }
 
+function toReaderNoteMarker(note: Note): ReaderNoteMarker | null {
+  if (!note.cfi) return null;
+
+  return {
+    id: note.id,
+    cfi: note.cfi,
+    value: note.cfi,
+    overlayKey: `note:${note.id}`,
+    markerType: "note",
+    noteId: note.id,
+  };
+}
+
 export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   const { settings } = useAppSettingsStore();
   const config = useReaderStore((state) => state.config)!;
@@ -44,9 +59,10 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   const view = useReaderStore((state) => state.view);
   const bookData = useReaderStore((state) => state.bookData);
   const store = useReaderStoreApi();
-  const { handleCreateNote } = useNotepad();
+  const { handleCreateNote, handleDeleteNote, handleUpdateNote, notesData } = useNotepad({ bookId });
   const queryClient = useQueryClient();
   const globalViewSettings = settings.globalViewSettings;
+  const currentNoteMarkersRef = useRef<ReaderNoteMarker[]>([]);
 
   // 状态管理
   const [selection, setSelection] = useState<TextSelection | null>(null);
@@ -56,6 +72,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   const [annotPopupPosition, setAnnotPopupPosition] = useState<Position>();
   const [askAIPopupPosition, setAskAIPopupPosition] = useState<Position>();
   const [highlightOptionsVisible, setHighlightOptionsVisible] = useState(false);
+  const [activeNote, setActiveNote] = useState<Note | null>(null);
 
   const [selectedStyle, setSelectedStyle] = useState<HighlightStyle>(settings.globalReadSettings.highlightStyle);
   const [selectedColor, setSelectedColor] = useState<HighlightColor>(
@@ -65,6 +82,10 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   const popupPadding = 10;
   const annotPopupWidth = Math.min(globalViewSettings?.vertical ? 320 : 280, window.innerWidth - 2 * popupPadding);
   const annotPopupHeight = 36;
+  const sourceBoundNotes = useMemo(
+    () => notesData?.pages.flatMap((page) => page.data).filter((note) => Boolean(note.cfi)) ?? [],
+    [notesData],
+  );
 
   // Popup 相关函数
   const handleDismissPopup = useCallback(() => {
@@ -177,30 +198,53 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     if (!selection || !selection.text) return;
 
     try {
-      const content = selection.text.trim();
-      const title = content.length > 50 ? `${content.substring(0, 50)}...` : content;
-
       if (!bookData?.book) {
         toast.error("无法获取书籍信息");
         return;
       }
+
+      const cfi = view?.getCFI(selection.index, selection.range);
+      if (!cfi) {
+        toast.error("无法定位笔记位置");
+        return;
+      }
+
+      const existingNote = await getNoteByBookLocation(bookId, cfi);
+      if (existingNote) {
+        handleDismissPopupAndSelection();
+        setActiveNote(existingNote);
+        toast.info("已打开现有笔记");
+        return;
+      }
+
+      const ctx = getContextByRange(selection.range, 50);
+      const sourceText = selection.text.trim();
 
       const bookMeta: BookMeta = {
         title: bookData.book.title,
         author: bookData.book.author,
       };
 
-      await handleCreateNote({
+      const newNote = await handleCreateNote({
         bookId,
         bookMeta,
-        title,
-        content,
+        title: sourceText,
+        content: "",
+        cfi,
+        sourceText,
+        contextBefore: ctx.before,
+        contextAfter: ctx.after,
       });
-      toast.success("笔记已创建");
+
+      const marker = toReaderNoteMarker(newNote);
+      if (marker) {
+        view?.addAnnotation(marker);
+      }
+      handleDismissPopupAndSelection();
     } catch (error) {
       toast.error("创建笔记失败");
     }
-  }, [selection, bookData, bookId, handleCreateNote]);
+  }, [selection, bookData, view, bookId, handleCreateNote, handleDismissPopupAndSelection]);
 
   const handleExplain = useCallback(() => {
     if (!selection || !selection.text) return;
@@ -309,6 +353,30 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress]);
 
+  useEffect(() => {
+    for (const marker of currentNoteMarkersRef.current) {
+      view?.addAnnotation(marker, true);
+    }
+    currentNoteMarkersRef.current = [];
+
+    if (!progress || !view) return;
+
+    try {
+      const { location } = progress;
+      const start = CFI.collapse(location);
+      const end = CFI.collapse(location, true);
+      const visibleMarkers = sourceBoundNotes
+        .filter((note) => note.cfi && CFI.compare(note.cfi, start) >= 0 && CFI.compare(note.cfi, end) <= 0)
+        .map(toReaderNoteMarker)
+        .filter((marker): marker is ReaderNoteMarker => marker !== null);
+
+      currentNoteMarkersRef.current = visibleMarkers;
+      Promise.all(visibleMarkers.map((marker) => view.addAnnotation(marker)));
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [progress, sourceBoundNotes, view]);
+
   return {
     // 状态
     selection,
@@ -319,6 +387,9 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     annotPopupPosition,
     askAIPopupPosition,
     highlightOptionsVisible,
+    activeNote,
+    setActiveNote,
+    sourceBoundNotes,
     selectedStyle,
     setSelectedStyle,
     selectedColor,
@@ -331,6 +402,8 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     handleDismissPopupAndSelection,
     handleCopy,
     handleHighlight,
+    handleDeleteNote,
+    handleUpdateNote,
     addNote,
     handleExplain,
     handleAskAI,

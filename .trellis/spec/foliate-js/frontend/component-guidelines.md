@@ -67,6 +67,66 @@ if (this.isFixedLayout) {
 
 Keep optional format and renderer modules dynamically imported so the library stays modular and avoids hard dependencies until a file type needs them.
 
+## Annotation Overlay Key Contract
+
+### 1. Scope / Trigger
+
+Use this contract when one CFI-backed location needs more than one overlay, such as a highlight plus a separate reader note marker. The CFI remains the navigation target; `overlayKey` is only the overlayer map key and emitted click identity.
+
+### 2. Signatures
+
+```js
+await view.addAnnotation({
+    value: 'epubcfi(/6/8)',
+    overlayKey: 'note:note-id',
+    markerType: 'note',
+})
+
+draw(Overlayer.noteMarker, { hitElementOnly: true })
+```
+
+### 3. Contracts
+
+- `annotation.value` must stay resolvable by `resolveNavigation(value)`.
+- `annotation.overlayKey ?? annotation.value` is used for `overlayer.add()` and `overlayer.remove()`.
+- `show-annotation` emits the overlayer key, so consumers can route `note:<id>` separately from normal CFI annotation clicks.
+- Badge-like overlays that should not claim the full text range must pass `hitElementOnly: true`; `Overlayer.hitTest()` then skips range rects and checks only the drawn element bounds.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| `overlayKey` is omitted | Preserve existing behavior by using `value` as the key. |
+| `value` is not resolvable | Do not add the overlay; let existing navigation resolution fail. |
+| A badge overlay uses full-range hit testing | Treat as a bug because it can intercept highlight clicks. |
+| A normal highlight uses `hitElementOnly` | Treat as a bug because the highlighted range should remain clickable. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: A note marker uses `value: cfi`, `overlayKey: note:<id>`, and `hitElementOnly: true`.
+- Base: A highlight uses only `value: cfi` and keeps full-range hit testing.
+- Bad: Replacing `value` with `note:<id>`, because foliate cannot resolve it as a navigation target.
+
+### 6. Tests Required
+
+- Run `pnpm --filter foliate-js build` after changing `view.js` or `overlayer.js`.
+- Run `pnpm --filter app build` after changing emitted event shapes or consumed ambient declarations.
+- Manual reader checks must cover clicking the note badge, clicking a highlight under/near the badge, and removing both independently.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```js
+view.addAnnotation({ value: `note:${id}` });
+```
+
+#### Correct
+
+```js
+view.addAnnotation({ value: cfi, overlayKey: `note:${id}`, markerType: 'note' });
+```
+
 ## Styling Patterns
 
 - Custom elements attach shadow roots where internals need encapsulation.

@@ -43,11 +43,52 @@ export class Overlayer {
         // loop in reverse to hit more recently added items first
         for (let i = arr.length - 1; i >= 0; i--) {
             const [key, obj] = arr[i]
-            for (const { left, top, right, bottom } of obj.rects)
-                if (top <= y && left <= x && bottom > y && right > x)
-                    return [key, obj.range]
+            if (!obj.options?.hitElementOnly)
+                for (const { left, top, right, bottom } of obj.rects)
+                    if (top <= y && left <= x && bottom > y && right > x)
+                        return [key, obj.range]
+            const box = obj.element?.getBoundingClientRect?.()
+            if (box && box.top <= y && box.left <= x && box.bottom > y && box.right > x)
+                return [key, obj.range]
         }
         return []
+    }
+    static noteMarker(rects, options = {}) {
+        const {
+            color = '#2563eb',
+            textColor = '#ffffff',
+            label = '笔',
+            width = 18,
+            height = 16,
+            radius = 5,
+            offset = 2,
+        } = options
+        const rect = rects[rects.length - 1]
+        const g = createSVGElement('g')
+        if (!rect) return g
+
+        const x = rect.right - width / 2
+        const y = Math.max(0, rect.top - height - offset)
+
+        const badge = createSVGElement('rect')
+        badge.setAttribute('x', x)
+        badge.setAttribute('y', y)
+        badge.setAttribute('width', width)
+        badge.setAttribute('height', height)
+        badge.setAttribute('rx', radius)
+        badge.setAttribute('fill', color)
+
+        const text = createSVGElement('text')
+        text.setAttribute('x', x + width / 2)
+        text.setAttribute('y', y + height / 2 + 4)
+        text.setAttribute('fill', textColor)
+        text.setAttribute('font-size', '11')
+        text.setAttribute('font-weight', '700')
+        text.setAttribute('text-anchor', 'middle')
+        text.textContent = label
+
+        g.append(badge, text)
+        return g
     }
     static underline(rects, options = {}) {
         const { color = 'red', width: strokeWidth = 2, writingMode } = options
@@ -265,4 +306,3 @@ export class Overlayer {
         return image
     }
 }
-

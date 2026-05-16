@@ -86,6 +86,14 @@ export async function getNotesByBookId(
 }
 
 /**
+ * 获取指定书籍位置的独立笔记
+ */
+export async function getNoteByBookLocation(bookId: string, cfi: string): Promise<Note | null> {
+  const notes = await getNotes({ bookId, cfi, limit: 1, sortBy: "updated_at", sortOrder: "desc" });
+  return notes[0] ?? null;
+}
+
+/**
  * 分页获取笔记
  */
 export async function getNotesPaginated(
