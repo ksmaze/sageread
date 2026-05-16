@@ -86,6 +86,7 @@ createRoot(document.getElementById("root")!).render(
 - Reader selection popups sit above the dock (`z-[80]`); active sheet content sits above them (`z-[100]`).
 - Portalled controls opened from reader sheets must render above the active sheet layer. For example, a `SelectContent` used inside `ReaderStylePanel` needs a z-index above `z-[100]`, such as `z-[120]`, because the shared select content portals to `document.body`.
 - Shared portalled primitives that may be used from mobile sheets or dialogs (`DialogContent`, `DropdownMenuContent`, `PopoverContent`, and `SelectContent`) should default to a layer above active sheets, currently `z-[120]`. Do not raise one modal layer without checking nested portalled controls that open from inside it.
+- Portalled popovers opened from inline mobile sheet content must also fit the visual viewport. Prefer Radix collision-aware vertical placement (`side="bottom"` with normal flip/shift behavior), `collisionPadding`, and viewport-clamped dimensions such as `w-[min(20rem,calc(100vw-2rem))]` plus `max-h-[min(<cap>,var(--radix-popover-content-available-height))]`. Avoid desktop sidebar assumptions such as forcing `side="left"` / `side="right"`, computing offsets from `#chat-sidebar`, or fixed `w-80` panels that can overflow a phone sheet.
 
 ## Mobile AI Chat Contracts
 
@@ -94,6 +95,7 @@ createRoot(document.getElementById("root")!).render(
 - Reader-scoped AI runs inside `MobileSheet` and must preserve the `MobileSheet z-[100]` stacking contract. Header controls must keep at least `44px` touch targets.
 - Shared chat components must get their surface context from `ChatSurfaceProvider`, not from router paths such as `/chat`. The standalone AI destination uses `surface="standalone"`; reader-scoped AI uses `surface="reader"`.
 - A newly opened or empty book-scoped chat must show a loading or empty state. It must not leave the message container blank while thread initialization completes.
+- AI markdown annotation/citation popovers may be triggered from arbitrary inline text positions inside the standalone AI destination or reader-scoped AI sheet. Keep these popovers viewport-contained with collision padding, clamped width, and an internal scroll region instead of preserving old desktop side-chat left/right placement.
 - Settings opened from mobile AI must appear above the AI sheet, and model/history popups must remain tappable without closing the sheet first.
 - Do not show both the shell-level floating settings shortcut and the `MobileAiChat` header settings button on the standalone AI destination.
 
@@ -141,6 +143,7 @@ Manual or device-emulated checks should cover:
 - `1280x800` tablet landscape.
 - Library upload/search/tags/open-book workflows.
 - Reader TOC/search/style/notes/AI sheets and text selection popups.
+- AI annotation/citation popovers opened from markers near the left, right, top, and bottom viewport edges.
 - Global AI chat and reader-scoped AI chat.
 - Unified Notes filters and reader-scoped notes.
 - Unified Notes model mapping with a focused `tsx --test` regression when display fields or supported note types change.
@@ -176,6 +179,26 @@ Manual or device-emulated checks should cover:
 window.addEventListener("message", handleIframeSingleClick);
 ```
 
+### Wrong: Desktop Side Placement Inside Mobile Sheets
+
+```tsx
+// Wrong: a fixed 20rem panel forced left/right can leave the phone viewport.
+<PopoverContent side={isStandaloneChat ? "right" : "left"} sideOffset={sideOffset} className="w-80" />
+```
+
+### Correct: Viewport-Contained Mobile Popovers
+
+```tsx
+// Correct: Radix can flip/shift vertically, while width and height stay inside the viewport.
+<PopoverContent
+  side="bottom"
+  align="center"
+  sideOffset={8}
+  collisionPadding={16}
+  className="max-h-[min(24rem,var(--radix-popover-content-available-height))] w-[min(20rem,calc(100vw-2rem))]"
+/>
+```
+
 ## Common Mistakes
 
 - Treating deleted desktop `ReaderLayout` code or `app-tabs` as the current shell contract.
@@ -185,3 +208,4 @@ window.addEventListener("message", handleIframeSingleClick);
 - Letting bottom navigation cover chat inputs, settings rows, or sheet content.
 - Using z-index values that put reader selection controls under the dock.
 - Forgetting that portalled option lists/popovers opened from `MobileSheet` need to stack above the sheet, not at the shared primitive default `z-50`.
+- Treating `MobileAiChat` as a desktop side-chat container. The same `#chat-sidebar` id appears in mobile surfaces, but popover placement must be based on the viewport and Radix collision data, not sidebar offset math.

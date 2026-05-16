@@ -38,6 +38,7 @@ For each arrow, ask:
 | Service ↔ Database | Format conversions, null handling |
 | Backend ↔ Frontend | Serialization, date formats |
 | Component ↔ Component | Props shape changes |
+| Trigger Surface ↔ Portal Root | z-index, collision boundary, viewport clamping, focus/outside-click behavior |
 
 ### Step 3: Define Contracts
 
@@ -68,6 +69,12 @@ For each boundary:
 
 **Good**: Each layer only knows its neighbors
 
+### Mistake 4: Treating Portalled UI As If It Stayed In Its Parent
+
+**Bad**: A popover opened from a mobile sheet uses desktop sidebar left/right placement and fixed width because the trigger component was originally written for a side panel.
+
+**Good**: Map the trigger surface, portal root, stacking layer, collision boundary, and viewport constraints. Use the relevant layer spec for concrete contracts; for Android mobile overlays see `../app/frontend/android-mobile-shell.md`.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -77,6 +84,7 @@ Before implementation:
 - [ ] Identified all layer boundaries
 - [ ] Defined format at each boundary
 - [ ] Decided where validation happens
+- [ ] For portalled UI, identified the trigger surface, portal root, z-index layer, collision boundary, and max viewport size
 
 After implementation:
 - [ ] Tested with edge cases (null, empty, invalid)
