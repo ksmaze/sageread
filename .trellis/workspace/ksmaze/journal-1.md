@@ -322,3 +322,37 @@ Prevented foliate paginator touch gestures from hijacking active Android text se
 ### Next Steps
 
 - None - task complete
+
+
+## Session 10: Fix content-specific reader selection jump
+
+**Date**: 2026-05-15
+**Task**: Fix content-specific reader selection jump
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Restricted foliate selection auto-paging to mouse range selection after EPUB paragraph-start selection jumped on Android touch handles.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fe4fcb0` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
