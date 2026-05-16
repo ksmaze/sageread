@@ -424,3 +424,38 @@ Removed Android-irrelevant settings, desktop shell/app-tabs, updater, and custom
 ### Next Steps
 
 - None - task complete
+
+
+## Session 13: Fix AI annotation popover overflow
+
+**Date**: 2026-05-16
+**Task**: Fix AI annotation popover overflow
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Fixed AI annotation popovers so citation panels stay within the mobile viewport, added a regression test, and captured the mobile overlay containment lesson in Trellis specs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `17bf3c9` | (see git log) |
+| `f2b929a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
