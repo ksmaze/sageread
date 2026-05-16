@@ -220,3 +220,37 @@ Fixed unified notes detail dialogs so long content scrolls instead of clipping, 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: Stabilize mobile AI chat
+
+**Date**: 2026-05-15
+**Task**: Stabilize mobile AI chat
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Fixed mobile AI blank initialization, replaced desktop chat shell with a mobile-native layout, and lifted portalled controls above the reader sheet.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bebd018` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
