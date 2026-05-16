@@ -356,3 +356,37 @@ Restricted foliate selection auto-paging to mouse range selection after EPUB par
 ### Next Steps
 
 - None - task complete
+
+
+## Session 11: Mobile reader chapter chrome
+
+**Date**: 2026-05-15
+**Task**: Mobile reader chapter chrome
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Added a single bottom reader chrome stack with previous/next chapter controls, chapter/progress display, tested page-progress formatting, and updated the Android reader chrome spec.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f8fa81b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
