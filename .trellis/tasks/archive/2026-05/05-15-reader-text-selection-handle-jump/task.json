@@ -1,0 +1,31 @@
+{
+  "id": "reader-text-selection-handle-jump",
+  "name": "reader-text-selection-handle-jump",
+  "title": "Fix reader text selection handle jump",
+  "description": "",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": "foliate-js",
+  "priority": "P1",
+  "creator": "ksmaze",
+  "assignee": "ksmaze",
+  "createdAt": "2026-05-15",
+  "completedAt": "2026-05-15",
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "packages/foliate-js/paginator.js",
+    "packages/foliate-js/selection.js",
+    "packages/foliate-js/tests/selection-tests.js",
+    ".trellis/spec/foliate-js/frontend/component-guidelines.md"
+  ],
+  "notes": "Root cause is foliate selectionchange auto-paging treating touch selection handles like mouse drag selection. The affected EPUB paragraph CSS made this content-specific.",
+  "meta": {}
+}
