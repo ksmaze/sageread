@@ -39,6 +39,7 @@ For each arrow, ask:
 | Backend ↔ Frontend | Serialization, date formats |
 | Component ↔ Component | Props shape changes |
 | Trigger Surface ↔ Portal Root | z-index, collision boundary, viewport clamping, focus/outside-click behavior |
+| Dynamic SQL ↔ Service Error UI | malformed generated SQL, hidden backend string errors |
 
 ### Step 3: Define Contracts
 
@@ -90,6 +91,8 @@ After implementation:
 - [ ] Tested with edge cases (null, empty, invalid)
 - [ ] Verified error handling at each boundary
 - [ ] Checked data survives round-trip
+- [ ] For dynamic SQL, tested the generated query against a real/in-memory database, not only by reading the builder code
+- [ ] For Tauri/backend string errors, verified the frontend service preserves the real message instead of replacing it with a generic fallback
 
 ---
 

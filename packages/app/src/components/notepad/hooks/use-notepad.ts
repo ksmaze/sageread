@@ -4,6 +4,8 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import { useCallback } from "react";
 import { toast } from "sonner";
 
+const getToastErrorMessage = (fallback: string, error: unknown) => (error instanceof Error ? error.message : fallback);
+
 interface UseNotepadProps {
   bookId?: string;
 }
@@ -68,7 +70,7 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
         return newNote;
       } catch (error) {
         console.error("创建笔记失败:", error);
-        toast.error("创建笔记失败");
+        toast.error(getToastErrorMessage("创建笔记失败", error));
         throw error;
       }
     },
@@ -87,7 +89,7 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
         return updatedNote;
       } catch (error) {
         console.error("更新笔记失败:", error);
-        toast.error("更新笔记失败");
+        toast.error(getToastErrorMessage("更新笔记失败", error));
         throw error;
       }
     },
@@ -104,7 +106,7 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
         invalidateNoteQueries(noteId);
       } catch (error) {
         console.error("删除笔记失败:", error);
-        toast.error("删除笔记失败");
+        toast.error(getToastErrorMessage("删除笔记失败", error));
         throw error;
       }
     },

@@ -26,3 +26,21 @@ console.assert(bookmark?.getAttribute('opacity') === '0.42',
     'note marker should be semi-transparent')
 console.assert(bookmark?.getAttribute('d') === 'M 155.5 21 L 164.5 21 L 164.5 33 L 160 30 L 155.5 33 Z',
     'note marker should be a 9x12 bookmark at the selected text end')
+
+const overlayer = new Overlayer()
+const fakeRange = {
+    getClientRects: () => [{ left: 100, top: 32, right: 160, bottom: 52 }],
+}
+overlayer.add('note:note-1', fakeRange, (rects, options) => {
+    const element = Overlayer.noteMarker(rects, options)
+    element.getBoundingClientRect = () => ({
+        left: 155.5,
+        top: 21,
+        right: 164.5,
+        bottom: 33,
+    })
+    return element
+}, { color: '#2563eb', hitElementOnly: true })
+const [hitValue] = overlayer.hitTest({ x: 145, y: 15 })
+console.assert(hitValue === 'note:note-1',
+    'note marker hit test should use the explicit transparent hit area, not only the visible bookmark bounds')

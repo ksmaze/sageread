@@ -2,6 +2,12 @@ import type { BookMeta, CreateNoteData, Note, NoteQueryOptions, UpdateNoteData }
 import type { SimpleBook } from "@/types/simple-book";
 import { invoke } from "@tauri-apps/api/core";
 
+export function toNoteServiceErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  return "未知错误";
+}
+
 /**
  * 创建新笔记
  */
@@ -11,7 +17,7 @@ export async function createNote(data: CreateNoteData): Promise<Note> {
     return result;
   } catch (error) {
     console.error("创建笔记失败:", error);
-    throw new Error(`创建笔记失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`创建笔记失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -24,7 +30,7 @@ export async function updateNote(data: UpdateNoteData): Promise<Note> {
     return result;
   } catch (error) {
     console.error("更新笔记失败:", error);
-    throw new Error(`更新笔记失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`更新笔记失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -36,7 +42,7 @@ export async function deleteNote(id: string): Promise<void> {
     await invoke("delete_note", { id });
   } catch (error) {
     console.error("删除笔记失败:", error);
-    throw new Error(`删除笔记失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`删除笔记失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -49,7 +55,7 @@ export async function getNoteById(id: string): Promise<Note | null> {
     return result;
   } catch (error) {
     console.error("获取笔记详情失败:", error);
-    throw new Error(`获取笔记详情失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`获取笔记详情失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -62,7 +68,7 @@ export async function getNotes(options: NoteQueryOptions = {}): Promise<Note[]> 
     return result;
   } catch (error) {
     console.error("获取笔记列表失败:", error);
-    throw new Error(`获取笔记列表失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`获取笔记列表失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -81,7 +87,7 @@ export async function getNotesByBookId(
     return await getNotes(queryOptions);
   } catch (error) {
     console.error("获取书籍笔记失败:", error);
-    throw new Error(`获取书籍笔记失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`获取书籍笔记失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -111,7 +117,7 @@ export async function getNotesPaginated(
     return await getNotes(queryOptions);
   } catch (error) {
     console.error("分页获取笔记失败:", error);
-    throw new Error(`分页获取笔记失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`分页获取笔记失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -128,7 +134,7 @@ export async function createStandaloneNote(noteData: Pick<CreateNoteData, "title
     return await createNote(createData);
   } catch (error) {
     console.error("创建独立笔记失败:", error);
-    throw new Error(`创建独立笔记失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`创建独立笔记失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -151,7 +157,7 @@ export async function linkNoteToBook(noteId: string, book: SimpleBook): Promise<
     return await updateNote(updateData);
   } catch (error) {
     console.error("关联笔记到书籍失败:", error);
-    throw new Error(`关联笔记到书籍失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`关联笔记到书籍失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -169,7 +175,7 @@ export async function unlinkNoteFromBook(noteId: string): Promise<Note> {
     return await updateNote(updateData);
   } catch (error) {
     console.error("取消笔记书籍关联失败:", error);
-    throw new Error(`取消笔记书籍关联失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`取消笔记书籍关联失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -189,7 +195,7 @@ export async function updateNoteContent(
     return await updateNote(updateData);
   } catch (error) {
     console.error("更新笔记内容失败:", error);
-    throw new Error(`更新笔记内容失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`更新笔记内容失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -207,7 +213,7 @@ export async function getRecentNotes(limit = 10): Promise<Note[]> {
     return await getNotes(options);
   } catch (error) {
     console.error("获取最近笔记失败:", error);
-    throw new Error(`获取最近笔记失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`获取最近笔记失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 
@@ -224,7 +230,7 @@ export async function getNotesByTitle(order: "asc" | "desc" = "asc"): Promise<No
     return await getNotes(options);
   } catch (error) {
     console.error("按标题获取笔记失败:", error);
-    throw new Error(`按标题获取笔记失败: ${error instanceof Error ? error.message : "未知错误"}`);
+    throw new Error(`按标题获取笔记失败: ${toNoteServiceErrorMessage(error)}`);
   }
 }
 

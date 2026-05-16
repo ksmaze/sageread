@@ -206,6 +206,24 @@ getNotes({ bookId, cfi, limit: 1 }): Promise<Note[]>;
 getNoteByBookLocation(bookId: string, cfi: string): Promise<Note | null>;
 getNoteById(id: string): Promise<Note | null>;
 handleUpdateNote({ id, content }): Promise<Note>;
+toNoteServiceErrorMessage(error: unknown): string;
+```
+
+```rust
+#[tauri::command]
+pub async fn update_note(app_handle: AppHandle, data: UpdateNoteData) -> Result<Note, String>;
+
+pub struct UpdateNoteData {
+    pub id: String,
+    pub book_id: Option<Option<String>>,
+    pub book_meta: Option<Option<BookMeta>>,
+    pub title: Option<Option<String>>,
+    pub content: Option<Option<String>>,
+    pub cfi: Option<Option<String>>,
+    pub source_text: Option<Option<String>>,
+    pub context_before: Option<Option<String>>,
+    pub context_after: Option<Option<String>>,
+}
 ```
 
 ### 3. Contracts
@@ -217,6 +235,10 @@ handleUpdateNote({ id, content }): Promise<Note>;
 - Reader marker clicks emit `note:<id>` and must open the independent note editor from the latest note state. If the note is not present in the current source-bound reader list, fetch it by id instead of silently ignoring the marker.
 - Saving from the reader note editor must merge the backend-returned `Note` into the current active note state when ids match; do not keep a stale pre-save `activeNote` object.
 - Mutations through `useNotepad` must invalidate `["notes"]`, per-note detail, and `["mobile-unified-notes"]` so reader sheets and management screens stay in sync.
+- `UpdateNoteData` uses `Option<Option<T>>` partial-update semantics: outer `None` means leave the field unchanged, `Some(None)` means clear it to SQL `NULL`, and `Some(Some(value))` means write a new value.
+- Dynamic note updates must append assignment fragments and bind placeholders as one logical `SET` item. When using `sqlx::QueryBuilder::separated(", ")`, call `push_bind_unseparated()` after `push("field = ")`; otherwise sqlx can insert a comma before the bind and produce invalid SQL such as `content = , ?`.
+- `update_note` must execute the dynamic `UPDATE`, treat `rows_affected() == 0` as `笔记不存在`, then return the fresh `Note` from `get_note_by_id` so the reader editor and note lists can replace stale state with backend truth.
+- Frontend note services must preserve Tauri string errors. Use `toNoteServiceErrorMessage(error)` before wrapping service errors, and let hooks/toasts show `error.message` when available instead of collapsing backend strings to `未知错误`.
 
 ### 4. Validation & Error Matrix
 
@@ -224,6 +246,10 @@ handleUpdateNote({ id, content }): Promise<Note>;
 |---|---|
 | `bookId` is provided without `bookMeta` | Reject the create/update request. |
 | `title`, `content`, and `sourceText` are all blank on create | Reject the create request. |
+| `{ id, content }` is the only update payload | Build valid `UPDATE notes SET content = ?, updated_at = ? WHERE id = ?`, execute it, and return the updated row. |
+| No updatable fields are present in `UpdateNoteData` | Reject with `没有需要更新的字段`. |
+| Dynamic update affects zero rows | Reject with `笔记不存在`. |
+| Backend/Tauri rejects with a string error | Surface the actual string inside the frontend `Error.message`; do not replace it with `未知错误`. |
 | Selected range cannot produce a CFI | Show an error and do not create a note. |
 | `{ bookId, cfi }` already has a note | Open/reuse the existing note instead of inserting. |
 | Marker emits `note:<id>` before the notes page is loaded | Fetch by id and open the editor if the note exists. |
@@ -235,15 +261,19 @@ handleUpdateNote({ id, content }): Promise<Note>;
 
 - Good: Select text, tap the note action, create an empty `Note` with source fields, close the selection popup, and later edit it from the note marker or notes list.
 - Good: Tap a note marker, resolve `note:<id>` to a `Note`, save `{ id, content }`, and use the returned `Note` for active reader state.
+- Good: Save `{ id, content: "aaa" }`, run the dynamic SQL update without separator corruption, and show the returned content immediately in the reader note editor.
 - Base: A loose standalone note with no `bookId` continues to display title/content and has no reader target.
 - Bad: Storing user note text inside `BookNote.note`, creating a highlight to represent a note, or using title/content-only rows for reader-created notes.
 - Bad: Looking only in a possibly unloaded `sourceBoundNotes` array and doing nothing when the marker id is absent.
+- Bad: Converting a Tauri string error into `未知错误`; that hides the SQL/backend cause needed for debugging.
 
 ### 6. Tests Required
 
 - Unified note model tests must assert that source-bound notes use `sourceText` for title/body and include a reader target with `cfi`.
 - Note display helper tests must assert empty source-bound notes display the source excerpt.
 - Reader note state tests must assert save-returned notes replace matching active state and marker ids can fall back to `getNoteById`.
+- Rust note command tests must cover content-only dynamic update SQL and execute it against an in-memory SQLite row.
+- Note service tests must cover string Tauri errors and JavaScript `Error.message` preservation.
 - Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml` after schema/model/command changes.
 - Run `pnpm --filter app build` after TypeScript contracts, reader hooks, or mobile notes screens change.
 
@@ -272,6 +302,20 @@ await createNote({
   contextBefore,
   contextAfter,
 });
+```
+
+#### Wrong
+
+```rust
+separated.push("content = ").push_bind(content_opt.clone());
+```
+
+#### Correct
+
+```rust
+separated
+    .push("content = ")
+    .push_bind_unseparated(content_opt.clone());
 ```
 
 ## Settings Contract

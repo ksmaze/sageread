@@ -83,6 +83,9 @@ await view.addAnnotation({
 })
 
 draw(Overlayer.noteMarker, { hitElementOnly: true })
+
+Overlayer.noteMarker(rects, { hitPadding: 12 })
+Overlayer.hitTest({ x, y })
 ```
 
 ### 3. Contracts
@@ -93,6 +96,8 @@ draw(Overlayer.noteMarker, { hitElementOnly: true })
 - A successful annotation hit must consume the iframe `click` in the capture phase with `preventDefault()` and `stopImmediatePropagation()` before emitting `show-annotation`. Reader chrome, page-turn, and generic iframe single-click handlers must not run for the same tap.
 - Badge-like overlays that should not claim the full text range must pass `hitElementOnly: true`; `Overlayer.hitTest()` then skips range rects and checks only the drawn element bounds.
 - `Overlayer.noteMarker()` renders a small semi-transparent bookmark path at the end/top of the selected text. Its default visual size is `9x12`, with a transparent hit area around the icon so it remains tappable without returning to full-range hit testing.
+- Transparent hit areas are part of the marker contract. `Overlayer.noteMarker()` must mark the transparent hit rectangle with `data-overlayer-hit-area="true"`, and `Overlayer.hitTest()` must check those explicit `x/y/width/height` bounds before falling back to `getBoundingClientRect()` on the returned group.
+- Do not rely on an SVG `<g>` bounding box to include transparent children. Android WebView can treat the group as only the visible bookmark path, which lets marker taps fall through to generic reader click handlers.
 
 ### 4. Validation & Error Matrix
 
@@ -101,6 +106,8 @@ draw(Overlayer.noteMarker, { hitElementOnly: true })
 | `overlayKey` is omitted | Preserve existing behavior by using `value` as the key. |
 | `value` is not resolvable | Do not add the overlay; let existing navigation resolution fail. |
 | `overlayer.hitTest(e)` returns a non-search annotation | Consume the click and emit exactly one `show-annotation` event. |
+| Point is inside a note marker's transparent hit area but outside the visible bookmark path | Return the `note:<id>` overlay key. |
+| Browser group bounds exclude the transparent hit rectangle | Use the explicit hit-area attributes instead of missing the marker. |
 | A badge overlay uses full-range hit testing | Treat as a bug because it can intercept highlight clicks. |
 | A normal highlight uses `hitElementOnly` | Treat as a bug because the highlighted range should remain clickable. |
 
@@ -109,15 +116,17 @@ draw(Overlayer.noteMarker, { hitElementOnly: true })
 - Good: A note marker uses `value: cfi`, `overlayKey: note:<id>`, and `hitElementOnly: true`.
 - Good: A note marker customizes only icon options such as `{ color, width, height, opacity, hitPadding }`, while keeping `hitElementOnly: true`.
 - Good: A marker tap emits `show-annotation` and does not also trigger reader chrome/page click behavior.
+- Good: A tap lands in the transparent hit rectangle around the compact bookmark, and `Overlayer.hitTest()` returns `note:<id>` even if the SVG group bbox only covers the visible path.
 - Base: A highlight uses only `value: cfi` and keeps full-range hit testing.
 - Bad: Replacing `value` with `note:<id>`, because foliate cannot resolve it as a navigation target.
 - Bad: Emitting `show-annotation` from a bubble-phase listener without consuming the event, because app iframe click handlers can process the same tap.
 - Bad: Reintroducing a text label inside `Overlayer.noteMarker()`; the marker should stay a compact bookmark so it does not cover reader text.
+- Bad: Increasing the visual bookmark size to improve tapping; keep the visual compact and enlarge only the explicit transparent hit area.
 
 ### 6. Tests Required
 
 - Run `pnpm --filter foliate-js build` after changing `view.js` or `overlayer.js`.
-- Run or update `packages/foliate-js/tests/overlayer-tests.js` when changing `Overlayer.noteMarker()` geometry, opacity, or hit area behavior.
+- Run or update `packages/foliate-js/tests/overlayer-tests.js` when changing `Overlayer.noteMarker()` geometry, opacity, or hit area behavior. The test must include a point inside the explicit transparent hit area but outside the visible bookmark/group bbox.
 - Run `pnpm --filter app build` after changing emitted event shapes or consumed ambient declarations.
 - Manual reader checks must cover clicking the note badge, clicking a highlight under/near the badge, and removing both independently.
 
@@ -133,6 +142,23 @@ view.addAnnotation({ value: `note:${id}` });
 
 ```js
 view.addAnnotation({ value: cfi, overlayKey: `note:${id}`, markerType: 'note' });
+```
+
+#### Wrong
+
+```js
+const box = obj.element.getBoundingClientRect()
+if (box.left <= x && x < box.right && box.top <= y && y < box.bottom)
+    return [key, obj.range]
+```
+
+#### Correct
+
+```js
+for (const hitArea of getExplicitHitAreas(obj.element)) {
+    const box = getExplicitHitBox(hitArea)
+    if (box && containsPoint(box, x, y)) return [key, obj.range]
+}
 ```
 
 ## Styling Patterns

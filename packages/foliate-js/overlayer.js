@@ -1,6 +1,27 @@
 const createSVGElement = tag =>
     document.createElementNS('http://www.w3.org/2000/svg', tag)
 
+const containsPoint = ({ left, top, right, bottom }, x, y) =>
+    top <= y && left <= x && bottom > y && right > x
+
+const getExplicitHitBox = element => {
+    const [rawX, rawY, rawWidth, rawHeight] = ['x', 'y', 'width', 'height']
+        .map(name => element.getAttribute?.(name))
+    if ([rawX, rawY, rawWidth, rawHeight].some(value => value == null))
+        return element.getBoundingClientRect?.()
+    const x = Number(rawX)
+    const y = Number(rawY)
+    const width = Number(rawWidth)
+    const height = Number(rawHeight)
+    if ([x, y, width, height].every(Number.isFinite))
+        return { left: x, top: y, right: x + width, bottom: y + height }
+    return element.getBoundingClientRect?.()
+}
+
+const getExplicitHitAreas = element =>
+    Array.from(element?.children ?? [])
+        .filter(child => child.getAttribute?.('data-overlayer-hit-area') === 'true')
+
 export class Overlayer {
     #svg = createSVGElement('svg')
     #map = new Map()
@@ -47,8 +68,12 @@ export class Overlayer {
                 for (const { left, top, right, bottom } of obj.rects)
                     if (top <= y && left <= x && bottom > y && right > x)
                         return [key, obj.range]
+            for (const hitArea of getExplicitHitAreas(obj.element)) {
+                const box = getExplicitHitBox(hitArea)
+                if (box && containsPoint(box, x, y)) return [key, obj.range]
+            }
             const box = obj.element?.getBoundingClientRect?.()
-            if (box && box.top <= y && box.left <= x && box.bottom > y && box.right > x)
+            if (box && containsPoint(box, x, y))
                 return [key, obj.range]
         }
         return []
@@ -76,6 +101,7 @@ export class Overlayer {
         hitArea.setAttribute('width', width + hitPadding * 2)
         hitArea.setAttribute('height', height + hitPadding * 2)
         hitArea.setAttribute('fill', 'transparent')
+        hitArea.setAttribute('data-overlayer-hit-area', 'true')
 
         const bookmark = createSVGElement('path')
         bookmark.setAttribute(
