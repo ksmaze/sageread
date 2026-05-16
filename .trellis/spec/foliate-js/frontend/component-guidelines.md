@@ -87,6 +87,30 @@ foliate-view::part(filter) {
 - Renderer internals must preserve selection and text ranges because annotation, search, TTS, and CFI features depend on DOM `Range` fidelity.
 - Do not hide book content from assistive technologies unless the rendering mode has a documented reason.
 
+### Gotcha: Text Selection Beats Paging Gestures
+
+**Symptom**: On Android, text selection handles jump or become difficult to adjust when a selection starts at a paragraph boundary.
+
+**Cause**: `foliate-paginator` touch handlers keep treating the iframe as a paging surface even while the document has an active non-collapsed selection.
+
+**Fix**: Yield touch handling to the selection state before calling `preventDefault()`, scrolling, or snapping pages.
+
+**Example**:
+```js
+import { hasActiveTextSelection } from './selection.js'
+
+#onTouchMove(e) {
+    if (!this.#touchState || hasActiveTextSelection(this.#view?.document)) return
+    // keep swipe paging only when there is no active selection
+}
+
+#onTouchEnd() {
+    if (this.scrolled || !this.#touchState || hasActiveTextSelection(this.#view?.document)) return
+}
+```
+
+**Prevention**: Any future touch gesture in the reader must check for active selection ranges before it claims the pointer sequence.
+
 ## Common Mistakes
 
 - Adding React components or JSX to `foliate-js`; framework wrappers belong in consumers.

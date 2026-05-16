@@ -1,3 +1,5 @@
+import { hasActiveTextSelection } from './selection.js'
+
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const debounce = (f, wait, immediate) => {
@@ -828,6 +830,7 @@ export class Paginator extends HTMLElement {
   }
   #onTouchMove(e) {
     const state = this.#touchState;
+    if (!state || hasActiveTextSelection(this.#view?.document)) return;
     if (state.pinched) return;
     state.pinched = globalThis.visualViewport.scale > 1;
     if (this.scrolled || state.pinched) return;
@@ -852,7 +855,7 @@ export class Paginator extends HTMLElement {
   }
   #onTouchEnd() {
     this.#touchScrolled = false;
-    if (this.scrolled) return;
+    if (this.scrolled || !this.#touchState || hasActiveTextSelection(this.#view?.document)) return;
 
     // XXX: Firefox seems to report scale as 1... sometimes...?
     // at this point I'm basically throwing `requestAnimationFrame` at
