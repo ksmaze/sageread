@@ -12,6 +12,8 @@ interface ChatInputAreaProps {
   status: string;
   activeBookId: string | undefined;
   showToolDetail?: boolean;
+  showContextPicker?: boolean;
+  showQuickActions?: boolean;
 
   setInput: (value: string) => void;
   onRemoveReference: (id: string) => void;
@@ -32,6 +34,8 @@ export function ChatInputArea({
   references,
   activeBookId,
   showToolDetail = false,
+  showContextPicker,
+  showQuickActions,
 
   setActiveBookId,
   onRemoveReference,
@@ -41,6 +45,10 @@ export function ChatInputArea({
 }: ChatInputAreaProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isChatPage = useIsChatPage();
+  const shouldShowContextPicker = showContextPicker ?? isChatPage;
+  const shouldShowQuickActions = showQuickActions ?? true;
+  const shouldShowQuickActionsAboveInput = shouldShowQuickActions && !isChatPage;
+  const shouldShowQuickActionsInInput = shouldShowQuickActions && isChatPage;
   const handleQuickPrompt = (prompt: string) => {
     setInput(prompt);
     if (status === "ready") {
@@ -50,7 +58,7 @@ export function ChatInputArea({
 
   return (
     <div className="z-10 shrink-0 px-2 pr-0 pl-1.5">
-      {!isChatPage && (
+      {shouldShowQuickActionsAboveInput && (
         <div className="flex items-center justify-between gap-2 py-2">
           <div className="flex flex-wrap items-center gap-2">
             {quickActions.map(({ label, icon: Icon, prompt }) => (
@@ -79,24 +87,30 @@ export function ChatInputArea({
           }}
           className="relative z-10 w-full rounded-2xl border bg-background shadow-around dark:bg-neutral-800"
         >
-          {isChatPage && (
+          {(shouldShowContextPicker || shouldShowQuickActionsInInput) && (
             <div className="flex items-center justify-between gap-2 py-2">
-              <ContextPopover activeBookId={activeBookId} setActiveBookId={setActiveBookId} />
-              <div className="flex flex-wrap items-center gap-2 ">
-                {quickActions.map(({ label, icon: Icon, prompt }) => (
-                  <PromptInputAction key={label} tooltip={label}>
-                    <Button
-                      variant="soft"
-                      className="h-7 cursor-pointer"
-                      size="sm"
-                      onClick={() => handleQuickPrompt(prompt)}
-                    >
-                      <Icon className="size-4" />
-                      {!showToolDetail && <span className="text-xs">{label}</span>}
-                    </Button>
-                  </PromptInputAction>
-                ))}
-              </div>
+              {shouldShowContextPicker ? (
+                <ContextPopover activeBookId={activeBookId} setActiveBookId={setActiveBookId} />
+              ) : (
+                <div />
+              )}
+              {shouldShowQuickActionsInInput && (
+                <div className="flex flex-wrap items-center gap-2 ">
+                  {quickActions.map(({ label, icon: Icon, prompt }) => (
+                    <PromptInputAction key={label} tooltip={label}>
+                      <Button
+                        variant="soft"
+                        className="h-7 cursor-pointer"
+                        size="sm"
+                        onClick={() => handleQuickPrompt(prompt)}
+                      >
+                        <Icon className="size-4" />
+                        {!showToolDetail && <span className="text-xs">{label}</span>}
+                      </Button>
+                    </PromptInputAction>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {references.length > 0 && (

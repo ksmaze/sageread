@@ -1,14 +1,262 @@
-import SideChat from "@/components/side-chat";
-import ChatPage from "@/pages/chat";
+import { ChatContainerRoot } from "@/components/prompt-kit/chat-container";
+import { ScrollButton } from "@/components/prompt-kit/scroll-button";
+import { ChatInputArea } from "@/components/side-chat/chat-input-area";
+import { ChatMessages } from "@/components/side-chat/chat-messages";
+import { ChatThreads } from "@/components/side-chat/chat-threads";
+import ModelSelector from "@/components/side-chat/model-selector";
+import { MindmapDialog } from "@/components/tools/mindmap-dialog";
+import { Button } from "@/components/ui/button";
+import { useChatState } from "@/hooks/use-chat-state";
+import { cn } from "@/lib/utils";
+import { useReaderStore } from "@/pages/reader/components/reader-provider";
+import { useAppSettingsStore } from "@/store/app-settings-store";
+import { useChatReaderStore } from "@/store/chat-reader-store";
+import { useThemeStore } from "@/store/theme-store";
+import type { Thread } from "@/types/thread";
+import { Brain, History, Lightbulb, MessageCirclePlus, Search, Settings, Sparkles, UserSearch } from "lucide-react";
+import { useState } from "react";
 
 interface MobileAiChatProps {
   bookId?: string;
+  className?: string;
 }
 
-export function MobileAiChat({ bookId }: MobileAiChatProps) {
-  if (bookId) {
-    return <SideChat bookId={bookId} />;
-  }
+const promptSuggestions = [
+  { text: "总结当前内容", icon: Sparkles },
+  { text: "分析作者观点", icon: UserSearch },
+  { text: "找出关键信息", icon: Search },
+  { text: "解释这个概念", icon: Lightbulb },
+] as const;
 
-  return <ChatPage />;
+function MobileChatLoadingState() {
+  return (
+    <div className="flex min-h-0 flex-1 items-center justify-center px-4 text-muted-foreground text-sm">
+      正在载入对话...
+    </div>
+  );
+}
+
+function MobileChatEmptyState({ onPrompt }: { onPrompt: (prompt: string) => void }) {
+  return (
+    <div className="mobile-scroll-area min-h-0 flex-1 overflow-y-auto px-1 py-4">
+      <div className="flex min-h-full flex-col justify-end gap-5 pb-2">
+        <div className="space-y-3 px-2">
+          <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Brain className="size-6" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="font-semibold text-foreground text-lg">AI 阅读助手</h2>
+            <p className="max-w-md text-muted-foreground text-sm leading-6">
+              可以围绕当前书籍、最近阅读和已有笔记提问，也可以从下面的问题开始。
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          {promptSuggestions.map(({ text, icon: Icon }) => (
+            <button
+              key={text}
+              type="button"
+              onClick={() => onPrompt(text)}
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-foreground text-sm transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <Icon className="size-4 shrink-0 text-muted-foreground" />
+              <span>{text}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
+  const readerScoped = Boolean(bookId);
+  const { toggleSettingsDialog } = useAppSettingsStore();
+  const { autoScroll } = useThemeStore();
+  const [toolDetail, setToolDetail] = useState<any>(null);
+  const [showMindmapDialog, setShowMindmapDialog] = useState(false);
+
+  const readerActiveContext = useReaderStore((state) => state.activeContext);
+  const readerSetActiveContext = useReaderStore((state) => state.setActiveContext);
+  const readerProgress = useReaderStore((state) => state.progress);
+  const readerCurrentThread = useReaderStore((state) => state.currentThread);
+  const readerSetCurrentThread = useReaderStore((state) => state.setCurrentThread);
+
+  const globalActiveBookId = useChatReaderStore((state) => state.activeBookId);
+  const globalActiveContext = useChatReaderStore((state) => state.activeContext);
+  const globalSetActiveBookId = useChatReaderStore((state) => state.setActiveBookId);
+  const globalSetActiveContext = useChatReaderStore((state) => state.setActiveContext);
+  const globalCurrentThread = useChatReaderStore((state) => state.currentThread);
+  const globalSetCurrentThread = useChatReaderStore((state) => state.setCurrentThread);
+
+  const activeBookId = readerScoped ? bookId : globalActiveBookId;
+  const activeContext = readerScoped ? (readerActiveContext ?? undefined) : globalActiveContext;
+  const currentThread = readerScoped ? (readerCurrentThread ?? null) : globalCurrentThread;
+  const setActiveContext: (context: string | undefined) => void =
+    readerScoped && readerSetActiveContext ? readerSetActiveContext : globalSetActiveContext;
+  const setCurrentThread: (thread: Thread | null) => void =
+    readerScoped && readerSetCurrentThread ? readerSetCurrentThread : globalSetCurrentThread;
+  const setActiveBookId: (nextBookId: string) => void = readerScoped
+    ? () => {}
+    : (nextBookId) => globalSetActiveBookId(nextBookId);
+
+  const {
+    input,
+    references,
+    displayError,
+    showThreads,
+    threadsKey,
+    isInit,
+    messages,
+    status,
+    selectedModel,
+    currentThread: resolvedCurrentThread,
+
+    stop,
+    setInput,
+    setSelectedModel,
+    handleAskSelection,
+    handleRemoveReference,
+    handleSubmit,
+    handleRetry,
+    handleNewThread,
+    handleShowThreads,
+    handleSelectThread,
+    handleBackFromThreads,
+    handleReasoningTimesUpdate,
+  } = useChatState({
+    chatContext: {
+      activeBookId,
+      activeContext,
+      activeSectionLabel: readerScoped ? readerProgress?.sectionLabel : undefined,
+    },
+    setActiveBookId,
+    setActiveContext,
+    currentThread,
+    setCurrentThread,
+  });
+
+  const handleViewToolDetail = (toolPart: any) => {
+    setToolDetail(toolPart);
+    setShowMindmapDialog(true);
+  };
+
+  const handlePrompt = (prompt: string) => {
+    setInput(prompt);
+    void handleSubmit(prompt);
+  };
+
+  const handleCreateThread = () => {
+    handleNewThread();
+    if (showThreads) {
+      handleBackFromThreads();
+    }
+  };
+
+  return (
+    <main id="chat-sidebar" className={cn("flex h-full min-h-0 flex-col overflow-hidden", className)}>
+      <div className="shrink-0 pb-2">
+        <div className="flex min-h-11 items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <ModelSelector
+              selectedModel={selectedModel}
+              onModelSelect={setSelectedModel}
+              className="h-11 max-w-[calc(100vw-10rem)] rounded-full text-sm md:max-w-72"
+            />
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title="新对话"
+              className="mobile-reader-control size-11 rounded-full hover:bg-muted"
+              onClick={handleCreateThread}
+            >
+              <MessageCirclePlus className="size-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title="历史对话"
+              className="mobile-reader-control size-11 rounded-full hover:bg-muted"
+              onClick={handleShowThreads}
+            >
+              <History className="size-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title="设置"
+              className="mobile-reader-control size-11 rounded-full hover:bg-muted"
+              onClick={toggleSettingsDialog}
+            >
+              <Settings className="size-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {showThreads ? (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <ChatThreads
+            key={`threads-${threadsKey}`}
+            bookId={readerScoped ? bookId : undefined}
+            onBack={handleBackFromThreads}
+            onSelectThread={handleSelectThread}
+          />
+        </div>
+      ) : !isInit.current ? (
+        <MobileChatLoadingState />
+      ) : messages.length === 0 ? (
+        <MobileChatEmptyState onPrompt={handlePrompt} />
+      ) : (
+        <ChatContainerRoot className="relative min-h-0 flex-1" autoScroll={autoScroll}>
+          <ChatMessages
+            messages={messages}
+            status={status}
+            error={displayError}
+            autoScroll={autoScroll}
+            scrollKey={resolvedCurrentThread?.id ?? (readerScoped ? `reader-${bookId}` : "__mobile_global__")}
+            onReasoningTimesUpdate={handleReasoningTimesUpdate}
+            onRetry={handleRetry}
+            canRetry={status === "ready" && !!displayError}
+            onAskSelection={handleAskSelection}
+            onViewToolDetail={handleViewToolDetail}
+          />
+          <div className="-translate-x-1/2 pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl justify-end px-5">
+            <div className="pointer-events-auto">
+              <ScrollButton />
+            </div>
+          </div>
+        </ChatContainerRoot>
+      )}
+
+      {!showThreads && (
+        <ChatInputArea
+          input={input}
+          setInput={setInput}
+          references={references}
+          onRemoveReference={handleRemoveReference}
+          onSubmit={handleSubmit}
+          onStop={stop}
+          status={status}
+          activeBookId={activeBookId}
+          setActiveBookId={(nextBookId) => {
+            if (nextBookId) {
+              setActiveBookId(nextBookId);
+            } else if (!readerScoped) {
+              globalSetActiveBookId(undefined);
+            }
+          }}
+          showContextPicker={!readerScoped}
+        />
+      )}
+
+      <MindmapDialog open={showMindmapDialog} onOpenChange={setShowMindmapDialog} toolPart={toolDetail} />
+    </main>
+  );
 }

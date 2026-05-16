@@ -1,4 +1,5 @@
 import { useChat } from "@/ai/hooks/use-chat";
+import { completeThreadInitialization } from "@/hooks/chat-initialization";
 import { useForceUpdate } from "@/hooks/use-force-update";
 import { useModelSelector } from "@/hooks/use-model-selector";
 import type { ReasoningTimes } from "@/hooks/use-reasoning-timer";
@@ -88,7 +89,20 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
   const forceUpdate = useForceUpdate();
 
   const messagesRef = useRef<UIMessage[]>([]);
+  const currentThreadRef = useRef<Thread | null>(currentThread ?? null);
   const reasoningTimesRef = useRef<{ [messageId: string]: ReasoningTimes }>({});
+
+  useEffect(() => {
+    currentThreadRef.current = currentThread ?? null;
+  }, [currentThread]);
+
+  const applyCurrentThread = useCallback(
+    (thread: Thread | null) => {
+      currentThreadRef.current = thread;
+      setCurrentThread(thread);
+    },
+    [setCurrentThread],
+  );
 
   const handleReasoningTimesUpdate = (messageId: string, reasoningTimes: ReasoningTimes) => {
     reasoningTimesRef.current[messageId] = reasoningTimes;
@@ -106,8 +120,8 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
         console.error("Error:", error);
       },
       onFinish: ({ message, messages: finishedMessages, isError }) => {
-        const { currentThread } = useThreadStore.getState();
         const { selectedModel } = useProviderStore.getState();
+        const threadToPersist = currentThreadRef.current;
         const resolvedMessages = finishedMessages ?? messagesRef.current;
 
         let nextMessages = resolvedMessages;
@@ -158,15 +172,14 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
         const persistMessages = (threadId: string) =>
           editThread(threadId, { messages: normalizedMessages })
             .then((updatedThread) => {
-              console.log("Thread updated successfully:", updatedThread.id);
-              setCurrentThread(updatedThread);
+              applyCurrentThread(updatedThread);
             })
             .catch((error) => {
               console.error("Failed to update thread:", error);
             });
 
-        if (currentThread?.id) {
-          persistMessages(currentThread.id);
+        if (threadToPersist?.id) {
+          persistMessages(threadToPersist.id);
         } else {
           try {
             const firstUserText =
@@ -176,8 +189,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
                 .join("") || "新对话";
             createThread(activeBookId, firstUserText.slice(0, 50), normalizedMessages)
               .then((thread) => {
-                console.log("Created thread on finish:", thread.id);
-                setCurrentThread(thread);
+                applyCurrentThread(thread);
                 persistMessages(thread.id);
               })
               .catch((error) => {
@@ -232,14 +244,21 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
       if (activeBookId && !currentThread && !isInit.current) {
         try {
           const latestThread = await getLatestThreadBybookId(activeBookId);
-          if (latestThread) {
-            setCurrentThread(latestThread);
-            setMessages(latestThread.messages);
-            setActiveContext(getThreadContext(latestThread) || undefined);
-          }
-          isInit.current = true;
+          completeThreadInitialization({
+            latestThread,
+            setCurrentThread: applyCurrentThread,
+            setMessages,
+            setActiveContext,
+            getThreadContext,
+            markInitialized: () => {
+              isInit.current = true;
+            },
+            forceUpdate,
+          });
         } catch (error) {
           console.error("Failed to load existing thread:", error);
+          isInit.current = true;
+          forceUpdate();
         }
       } else {
         isInit.current = true;
@@ -253,7 +272,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     return () => {
-      setCurrentThread(null);
+      applyCurrentThread(null);
       setMessages([]);
       setReferences([]);
     };
@@ -288,7 +307,6 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
 
       setTimeout(() => {
         const textarea = document.querySelector("#chat-sidebar textarea") as HTMLTextAreaElement;
-        console.log("textarea", textarea);
         if (textarea) {
           textarea.focus();
         }
@@ -328,10 +346,8 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
   const generateSemanticContextAsync = useCallback(
     async (userQuestion: string) => {
       try {
-        const { currentThread } = useThreadStore.getState();
-        const thread = currentThread;
+        const thread = currentThreadRef.current;
         if (!thread) {
-          console.log("No current thread, skipping context generation");
           return;
         }
         const previousContext = getThreadContext(thread);
@@ -379,8 +395,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
         try {
           const titleSource = trimmedInput || referenceSnapshot[0]?.text || "新对话";
           const thread = await createThread(activeBookId, titleSource.substring(0, 50), []);
-          setCurrentThread(thread);
-          console.log("Created new thread:", thread.id);
+          applyCurrentThread(thread);
         } catch (error) {
           console.error("Failed to create thread:", error);
         }
@@ -433,17 +448,17 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
       buildMessageParts,
       sendMessage,
       setMessages,
-      setCurrentThread,
+      applyCurrentThread,
       generateSemanticContextAsync,
     ],
   );
 
   const handleNewThread = useCallback(() => {
-    setCurrentThread(null);
+    applyCurrentThread(null);
     setMessages([]);
     setDisplayError(null);
     setReferences([]);
-  }, [setCurrentThread, setMessages]);
+  }, [applyCurrentThread, setMessages]);
 
   const handleShowThreads = useCallback(() => {
     if (!showThreads) {
@@ -460,19 +475,17 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
           setActiveBookId(fullThread.book_id);
         }
 
-        setCurrentThread(fullThread);
+        applyCurrentThread(fullThread);
         setMessages(fullThread.messages);
         setReferences([]);
         setShowThreads(false);
         const threadContext = getThreadContext(fullThread);
         setActiveContext(threadContext || undefined);
-
-        console.log("Selected thread:", fullThread.id, "context loaded:", !!threadContext);
       } catch (error) {
         console.error("Failed to load thread:", error);
       }
     },
-    [setCurrentThread, setMessages, setActiveBookId, setActiveContext],
+    [applyCurrentThread, setMessages, setActiveBookId, setActiveContext],
   );
 
   const handleBackFromThreads = useCallback(() => {

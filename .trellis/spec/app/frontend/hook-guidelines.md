@@ -15,6 +15,7 @@ Hooks isolate browser, Tauri, store, data-fetching, and reader-runtime behavior 
 - Reader foliate integration is grouped under `pages/reader/hooks/use-foliate-viewer/`.
 - Hooks that register global listeners must clean them up in the effect return.
 - Hooks that use refs for one-time initialization should guard repeat calls explicitly.
+- If a ref controls a render branch, changing that ref in an async effect is not enough. Also update state or force a render in the same completion path, especially when the async result is empty and no other state setter will run.
 
 ```tsx
 useEffect(() => {

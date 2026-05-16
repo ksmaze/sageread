@@ -83,6 +83,15 @@ createRoot(document.getElementById("root")!).render(
 - Use `mobile-scroll-area` for sheet and destination scroll containers to contain overscroll.
 - Reader selection popups sit above the dock (`z-[80]`); active sheet content sits above them (`z-[100]`).
 - Portalled controls opened from reader sheets must render above the active sheet layer. For example, a `SelectContent` used inside `ReaderStylePanel` needs a z-index above `z-[100]`, such as `z-[120]`, because the shared select content portals to `document.body`.
+- Shared portalled primitives that may be used from mobile sheets or dialogs (`DialogContent`, `DropdownMenuContent`, `PopoverContent`, and `SelectContent`) should default to a layer above active sheets, currently `z-[120]`. Do not raise one modal layer without checking nested portalled controls that open from inside it.
+
+## Mobile AI Chat Contracts
+
+- `MobileAiChat` is the Android AI surface for both the standalone AI destination and reader-scoped AI sheet.
+- The standalone mobile AI destination must not render the desktop `ChatPage`/`Resizable` chrome directly. Keep the mobile surface as a `min-h-0 flex` column with a stable header, scrollable messages/empty state, and bottom input.
+- Reader-scoped AI runs inside `MobileSheet` and must preserve the `MobileSheet z-[100]` stacking contract. Header controls must keep at least `44px` touch targets.
+- A newly opened or empty book-scoped chat must show a loading or empty state. It must not leave the message container blank while thread initialization completes.
+- Settings opened from mobile AI must appear above the AI sheet, and model/history popups must remain tappable without closing the sheet first.
 
 ## Color Token Contracts
 
