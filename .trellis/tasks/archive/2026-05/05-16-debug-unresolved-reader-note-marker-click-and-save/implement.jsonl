@@ -1,0 +1,5 @@
+{"file":".trellis/spec/app/frontend/state-management.md","reason":"Source-bound independent notes and note update contract."}
+{"file":".trellis/spec/app/frontend/hook-guidelines.md","reason":"Reader iframe and foliate event bridge behavior."}
+{"file":".trellis/spec/foliate-js/frontend/component-guidelines.md","reason":"Annotation overlay key and note marker hit-test contract."}
+{"file":".trellis/spec/foliate-js/frontend/quality-guidelines.md","reason":"foliate-js test and build expectations."}
+{"file":".trellis/tasks/05-16-debug-unresolved-reader-note-marker-click-and-save/research/video-and-root-cause.md","reason":"Video evidence and root-cause findings for the failed previous fix."}

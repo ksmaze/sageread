@@ -1,0 +1,5 @@
+{"file":".trellis/spec/app/frontend/index.md","reason":"App frontend quality entry point."}
+{"file":".trellis/spec/app/frontend/state-management.md","reason":"Verify source-bound note update behavior."}
+{"file":".trellis/spec/foliate-js/frontend/component-guidelines.md","reason":"Verify overlay hit-test and click consumption behavior."}
+{"file":".trellis/spec/foliate-js/frontend/quality-guidelines.md","reason":"Verify foliate-js build and vendor handling."}
+{"file":".trellis/tasks/05-16-debug-unresolved-reader-note-marker-click-and-save/research/video-and-root-cause.md","reason":"Check against the actual reported failure symptoms."}
