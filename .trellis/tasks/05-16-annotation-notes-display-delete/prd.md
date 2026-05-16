@@ -43,7 +43,7 @@ Make highlights/annotations and notes fully independent in the reader. Notes may
 
 ## Definition of Done
 
-* Tests added or updated where appropriate.
+* Tests added or updated for changed behavior.
 * `pnpm --filter app build` passes.
 * Focused model tests pass for unified note mapping and reader target behavior.
 * Manual verification covers reader note creation, duplicate prevention, marker display, edit/delete, and open-original behavior.
