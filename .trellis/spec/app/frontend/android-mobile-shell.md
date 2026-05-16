@@ -48,7 +48,7 @@ createRoot(document.getElementById("root")!).render(
 - Phone navigation is `MobileBottomNav` with safe-area bottom padding.
 - Tablet navigation is `TabletRail` from the `md` breakpoint upward.
 - Shared destination frames use `MobileSurface`, which applies `mobile-paper`, safe-area horizontal padding, and mobile scroll containment.
-- A floating `MobileSettingsEntry` opens global settings outside the reader overlay.
+- A floating `MobileSettingsEntry` opens global settings outside the reader overlay on non-AI destinations.
 
 ## Reader Contracts
 
@@ -73,8 +73,9 @@ createRoot(document.getElementById("root")!).render(
 
 - Settings are shared with the existing `SettingsDialog`.
 - On phones, settings content is full-screen using `100dvh` and stacked navigation/content.
-- From `sm` upward, settings keep the bounded `800px` modal and two-column layout.
+- From `sm` upward, settings keep a two-column layout with a viewport-constrained modal: `width: calc(100vw - 2rem)`, max `800px`, and no fixed `800px` minimum width. Tablet portrait must not clip the sidebar or content horizontally.
 - Pages embedded in the Android shell should not mount duplicate settings dialogs. Pass an opt-out prop when a legacy page already owns a settings dialog.
+- The standalone AI destination must hide the shell-level floating `MobileSettingsEntry` because `MobileAiChat` owns its own settings button alongside model, new-thread, and history controls.
 
 ## Safe Area And Touch Contracts
 
@@ -92,6 +93,7 @@ createRoot(document.getElementById("root")!).render(
 - Reader-scoped AI runs inside `MobileSheet` and must preserve the `MobileSheet z-[100]` stacking contract. Header controls must keep at least `44px` touch targets.
 - A newly opened or empty book-scoped chat must show a loading or empty state. It must not leave the message container blank while thread initialization completes.
 - Settings opened from mobile AI must appear above the AI sheet, and model/history popups must remain tappable without closing the sheet first.
+- Do not show both the shell-level floating settings shortcut and the `MobileAiChat` header settings button on the standalone AI destination.
 
 ## Color Token Contracts
 

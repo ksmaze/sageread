@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "@/hooks/use-safe-areaInsets";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useLlamaStore } from "@/store/llama-store";
 import { useEffect } from "react";
+import { shouldShowShellSettingsEntry } from "./app-shell-settings";
 import { MobileBottomNav } from "./components/mobile-bottom-nav";
 import { TabletRail } from "./components/tablet-rail";
 import { AiDestination } from "./destinations/ai-destination";
@@ -32,6 +33,7 @@ export default function AndroidAppShell() {
   const insets = useSafeAreaInsets();
   const activeDestination = useMobileShellStore((state) => state.activeDestination);
   const setDestination = useMobileShellStore((state) => state.setDestination);
+  const showShellSettingsEntry = shouldShowShellSettingsEntry(activeDestination);
   const { isSettingsDialogOpen, toggleSettingsDialog } = useAppSettingsStore();
   const { hasHydrated, initializeEmbeddingService } = useLlamaStore();
 
@@ -50,9 +52,11 @@ export default function AndroidAppShell() {
         <ActiveDestination />
       </main>
       <MobileBottomNav activeDestination={activeDestination} onDestinationChange={setDestination} />
-      <div className="pt-safe px-safe fixed top-2 right-2 z-40 md:top-3 md:right-3">
-        <MobileSettingsEntry />
-      </div>
+      {showShellSettingsEntry && (
+        <div className="fixed top-2 right-2 z-40 px-safe pt-safe md:top-3 md:right-3">
+          <MobileSettingsEntry />
+        </div>
+      )}
       <MobileReader />
       <SettingsDialog open={isSettingsDialogOpen} onOpenChange={toggleSettingsDialog} />
     </div>

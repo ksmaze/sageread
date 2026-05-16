@@ -10,6 +10,7 @@ import GeneralSettings from "./general";
 import LlamaSettings from "./llama";
 import ProviderDetailSettings from "./provider-detail";
 import ProvidersSettings from "./providers";
+import { SETTINGS_DIALOG_CONTENT_CLASS_NAME } from "./settings-dialog-layout";
 import ShortcutsSettings from "./shortcuts";
 import TTSSettings from "./tts-settings";
 
@@ -183,13 +184,13 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-y-auto rounded-none p-0 sm:h-[80vh] sm:min-h-[80vh] sm:w-[800px] sm:min-w-[800px] sm:max-w-[800px] sm:rounded-lg">
+      <DialogContent className={SETTINGS_DIALOG_CONTENT_CLASS_NAME}>
         <DialogHeader className="flex-shrink-0 border-neutral-200 border-b px-3 py-4 dark:border-neutral-800 dark:bg-neutral-900">
           <DialogTitle className="dark:text-neutral-100">设置</DialogTitle>
         </DialogHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col dark:bg-neutral-900 sm:flex-row">
-          <div className="max-h-36 w-full flex-shrink-0 overflow-y-auto border-neutral-200 border-b p-3 px-2 dark:border-neutral-800 dark:bg-neutral-900 sm:max-h-none sm:w-48 sm:border-r sm:border-b-0">
+        <div className="flex min-h-0 flex-1 flex-col sm:flex-row dark:bg-neutral-900">
+          <div className="max-h-36 w-full flex-shrink-0 overflow-y-auto border-neutral-200 border-b p-3 px-2 sm:max-h-none sm:w-48 sm:border-r sm:border-b-0 dark:border-neutral-800 dark:bg-neutral-900">
             <nav className="space-y-1">{settingsItems.map((item) => renderSidebarItem(item))}</nav>
           </div>
 
