@@ -55,9 +55,9 @@ const Annotator: React.FC = () => {
     handleSendAIQuery,
     activeNote,
     setActiveNote,
-    sourceBoundNotes,
     handleDeleteNote,
     handleUpdateNote,
+    openSourceBoundNote,
   } = useAnnotator({ bookId });
 
   const {
@@ -133,10 +133,7 @@ const Annotator: React.FC = () => {
     const value = String(cfi);
     if (value.startsWith("note:")) {
       const noteId = value.slice("note:".length);
-      const note = sourceBoundNotes.find((item) => item.id === noteId);
-      if (note) {
-        setActiveNote(note);
-      }
+      void openSourceBoundNote(noteId);
       return;
     }
 

@@ -90,6 +90,7 @@ draw(Overlayer.noteMarker, { hitElementOnly: true })
 - `annotation.value` must stay resolvable by `resolveNavigation(value)`.
 - `annotation.overlayKey ?? annotation.value` is used for `overlayer.add()` and `overlayer.remove()`.
 - `show-annotation` emits the overlayer key, so consumers can route `note:<id>` separately from normal CFI annotation clicks.
+- A successful annotation hit must consume the iframe `click` in the capture phase with `preventDefault()` and `stopImmediatePropagation()` before emitting `show-annotation`. Reader chrome, page-turn, and generic iframe single-click handlers must not run for the same tap.
 - Badge-like overlays that should not claim the full text range must pass `hitElementOnly: true`; `Overlayer.hitTest()` then skips range rects and checks only the drawn element bounds.
 - `Overlayer.noteMarker()` renders a small semi-transparent bookmark path at the end/top of the selected text. Its default visual size is `9x12`, with a transparent hit area around the icon so it remains tappable without returning to full-range hit testing.
 
@@ -99,6 +100,7 @@ draw(Overlayer.noteMarker, { hitElementOnly: true })
 |---|---|
 | `overlayKey` is omitted | Preserve existing behavior by using `value` as the key. |
 | `value` is not resolvable | Do not add the overlay; let existing navigation resolution fail. |
+| `overlayer.hitTest(e)` returns a non-search annotation | Consume the click and emit exactly one `show-annotation` event. |
 | A badge overlay uses full-range hit testing | Treat as a bug because it can intercept highlight clicks. |
 | A normal highlight uses `hitElementOnly` | Treat as a bug because the highlighted range should remain clickable. |
 
@@ -106,8 +108,10 @@ draw(Overlayer.noteMarker, { hitElementOnly: true })
 
 - Good: A note marker uses `value: cfi`, `overlayKey: note:<id>`, and `hitElementOnly: true`.
 - Good: A note marker customizes only icon options such as `{ color, width, height, opacity, hitPadding }`, while keeping `hitElementOnly: true`.
+- Good: A marker tap emits `show-annotation` and does not also trigger reader chrome/page click behavior.
 - Base: A highlight uses only `value: cfi` and keeps full-range hit testing.
 - Bad: Replacing `value` with `note:<id>`, because foliate cannot resolve it as a navigation target.
+- Bad: Emitting `show-annotation` from a bubble-phase listener without consuming the event, because app iframe click handlers can process the same tap.
 - Bad: Reintroducing a text label inside `Overlayer.noteMarker()`; the marker should stay a compact bookmark so it does not cover reader text.
 
 ### 6. Tests Required

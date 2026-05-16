@@ -10,8 +10,14 @@ console.assert(hitArea?.tagName?.toLowerCase() === 'rect',
     'note marker should include a transparent hit area')
 console.assert(hitArea?.getAttribute('fill') === 'transparent',
     'note marker hit area should be invisible')
-console.assert(hitArea?.getAttribute('width') === '15',
+console.assert(hitArea?.getAttribute('x') === '143.5',
+    'note marker hit area should start well before the visible bookmark')
+console.assert(hitArea?.getAttribute('y') === '9',
+    'note marker hit area should start above the visible bookmark')
+console.assert(hitArea?.getAttribute('width') === '33',
     'note marker hit area should remain finger-friendly')
+console.assert(hitArea?.getAttribute('height') === '36',
+    'note marker hit area should be tall enough for touch')
 console.assert(bookmark?.tagName?.toLowerCase() === 'path',
     'note marker should render a bookmark path')
 console.assert(bookmark?.getAttribute('fill') === '#2563eb',

@@ -1,5 +1,5 @@
 import type { FoliateView } from "@/types/view";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type FoliateEventHandler = {
   onLoad?: (event: Event) => void;
@@ -11,30 +11,38 @@ type FoliateEventHandler = {
 };
 
 export const useFoliateEvents = (view: FoliateView | null, handlers?: FoliateEventHandler) => {
-  const onLoad = handlers?.onLoad;
-  const onRelocate = handlers?.onRelocate;
-  const onLinkClick = handlers?.onLinkClick;
-  const onRendererRelocate = handlers?.onRendererRelocate;
-  const onDrawAnnotation = handlers?.onDrawAnnotation;
-  const onShowAnnotation = handlers?.onShowAnnotation;
+  const handlersRef = useRef<FoliateEventHandler | undefined>(handlers);
+  handlersRef.current = handlers;
+  const hasOnLoad = Boolean(handlers?.onLoad);
+  const hasOnRelocate = Boolean(handlers?.onRelocate);
+  const hasOnLinkClick = Boolean(handlers?.onLinkClick);
+  const hasOnRendererRelocate = Boolean(handlers?.onRendererRelocate);
+  const hasOnDrawAnnotation = Boolean(handlers?.onDrawAnnotation);
+  const hasOnShowAnnotation = Boolean(handlers?.onShowAnnotation);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     if (!view) return;
-    if (onLoad) view.addEventListener("load", onLoad);
-    if (onRelocate) view.addEventListener("relocate", onRelocate);
-    if (onLinkClick) view.addEventListener("link", onLinkClick);
-    if (onRendererRelocate) view.renderer.addEventListener("relocate", onRendererRelocate);
-    if (onDrawAnnotation) view.addEventListener("draw-annotation", onDrawAnnotation);
-    if (onShowAnnotation) view.addEventListener("show-annotation", onShowAnnotation);
+    const onLoad = (event: Event) => handlersRef.current?.onLoad?.(event);
+    const onRelocate = (event: Event) => handlersRef.current?.onRelocate?.(event);
+    const onLinkClick = (event: Event) => handlersRef.current?.onLinkClick?.(event);
+    const onRendererRelocate = (event: Event) => handlersRef.current?.onRendererRelocate?.(event);
+    const onDrawAnnotation = (event: Event) => handlersRef.current?.onDrawAnnotation?.(event);
+    const onShowAnnotation = (event: Event) => handlersRef.current?.onShowAnnotation?.(event);
+
+    if (hasOnLoad) view.addEventListener("load", onLoad);
+    if (hasOnRelocate) view.addEventListener("relocate", onRelocate);
+    if (hasOnLinkClick) view.addEventListener("link", onLinkClick);
+    if (hasOnRendererRelocate) view.renderer?.addEventListener("relocate", onRendererRelocate);
+    if (hasOnDrawAnnotation) view.addEventListener("draw-annotation", onDrawAnnotation);
+    if (hasOnShowAnnotation) view.addEventListener("show-annotation", onShowAnnotation);
 
     return () => {
-      if (onLoad) view.removeEventListener("load", onLoad);
-      if (onRelocate) view.removeEventListener("relocate", onRelocate);
-      if (onLinkClick) view.removeEventListener("link", onLinkClick);
-      if (onRendererRelocate) view.renderer.removeEventListener("relocate", onRendererRelocate);
-      if (onDrawAnnotation) view.removeEventListener("draw-annotation", onDrawAnnotation);
-      if (onShowAnnotation) view.removeEventListener("show-annotation", onShowAnnotation);
+      if (hasOnLoad) view.removeEventListener("load", onLoad);
+      if (hasOnRelocate) view.removeEventListener("relocate", onRelocate);
+      if (hasOnLinkClick) view.removeEventListener("link", onLinkClick);
+      if (hasOnRendererRelocate) view.renderer?.removeEventListener("relocate", onRendererRelocate);
+      if (hasOnDrawAnnotation) view.removeEventListener("draw-annotation", onDrawAnnotation);
+      if (hasOnShowAnnotation) view.removeEventListener("show-annotation", onShowAnnotation);
     };
-  }, [view]);
+  }, [view, hasOnLoad, hasOnRelocate, hasOnLinkClick, hasOnRendererRelocate, hasOnDrawAnnotation, hasOnShowAnnotation]);
 };

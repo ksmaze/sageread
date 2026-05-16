@@ -433,10 +433,12 @@ export class View extends HTMLElement {
       (e) => {
         const [value, range] = overlayer.hitTest(e);
         if (value && !value.startsWith(SEARCH_PREFIX)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
           this.#emit("show-annotation", { value, index, range });
         }
       },
-      false,
+      true,
     );
 
     const list = this.#searchResults.get(index);

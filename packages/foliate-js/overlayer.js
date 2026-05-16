@@ -60,7 +60,7 @@ export class Overlayer {
             height = 12,
             opacity = 0.42,
             offset = 1,
-            hitPadding = 3,
+            hitPadding = 12,
         } = options
         const rect = rects[rects.length - 1]
         const g = createSVGElement('g')

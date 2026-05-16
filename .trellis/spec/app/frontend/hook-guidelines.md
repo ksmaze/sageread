@@ -38,6 +38,7 @@ useEffect(() => {
 - `useSafeAreaInsets` reads CSS safe-area custom properties and returns `null` until it has attempted an update. Home/library surfaces may wait for it; reader content falls back to zero insets.
 - `useResponsiveSize(baseSize)` uses desktop as the base and scales phones/tablets by `1.25`.
 - Reader hooks that integrate with foliate must dispatch or listen to explicit events such as `foliate-resize-update` when layout changes affect rendering.
+- Reader event bridge hooks that subscribe to long-lived foliate or iframe listeners must avoid stale React closures. Subscribe stable wrapper listeners for the current `view`, store the latest handler object in a ref, and have wrappers call `handlersRef.current`.
 
 ```ts
 window.dispatchEvent(
@@ -52,6 +53,7 @@ window.dispatchEvent(
 - `useBookShortcuts` owns keyboard shortcuts and must apply changes to both persisted settings and the live viewer.
 - `useAutoHideControls` owns hover/interaction visibility for reader header/footer controls; do not replace it with local timers in each bar.
 - `useFoliateViewer` and its manager own imperative foliate setup, style application, progress updates, and iframe event handling.
+- `useFoliateEvents` owns `foliate-view` event subscriptions. It should re-subscribe when the view or handler presence changes, but use ref-backed wrappers so events such as `show-annotation` see the latest reader note list and callbacks.
 - `usePagination` owns click, wheel, and key pagination behavior. Respect `globalViewSettings.scrolled`, `disableClick`, `swapClickArea`, and `volumeKeysToFlip`.
 
 ## Naming Conventions
@@ -67,3 +69,4 @@ window.dispatchEvent(
 - Letting inactive reader tabs continue session timers or subscriptions.
 - Duplicating upload/search/tag logic in components instead of using existing library hooks and stores.
 - Treating safe-area insets as always available on first render.
+- Capturing the first render's foliate event handlers in an effect with `[view]` only; later events will see stale note/query state.

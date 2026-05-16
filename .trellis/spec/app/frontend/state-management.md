@@ -204,6 +204,8 @@ interface Note {
 
 getNotes({ bookId, cfi, limit: 1 }): Promise<Note[]>;
 getNoteByBookLocation(bookId: string, cfi: string): Promise<Note | null>;
+getNoteById(id: string): Promise<Note | null>;
+handleUpdateNote({ id, content }): Promise<Note>;
 ```
 
 ### 3. Contracts
@@ -212,6 +214,8 @@ getNoteByBookLocation(bookId: string, cfi: string): Promise<Note | null>;
 - Duplicate creation checks `{ bookId, cfi }` first. If an existing note is found, reuse/open it instead of creating another row.
 - Display helpers must treat source-bound empty notes as meaningful: show the source excerpt in reader notes and unified notes even when `content` is empty.
 - Editing writes only the user's `content` unless the caller explicitly updates source fields. Do not expose manual title editing for source-bound notes.
+- Reader marker clicks emit `note:<id>` and must open the independent note editor from the latest note state. If the note is not present in the current source-bound reader list, fetch it by id instead of silently ignoring the marker.
+- Saving from the reader note editor must merge the backend-returned `Note` into the current active note state when ids match; do not keep a stale pre-save `activeNote` object.
 - Mutations through `useNotepad` must invalidate `["notes"]`, per-note detail, and `["mobile-unified-notes"]` so reader sheets and management screens stay in sync.
 
 ### 4. Validation & Error Matrix
@@ -222,19 +226,24 @@ getNoteByBookLocation(bookId: string, cfi: string): Promise<Note | null>;
 | `title`, `content`, and `sourceText` are all blank on create | Reject the create request. |
 | Selected range cannot produce a CFI | Show an error and do not create a note. |
 | `{ bookId, cfi }` already has a note | Open/reuse the existing note instead of inserting. |
+| Marker emits `note:<id>` before the notes page is loaded | Fetch by id and open the editor if the note exists. |
+| Note editor save returns an updated `Note` | Replace matching active reader note state with the returned note. |
 | Source-bound note has empty `content` | Display the source excerpt, not an empty-state label. |
 | Note is deleted | Remove/invalidate list state without touching `book_notes` highlights. |
 
 ### 5. Good/Base/Bad Cases
 
 - Good: Select text, tap the note action, create an empty `Note` with source fields, close the selection popup, and later edit it from the note marker or notes list.
+- Good: Tap a note marker, resolve `note:<id>` to a `Note`, save `{ id, content }`, and use the returned `Note` for active reader state.
 - Base: A loose standalone note with no `bookId` continues to display title/content and has no reader target.
 - Bad: Storing user note text inside `BookNote.note`, creating a highlight to represent a note, or using title/content-only rows for reader-created notes.
+- Bad: Looking only in a possibly unloaded `sourceBoundNotes` array and doing nothing when the marker id is absent.
 
 ### 6. Tests Required
 
 - Unified note model tests must assert that source-bound notes use `sourceText` for title/body and include a reader target with `cfi`.
 - Note display helper tests must assert empty source-bound notes display the source excerpt.
+- Reader note state tests must assert save-returned notes replace matching active state and marker ids can fall back to `getNoteById`.
 - Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml` after schema/model/command changes.
 - Run `pnpm --filter app build` after TypeScript contracts, reader hooks, or mobile notes screens change.
 

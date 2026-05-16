@@ -1,10 +1,10 @@
 import { useNotepad } from "@/components/notepad/hooks";
 import { createBookNote, deleteBookNote, updateBookNote } from "@/services/book-note-service";
 import { iframeService } from "@/services/iframe-service";
-import { getNoteByBookLocation } from "@/services/note-service";
+import { getNoteByBookLocation, getNoteById } from "@/services/note-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { HighlightColor, HighlightStyle } from "@/types/book";
-import type { BookMeta, Note } from "@/types/note";
+import type { BookMeta, Note, UpdateNoteData } from "@/types/note";
 import type { ReaderNoteMarker } from "@/types/view";
 import { type Position, type TextSelection, getPopupPosition, getPosition } from "@/utils/sel";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import * as CFI from "foliate-js/epubcfi.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useReaderStore, useReaderStoreApi } from "../components/reader-provider";
+import { findSourceBoundNote, mergeUpdatedActiveNote } from "./reader-note-state";
 
 function getContextByRange(range: Range, win = 30) {
   const container = range.commonAncestorContainer;
@@ -59,7 +60,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   const view = useReaderStore((state) => state.view);
   const bookData = useReaderStore((state) => state.bookData);
   const store = useReaderStoreApi();
-  const { handleCreateNote, handleDeleteNote, handleUpdateNote, notesData } = useNotepad({ bookId });
+  const { handleCreateNote, handleDeleteNote, handleUpdateNote: updateNote, notesData } = useNotepad({ bookId });
   const queryClient = useQueryClient();
   const globalViewSettings = settings.globalViewSettings;
   const currentNoteMarkersRef = useRef<ReaderNoteMarker[]>([]);
@@ -289,6 +290,32 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     view?.deselect();
   }, [view]);
 
+  const handleUpdateNote = useCallback(
+    async (data: UpdateNoteData) => {
+      const updatedNote = await updateNote(data);
+      setActiveNote((current) => mergeUpdatedActiveNote(current, updatedNote));
+      return updatedNote;
+    },
+    [updateNote],
+  );
+
+  const openSourceBoundNote = useCallback(
+    async (noteId: string) => {
+      try {
+        const note = await findSourceBoundNote(noteId, sourceBoundNotes, getNoteById);
+        if (note) {
+          setActiveNote(note);
+        } else {
+          toast.error("笔记不存在");
+        }
+      } catch (error) {
+        console.error("Failed to open reader note:", error);
+        toast.error("打开笔记失败");
+      }
+    },
+    [sourceBoundNotes],
+  );
+
   const handleSendAIQuery = useCallback(
     (query: string, selectedText: string) => {
       iframeService.sendAskAIRequest(selectedText, query, bookId);
@@ -404,6 +431,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     handleHighlight,
     handleDeleteNote,
     handleUpdateNote,
+    openSourceBoundNote,
     addNote,
     handleExplain,
     handleAskAI,
