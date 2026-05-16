@@ -1,3 +1,0 @@
-{"file":".trellis/spec/app/frontend/index.md","reason":"Trellis quality entry point for app frontend changes."}
-{"file":".trellis/spec/foliate-js/frontend/index.md","reason":"Trellis quality entry point for foliate-js changes."}
-{"file":".trellis/spec/foliate-js/frontend/quality-guidelines.md","reason":"Build and vendor-output checks for foliate-js source changes."}
