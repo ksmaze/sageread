@@ -496,3 +496,37 @@ Designed and implemented independent source-bound reader notes: DB/source fields
 ### Next Steps
 
 - None - task complete
+
+
+## Session 15: Shrink reader note marker
+
+**Date**: 2026-05-16
+**Task**: Shrink reader note marker
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Changed reader note markers from large labeled badges to compact semi-transparent bookmark icons; added overlayer geometry coverage and updated foliate overlay spec.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3ce2cb6` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
