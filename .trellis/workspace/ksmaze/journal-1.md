@@ -459,3 +459,40 @@ Fixed AI annotation popovers so citation panels stay within the mobile viewport,
 ### Next Steps
 
 - None - task complete
+
+
+## Session 14: Source-bound reader notes
+
+**Date**: 2026-05-16
+**Task**: Source-bound reader notes
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Designed and implemented independent source-bound reader notes: DB/source fields, duplicate lookup, reader note creation without immediate editing, notes panel/unified edit-delete flows, foliate note badge overlays, focused tests, and spec updates.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a534586` | (see git log) |
+| `60fb21b` | (see git log) |
+| `90557f0` | (see git log) |
+| `4b5bd22` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

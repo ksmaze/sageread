@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 13
+- **Total Sessions**: 14
 - **Last Active**: 2026-05-16
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~461 | Active |
+| `journal-1.md` | ~498 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 14 | 2026-05-16 | Source-bound reader notes | `a534586`, `60fb21b`, `90557f0`, `4b5bd22` | `main` |
 | 13 | 2026-05-16 | Fix AI annotation popover overflow | `17bf3c9`, `f2b929a` | `main` |
 | 12 | 2026-05-16 | Android-only settings cleanup | `5539094` | `main` |
 | 11 | 2026-05-15 | Mobile reader chapter chrome | `f8fa81b` | `main` |
