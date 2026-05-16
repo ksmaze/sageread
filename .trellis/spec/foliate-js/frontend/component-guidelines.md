@@ -91,6 +91,7 @@ draw(Overlayer.noteMarker, { hitElementOnly: true })
 - `annotation.overlayKey ?? annotation.value` is used for `overlayer.add()` and `overlayer.remove()`.
 - `show-annotation` emits the overlayer key, so consumers can route `note:<id>` separately from normal CFI annotation clicks.
 - Badge-like overlays that should not claim the full text range must pass `hitElementOnly: true`; `Overlayer.hitTest()` then skips range rects and checks only the drawn element bounds.
+- `Overlayer.noteMarker()` renders a small semi-transparent bookmark path at the end/top of the selected text. Its default visual size is `9x12`, with a transparent hit area around the icon so it remains tappable without returning to full-range hit testing.
 
 ### 4. Validation & Error Matrix
 
@@ -104,12 +105,15 @@ draw(Overlayer.noteMarker, { hitElementOnly: true })
 ### 5. Good/Base/Bad Cases
 
 - Good: A note marker uses `value: cfi`, `overlayKey: note:<id>`, and `hitElementOnly: true`.
+- Good: A note marker customizes only icon options such as `{ color, width, height, opacity, hitPadding }`, while keeping `hitElementOnly: true`.
 - Base: A highlight uses only `value: cfi` and keeps full-range hit testing.
 - Bad: Replacing `value` with `note:<id>`, because foliate cannot resolve it as a navigation target.
+- Bad: Reintroducing a text label inside `Overlayer.noteMarker()`; the marker should stay a compact bookmark so it does not cover reader text.
 
 ### 6. Tests Required
 
 - Run `pnpm --filter foliate-js build` after changing `view.js` or `overlayer.js`.
+- Run or update `packages/foliate-js/tests/overlayer-tests.js` when changing `Overlayer.noteMarker()` geometry, opacity, or hit area behavior.
 - Run `pnpm --filter app build` after changing emitted event shapes or consumed ambient declarations.
 - Manual reader checks must cover clicking the note badge, clicking a highlight under/near the badge, and removing both independently.
 

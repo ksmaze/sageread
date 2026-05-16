@@ -105,7 +105,7 @@ const Annotator: React.FC = () => {
     const detail = (event as CustomEvent).detail;
     const { draw, annotation, doc, range } = detail;
     if ((annotation as ReaderNoteMarker).markerType === "note") {
-      draw(Overlayer.noteMarker, { color: "#2563eb", hitElementOnly: true, textColor: "#ffffff", label: "笔" });
+      draw(Overlayer.noteMarker, { color: "#2563eb", hitElementOnly: true });
       return;
     }
 

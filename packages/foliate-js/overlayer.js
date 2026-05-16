@@ -56,38 +56,36 @@ export class Overlayer {
     static noteMarker(rects, options = {}) {
         const {
             color = '#2563eb',
-            textColor = '#ffffff',
-            label = '笔',
-            width = 18,
-            height = 16,
-            radius = 5,
-            offset = 2,
+            width = 9,
+            height = 12,
+            opacity = 0.42,
+            offset = 1,
+            hitPadding = 3,
         } = options
         const rect = rects[rects.length - 1]
         const g = createSVGElement('g')
         if (!rect) return g
 
         const x = rect.right - width / 2
-        const y = Math.max(0, rect.top - height - offset)
+        const y = Math.max(0, rect.top - height + offset)
+        const notchY = y + height * 0.75
 
-        const badge = createSVGElement('rect')
-        badge.setAttribute('x', x)
-        badge.setAttribute('y', y)
-        badge.setAttribute('width', width)
-        badge.setAttribute('height', height)
-        badge.setAttribute('rx', radius)
-        badge.setAttribute('fill', color)
+        const hitArea = createSVGElement('rect')
+        hitArea.setAttribute('x', x - hitPadding)
+        hitArea.setAttribute('y', y - hitPadding)
+        hitArea.setAttribute('width', width + hitPadding * 2)
+        hitArea.setAttribute('height', height + hitPadding * 2)
+        hitArea.setAttribute('fill', 'transparent')
 
-        const text = createSVGElement('text')
-        text.setAttribute('x', x + width / 2)
-        text.setAttribute('y', y + height / 2 + 4)
-        text.setAttribute('fill', textColor)
-        text.setAttribute('font-size', '11')
-        text.setAttribute('font-weight', '700')
-        text.setAttribute('text-anchor', 'middle')
-        text.textContent = label
+        const bookmark = createSVGElement('path')
+        bookmark.setAttribute(
+            'd',
+            `M ${x} ${y} L ${x + width} ${y} L ${x + width} ${y + height} L ${x + width / 2} ${notchY} L ${x} ${y + height} Z`,
+        )
+        bookmark.setAttribute('fill', color)
+        bookmark.setAttribute('opacity', opacity)
 
-        g.append(badge, text)
+        g.append(hitArea, bookmark)
         return g
     }
     static underline(rects, options = {}) {
