@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 11
-- **Last Active**: 2026-05-15
+- **Total Sessions**: 12
+- **Last Active**: 2026-05-16
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~392 | Active |
+| `journal-1.md` | ~426 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 12 | 2026-05-16 | Android-only settings cleanup | `5539094` | `main` |
 | 11 | 2026-05-15 | Mobile reader chapter chrome | `f8fa81b` | `main` |
 | 10 | 2026-05-15 | Fix content-specific reader selection jump | `fe4fcb0` | `main` |
 | 9 | 2026-05-15 | Fix reader paragraph-start selection | `096ae9b` | `main` |

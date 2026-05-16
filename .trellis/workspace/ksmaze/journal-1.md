@@ -390,3 +390,37 @@ Added a single bottom reader chrome stack with previous/next chapter controls, c
 ### Next Steps
 
 - None - task complete
+
+
+## Session 12: Android-only settings cleanup
+
+**Date**: 2026-05-16
+**Task**: Android-only settings cleanup
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Removed Android-irrelevant settings, desktop shell/app-tabs, updater, and custom font pipeline; synced specs and verified app build plus Tauri cargo check.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5539094` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
