@@ -12,3 +12,6 @@ export const hasActiveTextSelection = doc => {
 
     return false
 }
+
+export const shouldAutoTurnPageForPointerSelection = ({ isPointerSelecting, pointerType, selectionType }) =>
+    Boolean(isPointerSelecting && pointerType === 'mouse' && selectionType === 'Range')

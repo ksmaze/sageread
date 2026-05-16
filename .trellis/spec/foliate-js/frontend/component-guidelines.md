@@ -91,13 +91,16 @@ foliate-view::part(filter) {
 
 **Symptom**: On Android, text selection handles jump or become difficult to adjust when a selection starts at a paragraph boundary.
 
-**Cause**: `foliate-paginator` touch handlers keep treating the iframe as a paging surface even while the document has an active non-collapsed selection.
+**Cause**: Paging and cross-page selection helpers can treat the iframe as a renderer control surface while the browser is still managing native text selection.
 
-**Fix**: Yield touch handling to the selection state before calling `preventDefault()`, scrolling, or snapping pages.
+**Fix**: Yield touch handling to the selection state before calling `preventDefault()`, scrolling, or snapping pages. Also keep `selectionchange` auto-paging mouse-only.
 
 **Example**:
 ```js
-import { hasActiveTextSelection } from './selection.js'
+import {
+    hasActiveTextSelection,
+    shouldAutoTurnPageForPointerSelection,
+} from './selection.js'
 
 #onTouchMove(e) {
     if (!this.#touchState || hasActiveTextSelection(this.#view?.document)) return
@@ -107,9 +110,20 @@ import { hasActiveTextSelection } from './selection.js'
 #onTouchEnd() {
     if (this.scrolled || !this.#touchState || hasActiveTextSelection(this.#view?.document)) return
 }
+
+doc.addEventListener('selectionchange', () => {
+    if (shouldAutoTurnPageForPointerSelection({
+        isPointerSelecting,
+        pointerType: pointerSelectionType,
+        selectionType: doc.getSelection()?.type,
+    }))
+        checkPointerSelection(range, sel)
+})
 ```
 
-**Prevention**: Any future touch gesture in the reader must check for active selection ranges before it claims the pointer sequence.
+**Selection auto-paging contract**: `checkPointerSelection()` is for desktop mouse drag selection across paginated columns. Do not run it for `touch` or `pen` pointers. Android and iOS native selection handles can emit transient `selectionchange` events while handles are moving, and EPUB CSS can make paragraph-start geometry look like it crossed `#lastVisibleRange`. Common triggers include `text-indent`, justified paragraphs, block boundaries, empty anchors, and column fragmentation.
+
+**Prevention**: Any future touch gesture in the reader must check for active selection ranges before it claims the pointer sequence. Any future selection auto-paging change must inspect `PointerEvent.pointerType` and preserve native touch and pen selection handles.
 
 ## Common Mistakes
 

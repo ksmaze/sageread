@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { hasActiveTextSelection } from '../selection.js'
+import { hasActiveTextSelection, shouldAutoTurnPageForPointerSelection } from '../selection.js'
 
 const makeDocumentWithSelection = selection => ({
     getSelection: () => selection,
@@ -26,6 +26,49 @@ describe('selection helpers', () => {
                     getRangeAt: () => ({ collapsed: true }),
                 }),
             ),
+            false,
+        )
+    })
+
+    it('only auto-turns pages for mouse range selection', () => {
+        assert.equal(
+            shouldAutoTurnPageForPointerSelection({
+                isPointerSelecting: true,
+                pointerType: 'mouse',
+                selectionType: 'Range',
+            }),
+            true,
+        )
+        assert.equal(
+            shouldAutoTurnPageForPointerSelection({
+                isPointerSelecting: true,
+                pointerType: 'touch',
+                selectionType: 'Range',
+            }),
+            false,
+        )
+        assert.equal(
+            shouldAutoTurnPageForPointerSelection({
+                isPointerSelecting: true,
+                pointerType: 'pen',
+                selectionType: 'Range',
+            }),
+            false,
+        )
+        assert.equal(
+            shouldAutoTurnPageForPointerSelection({
+                isPointerSelecting: false,
+                pointerType: 'mouse',
+                selectionType: 'Range',
+            }),
+            false,
+        )
+        assert.equal(
+            shouldAutoTurnPageForPointerSelection({
+                isPointerSelecting: true,
+                pointerType: 'mouse',
+                selectionType: 'Caret',
+            }),
             false,
         )
     })
