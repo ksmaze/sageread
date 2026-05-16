@@ -57,7 +57,7 @@ createRoot(document.getElementById("root")!).render(
 - `MobileReader` mounts `ReaderProvider` with `createReaderStore(activeBook.id)` and renders the existing `ReaderViewer`.
 - `ReaderViewer` may hide desktop `HeaderBar` and `FooterBar` when `mobileChrome` is enabled, but it must keep reading-session visibility and foliate lifecycle behavior intact.
 - Reader chrome toggles from foliate single-click events; do not add a transparent tap catcher over the reader because it blocks iframe text selection and page interaction.
-- `ReaderToolDock` exposes TOC, search, notes, AI, and style tools.
+- `ReaderToolDock` is the Android reader chrome stack. Its top row exposes previous/next chapter controls plus current chapter/progress text, and its bottom row exposes TOC, search, notes, AI, and style tools.
 - `ReaderSheetHost` renders real reader tool content in `MobileSheet`.
 - Android/browser back should close the active reader sheet, then hide reader chrome, then close the reader.
 
@@ -81,6 +81,7 @@ createRoot(document.getElementById("root")!).render(
 
 - Use `pb-safe`, `pt-safe`, and `px-safe` for fixed Android controls.
 - Interactive Android controls must be at least `--mobile-touch-target` (`44px`) in both dimensions, or be inside a larger fixed-height/wide grid cell.
+- Reader chrome rows should share one safe-area-aware bottom container, one max width, one shadow, and `--mobile-control-fill` / `--mobile-on-control` tokens so chapter navigation and dock tools read as one control system.
 - Use `mobile-scroll-area` for sheet and destination scroll containers to contain overscroll.
 - Reader selection popups sit above the dock (`z-[80]`); active sheet content sits above them (`z-[100]`).
 - Portalled controls opened from reader sheets must render above the active sheet layer. For example, a `SelectContent` used inside `ReaderStylePanel` needs a z-index above `z-[100]`, such as `z-[120]`, because the shared select content portals to `document.body`.
@@ -110,6 +111,7 @@ createRoot(document.getElementById("root")!).render(
 | User opens a book from library | Set `activeBook`, open reader, close sheets, and hide reader chrome. |
 | Reader single-click event fires | Toggle reader chrome without blocking foliate selection or gestures. |
 | Reader tool opens | Keep chrome visible and show the matching sheet. |
+| Reader chapter control is tapped | Use the mounted foliate renderer's adjacent-section navigation; first/last boundaries may no-op quietly. |
 | Android/browser back fires with a sheet open | Close only the sheet. |
 | Android/browser back fires with chrome visible | Hide chrome. |
 | Android/browser back fires in reader with no sheet/chrome | Close reader. |
@@ -118,7 +120,7 @@ createRoot(document.getElementById("root")!).render(
 
 ## Good / Base / Bad Cases
 
-- Good: A 390x844 phone shows Library/Notes/AI/Stats bottom navigation, a single active reader, reachable reader dock tools, full-screen settings, and no bottom control overlap.
+- Good: A 390x844 phone shows Library/Notes/AI/Stats bottom navigation, a single active reader, reachable reader chrome with chapter navigation/progress and dock tools, full-screen settings, and no bottom control overlap.
 - Base: No book is open. The active destination fills the safe-area-aware mobile surface and bottom navigation remains reachable.
 - Bad: Reintroducing desktop app tabs as the root, mounting duplicate settings dialogs, blocking foliate selection with a reader overlay, or placing popups below the reader dock.
 
