@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 18
-- **Last Active**: 2026-05-16
+- **Total Sessions**: 19
+- **Last Active**: 2026-05-17
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~634 | Active |
+| `journal-1.md` | ~668 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 19 | 2026-05-17 | Remove non-Android Llama features | `67d6d4d` | `main` |
 | 18 | 2026-05-16 | Data backup import export | `b991393` | `main` |
 | 17 | 2026-05-16 | Fix reader note marker hit area and save | `4c85fa7` | `main` |
 | 16 | 2026-05-16 | Fix reader note marker interaction | `a8c863c` | `main` |

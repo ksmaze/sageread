@@ -632,3 +632,37 @@ Implemented manual zip backup export and merge/overwrite import for SageRead dat
 ### Next Steps
 
 - None - task complete
+
+
+## Session 19: Remove non-Android Llama features
+
+**Date**: 2026-05-17
+**Task**: Remove non-Android Llama features
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Removed the local Llama.cpp backend, plugin, settings UI, model download flow, legacy starter assets, and related backup scope while preserving Android external vector/RAG support through a generic vector-store.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `67d6d4d` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
