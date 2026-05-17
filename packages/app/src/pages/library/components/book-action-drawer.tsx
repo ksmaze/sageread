@@ -9,18 +9,8 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { BookTag } from "@/pages/library/hooks/use-tags-management";
 import type { BookWithStatusAndUrls } from "@/types/simple-book";
-import {
-  BookOpen,
-  BrainCircuit,
-  Download,
-  Edit,
-  MoreHorizontal,
-  Tags,
-  Trash2,
-} from "lucide-react";
-import { useState } from "react";
+import { BookOpen, BrainCircuit, Download, Edit, Tags, Trash2 } from "lucide-react";
 
 interface BookActionDrawerProps {
   book: BookWithStatusAndUrls;
@@ -32,7 +22,6 @@ interface BookActionDrawerProps {
   onDownloadImage: () => void;
   onToggleReadStatus: () => void;
   onVectorize: () => void;
-  onVectorTest: () => void;
   onManageTags: () => void;
   onAITags: () => void;
   vectorizeProgress?: number | null;
@@ -48,7 +37,6 @@ export default function BookActionDrawer({
   onDownloadImage,
   onToggleReadStatus,
   onVectorize,
-  onVectorTest,
   onManageTags,
   onAITags,
   vectorizeProgress,
@@ -195,18 +183,6 @@ export default function BookActionDrawer({
                 : isVectorized
                 ? "重新向量化"
                 : "开始向量化"}
-            </Button>
-
-            <Button
-              variant="outline"
-              className="justify-start gap-2"
-              onClick={() => {
-                onVectorTest();
-                onOpenChange(false);
-              }}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-              向量化测试
             </Button>
 
             <div className="my-2 border-t" />

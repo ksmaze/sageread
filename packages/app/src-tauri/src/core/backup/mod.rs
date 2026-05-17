@@ -19,7 +19,7 @@ const BACKUP_MANIFEST_ENTRY: &str = "manifest.json";
 const CONFIG_FILE_NAMES: &[&str] = &[
     "model-provider.json",
     "app-settings.json",
-    "llama-store.json",
+    "vector-store.json",
     "layout-store.json",
 ];
 const LOCAL_STORAGE_KEYS: &[&str] = &["tts-config-storage"];
@@ -1210,9 +1210,10 @@ mod tests {
 
     use super::{
         apply_backup_data_to_database, backup_file_name, collect_backup_data,
-        filter_book_export_scope, read_backup_zip, should_apply_imported_record,
-        validate_backup_archive, write_backup_zip, BackupData, BackupLocalStorageItem,
-        BackupManifest, BackupTable, BookExportCandidate, ImportMode, SkippedBook,
+        filter_book_export_scope, is_allowed_config_archive_path, read_backup_zip,
+        should_apply_imported_record, validate_backup_archive, write_backup_zip, BackupData,
+        BackupLocalStorageItem, BackupManifest, BackupTable, BookExportCandidate, ImportMode,
+        SkippedBook,
     };
 
     #[test]
@@ -1553,6 +1554,14 @@ mod tests {
 
         let error = validate_backup_archive(&archive).unwrap_err();
         assert!(error.contains("备份缺少书籍文件"));
+    }
+
+    #[test]
+    fn backup_config_scope_uses_vector_store_name() {
+        let legacy_config_path = "config/legacy-vector-store.json";
+
+        assert!(is_allowed_config_archive_path("config/vector-store.json"));
+        assert!(!is_allowed_config_archive_path(legacy_config_path));
     }
 
     fn table_ids(data: &super::BackupData, table_name: &str) -> Vec<String> {

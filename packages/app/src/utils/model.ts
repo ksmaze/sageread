@@ -1,14 +1,4 @@
-export function getModelIdFromFilename(filename: string): string {
-  if (!filename) {
-    return "local-embed";
-  }
-
-  if (filename.endsWith(".gguf")) {
-    return filename.slice(0, -5);
-  }
-
-  return filename;
-}
+import { useVectorModelStore } from "@/store/vector-model-store";
 
 export function normalizeEmbeddingsUrl(url: string): string {
   return url.replace(/\/$/, "");
@@ -19,39 +9,26 @@ export interface VectorModelConfig {
   model: string;
   apiKey: string | null;
   dimension: number;
-  source: "external" | "local";
+  source: "external";
 }
 
-export async function getCurrentVectorModelConfig(): Promise<VectorModelConfig> {
-  const { useLlamaStore } = await import("@/store/llama-store");
-  const { PRESET_EMBEDDING_MODELS } = await import("@/constants/preset-models");
-  const llamaState = useLlamaStore.getState();
+export async function getCurrentVectorModelConfig(): Promise<VectorModelConfig | null> {
+  const { vectorModelEnabled, getSelectedVectorModel } = useVectorModelStore.getState();
 
-  if (llamaState.vectorModelEnabled) {
-    const selectedModel = llamaState.getSelectedVectorModel();
-    if (selectedModel) {
-      return {
-        embeddingsUrl: normalizeEmbeddingsUrl(selectedModel.url),
-        model: selectedModel.modelId,
-        apiKey: selectedModel.apiKey || null,
-        dimension: selectedModel.dimension || 1024,
-        source: "external",
-      };
-    }
+  if (!vectorModelEnabled) {
+    return null;
   }
 
-  const port = llamaState.currentSession?.port;
-  const baseUrl = port ? `http://127.0.0.1:${port}` : "http://127.0.0.1:3544";
-  const model = getModelIdFromFilename(llamaState.modelPath);
-
-  const presetModel = PRESET_EMBEDDING_MODELS.find((m) => m.filename === llamaState.modelPath);
-  const dimension = presetModel?.dimension || 1024;
+  const selectedModel = getSelectedVectorModel();
+  if (!selectedModel) {
+    return null;
+  }
 
   return {
-    embeddingsUrl: `${baseUrl}/v1/embeddings`,
-    model,
-    apiKey: null,
-    dimension,
-    source: "local",
+    embeddingsUrl: normalizeEmbeddingsUrl(selectedModel.url),
+    model: selectedModel.modelId,
+    apiKey: selectedModel.apiKey || null,
+    dimension: selectedModel.dimension || 1024,
+    source: "external",
   };
 }

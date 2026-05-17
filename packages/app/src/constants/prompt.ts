@@ -1,6 +1,6 @@
 import type { ChatContext } from "@/hooks/use-chat-state";
 import { getSkills } from "@/services/skill-service";
-import { useLlamaStore } from "@/store/llama-store";
+import { useVectorModelStore } from "@/store/vector-model-store";
 import { appDataDir } from "@tauri-apps/api/path";
 import { exists, readTextFile } from "@tauri-apps/plugin-fs";
 
@@ -20,7 +20,7 @@ export async function buildReadingPrompt(chatContext: ChatContext | undefined): 
     console.warn("获取技能列表失败:", error);
   }
 
-  const hasVectorCapability = useLlamaStore.getState().hasVectorCapability();
+  const hasVectorCapability = useVectorModelStore.getState().hasVectorCapability();
 
   let metadataMd: string | null = null;
   try {

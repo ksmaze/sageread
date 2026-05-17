@@ -47,11 +47,11 @@ export async function importBackup(mode: BackupImportMode): Promise<BackupImport
   - `books/<bookId>/**` for real book assets only
   - `config/model-provider.json`
   - `config/app-settings.json`
-  - `config/llama-store.json`
+  - `config/vector-store.json`
   - `config/layout-store.json`
   - `local-storage/tts-config-storage.json`
 - Include SQLite tables: `tags`, `skills`, `books`, `book_status`, `reading_sessions`, `notes`, `book_notes`, `threads`.
-- Exclude generated RAG artifacts (`mdbook/`, `vectors.sqlite*`) and local Llama.cpp model/backend files. Android remote vector model settings may still be included through `llama-store.json`.
+- Exclude generated RAG artifacts (`mdbook/`, `vectors.sqlite*`) and legacy local embedding model/backend files. Android remote vector model settings may still be included through `vector-store.json`.
 - Exclude local-only UI preferences that are not part of Tauri config backup scope, such as `themeMode`, `autoScroll`, and `customThemes`.
 - If a book record points to a missing file during export, skip that book and skip strong linked data: `book_status`, `reading_sessions`, `book_notes`, book-scoped `threads`, and book-scoped `notes`. Keep standalone notes and global threads.
 - Merge import preserves current device config files and localStorage. It imports database/book user content and uses `updated_at` to keep newer records.
@@ -78,7 +78,7 @@ export async function importBackup(mode: BackupImportMode): Promise<BackupImport
 - Good: Merge import adds a new book and keeps a newer local edited tag with the same name.
 - Good: Overwrite import validates the whole archive before deleting current `books/`.
 - Base: No books exist. Export still creates a valid zip with manifest/database/config entries that exist.
-- Bad: Exporting `mdbook/`, `vectors.sqlite`, GGUF models, or Llama backend binaries.
+- Bad: Exporting `mdbook/`, `vectors.sqlite`, GGUF models, or legacy local embedding backend binaries.
 - Bad: Restoring device-local theme/autoscroll preferences from backup.
 - Bad: Reading Android shared storage directly in Rust instead of using the frontend dialog/fs handoff unless official plugins prove insufficient on device.
 

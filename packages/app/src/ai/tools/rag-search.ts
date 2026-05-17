@@ -87,6 +87,9 @@ export const createRagSearchTool = (activeBookId: string | undefined) =>
       );
 
       const vectorConfig = await getCurrentVectorModelConfig();
+      if (!vectorConfig) {
+        throw new Error("请先在设置中启用并选择外部向量模型");
+      }
 
       const results = (await invoke("plugin:epub|search_db", {
         bookId: activeBookId,

@@ -31,7 +31,6 @@ tokio = { version = "1", features = ["full"] }
 sqlx = "0.8.6"
 uuid = { version = "1", features = ["v4"] }
 log = "0.4"
-tauri-plugin-llamacpp = { path = "plugins/tauri-plugin-llamacpp" }
 tauri-plugin-epub = { path = "plugins/tauri-plugin-epub" }
 jan-utils = { path = "utils" }
 tauri-plugin-log = "2"

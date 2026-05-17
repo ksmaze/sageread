@@ -1,6 +1,6 @@
 import { buildReadingPrompt } from "@/constants/prompt";
 import type { ChatContext } from "@/hooks/use-chat-state";
-import { useLlamaStore } from "@/store/llama-store";
+import { useVectorModelStore } from "@/store/vector-model-store";
 import type { UIMessage } from "@ai-sdk/react";
 import {
   type ChatRequestOptions,
@@ -76,7 +76,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
     const processedMessages = processQuoteMessages(options.messages);
     const selectedMessages = selectValidMessages(processedMessages, 8);
 
-    const hasVectorCapability = useLlamaStore.getState().hasVectorCapability();
+    const hasVectorCapability = useVectorModelStore.getState().hasVectorCapability();
 
     const tools: any = {
       notes: notesTool,

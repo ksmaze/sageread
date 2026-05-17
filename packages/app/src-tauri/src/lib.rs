@@ -25,11 +25,6 @@ use crate::core::{
         update_reading_session,
     },
     database,
-    llama::commands::{
-        delete_local_model, download_llama_server, download_model_file,
-        ensure_llamacpp_directories, get_app_data_dir, get_llamacpp_backend_path, greet,
-        list_local_models, llama_server_binary_name_cmd,
-    },
     notes::commands::{create_note, delete_note, get_note_by_id, get_notes, update_note},
     skills::commands::{
         create_skill, delete_skill, get_skill_by_id, get_skills, toggle_skill_active,
@@ -74,7 +69,6 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_llamacpp::init())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Info)
@@ -152,31 +146,10 @@ pub fn run() {
             update_skill,
             delete_skill,
             toggle_skill_active,
-            // llama
-            greet,
-            get_app_data_dir,
-            get_llamacpp_backend_path,
-            ensure_llamacpp_directories,
-            download_llama_server,
-            llama_server_binary_name_cmd,
-            list_local_models,
-            download_model_file,
-            delete_local_model,
             app_ready,
             create_backup_archive,
             import_backup_archive,
         ])
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let app_handle = window.app_handle().clone();
-                tauri::async_runtime::spawn(async move {
-                    if let Err(e) = tauri_plugin_llamacpp::cleanup_llama_processes(app_handle).await
-                    {
-                        log::error!("清理 llamacpp 进程失败: {}", e);
-                    }
-                });
-            }
-        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

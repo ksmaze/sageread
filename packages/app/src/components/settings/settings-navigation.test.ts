@@ -3,9 +3,9 @@ import { describe, it } from "node:test";
 import { SETTINGS_NAVIGATION_ITEMS } from "./settings-navigation";
 
 describe("settings navigation", () => {
-  it("does not expose desktop-only font management in the Android settings dialog", () => {
+  it("exposes vector models instead of the old llama section", () => {
     const keys = SETTINGS_NAVIGATION_ITEMS.map((item) => item.key);
 
-    assert.deepEqual(keys, ["general", "llama", "tts", "model-providers"]);
+    assert.deepEqual(keys, ["general", "vector-models", "tts", "model-providers"]);
   });
 });

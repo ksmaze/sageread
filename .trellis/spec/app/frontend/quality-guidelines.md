@@ -27,9 +27,9 @@ return () => {
 
 ## Forbidden Patterns
 
-### Do Not Mount Around `App.tsx`
+### Do Not Reintroduce a Starter App Wrapper
 
-`src/App.tsx` is still a Vite stub. The real app is `AndroidAppShell` mounted from `src/main.tsx`.
+`src/main.tsx` mounts `AndroidAppShell` directly. `src/App.tsx` and the Vite starter assets have been removed; do not recreate them as an app root.
 
 ```tsx
 // Wrong

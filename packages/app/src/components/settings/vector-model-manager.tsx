@@ -1,15 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { type VectorModelConfig, useLlamaStore } from "@/store/llama-store";
+import { type VectorModelConfig, useVectorModelStore } from "@/store/vector-model-store";
 import { normalizeEmbeddingsUrl } from "@/utils/model";
 import { ask } from "@tauri-apps/plugin-dialog";
-import { type as getOsType } from "@tauri-apps/plugin-os";
 import { Edit2, Plus, Trash2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-export default function VectorModelManager() {
+export default function VectorModelSettings() {
   const {
     vectorModelEnabled,
     vectorModels,
@@ -20,9 +19,8 @@ export default function VectorModelManager() {
     updateVectorModel,
     deleteVectorModel,
     setSelectedVectorModelId,
-  } = useLlamaStore();
+  } = useVectorModelStore();
 
-  const [isMacOS, setIsMacOS] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
@@ -35,15 +33,6 @@ export default function VectorModelManager() {
     apiKey: "",
     description: "",
   });
-
-  useEffect(() => {
-    const osType = getOsType();
-    const isMac = osType === "macos";
-    setIsMacOS(isMac);
-    if (!isMac && !vectorModelEnabled) {
-      setVectorModelEnabled(true);
-    }
-  }, [vectorModelEnabled, setVectorModelEnabled]);
 
   const labelClass = "block mb-2 text-sm text-neutral-800 dark:text-neutral-200";
 
@@ -186,24 +175,15 @@ export default function VectorModelManager() {
       </div>
 
       <div className="space-y-4">
-        {isMacOS && (
-          <div className="flex items-start justify-between">
-            <div>
-              <div className={labelClass}>使用远程向量模型</div>
-              <div className="text-neutral-500 text-xs dark:text-neutral-400">
-                启用后将使用配置的向量模型，而非本地 Llama.cpp 服务
-              </div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className={labelClass}>启用向量模型</div>
+            <div className="text-neutral-500 text-xs dark:text-neutral-400">
+              启用后将使用已配置的外部 embeddings 服务进行向量化、检索和 RAG
             </div>
-            <Switch checked={vectorModelEnabled} onCheckedChange={setVectorModelEnabled} />
           </div>
-        )}
-
-        {!isMacOS && (
-          <div className="mb-4">
-            <div className={labelClass}>远程向量模型</div>
-            <div className="text-neutral-500 text-xs dark:text-neutral-400">当前平台仅支持远程向量模型</div>
-          </div>
-        )}
+          <Switch checked={vectorModelEnabled} onCheckedChange={setVectorModelEnabled} />
+        </div>
 
         {vectorModelEnabled && (
           <>

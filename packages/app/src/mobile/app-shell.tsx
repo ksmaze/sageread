@@ -1,8 +1,6 @@
 import SettingsDialog from "@/components/settings/settings-dialog";
 import { useSafeAreaInsets } from "@/hooks/use-safe-areaInsets";
 import { useAppSettingsStore } from "@/store/app-settings-store";
-import { useLlamaStore } from "@/store/llama-store";
-import { useEffect } from "react";
 import { shouldShowShellSettingsEntry } from "./app-shell-settings";
 import { MobileBottomNav } from "./components/mobile-bottom-nav";
 import { TabletRail } from "./components/tablet-rail";
@@ -35,13 +33,6 @@ export default function AndroidAppShell() {
   const setDestination = useMobileShellStore((state) => state.setDestination);
   const showShellSettingsEntry = shouldShowShellSettingsEntry(activeDestination);
   const { isSettingsDialogOpen, toggleSettingsDialog } = useAppSettingsStore();
-  const { hasHydrated, initializeEmbeddingService } = useLlamaStore();
-
-  useEffect(() => {
-    if (hasHydrated) {
-      void initializeEmbeddingService();
-    }
-  }, [hasHydrated, initializeEmbeddingService]);
 
   if (!insets) return null;
 

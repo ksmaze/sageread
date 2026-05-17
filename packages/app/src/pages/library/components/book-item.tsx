@@ -16,7 +16,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import BookActionDrawer from "./book-action-drawer";
 import EditInfo from "./edit-info";
-import EmbeddingDialog from "./embedding-dialog";
 
 interface BookUpdateData {
   title?: string;
@@ -42,7 +41,6 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
   const [aiTagSuggestions, setAiTagSuggestions] = useState<AITagSuggestion[]>([]);
   const [isAITagLoading, setIsAITagLoading] = useState(false);
   const { selectedModel } = useModelSelector();
-  const [showEmbeddingDialog, setShowEmbeddingDialog] = useState(false);
   const [vectorizeProgress, setVectorizeProgress] = useState<number | null>(null);
 
   useEffect(() => {
@@ -193,6 +191,10 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
     const { addNotification } = useNotificationStore.getState();
 
     const vectorConfig = await getCurrentVectorModelConfig();
+    if (!vectorConfig) {
+      toast.error("请先在设置中启用并选择外部向量模型");
+      return;
+    }
     const version = 1;
 
     try {
@@ -480,7 +482,6 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
         onDownloadImage={handleDownloadImage}
         onToggleReadStatus={handleToggleReadStatus}
         onVectorize={handleVectorizeBook}
-        onVectorTest={() => setShowEmbeddingDialog(true)}
         onManageTags={() => {
            // For now, we don't have a separate tag manager dialog, 
            // we could expand it in the drawer later.
@@ -501,7 +502,6 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
         isLoading={isAITagLoading}
       />
 
-      <EmbeddingDialog isOpen={showEmbeddingDialog} onClose={() => setShowEmbeddingDialog(false)} bookId={book.id} />
     </>
   );
 }

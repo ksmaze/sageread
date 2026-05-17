@@ -6,7 +6,7 @@
 
 ## Overview
 
-`packages/app` is a Tauri + React Android phone/tablet reader. The real UI entrypoint is `src/main.tsx`, which mounts `AndroidAppShell`; `src/App.tsx` is still a Vite starter stub and must not be treated as the app shell. The previous desktop tab/sidebar shell was removed during the Android-only cleanup.
+`packages/app` is a Tauri + React Android phone/tablet reader. The UI entrypoint is `src/main.tsx`, which mounts `AndroidAppShell` directly. The previous Vite starter files and desktop tab/sidebar shell have been removed during the Android-only cleanup.
 
 The codebase is organized by app surface first, with shared primitives under `components/`, persisted state under `store/`, service boundaries under `services/`, and cross-cutting helpers under `hooks/`, `utils/`, and `types/`.
 
@@ -15,7 +15,7 @@ The codebase is organized by app surface first, with shared primitives under `co
 ```text
 packages/app/src/
 +-- ai/                  # AI tools, providers, and message processing helpers
-+-- assets/              # Bundled React assets
++-- assets/              # App-owned bundled assets, when needed
 +-- components/          # Shared app components and UI primitives
 |   +-- ui/              # Radix/shadcn-style primitives
 |   +-- settings/        # Global settings dialog sections
@@ -91,7 +91,7 @@ Shared components graduate to `src/components/` only when they are used outside 
 - Hooks use `use-*.ts` or feature-local `hooks/use-*.ts`.
 - Stores use `*-store.ts`.
 - Service wrappers use `*-service.ts`.
-- Shared constants use descriptive kebab-case files such as `preset-models.ts` and `tauri-storage.ts`.
+- Shared constants use descriptive kebab-case files such as `tauri-storage.ts` and `prompt.ts`.
 - Route page entry files are `index.tsx` inside the route folder.
 
 ## Examples
@@ -104,10 +104,10 @@ pages/library/hooks/use-books-operations.ts
 pages/library/hooks/use-tags-management.ts
 ```
 
-### Wrong: mounting around the Vite stub
+### Wrong: reintroducing a starter app wrapper
 
 ```tsx
-// Wrong: App.tsx is not the real app shell.
+// Wrong: do not add an App.tsx wrapper around the Android shell.
 createRoot(root).render(<App />);
 ```
 
@@ -128,6 +128,6 @@ createRoot(document.getElementById("root")!).render(
 
 - Adding new top-level folders before checking whether the feature belongs under `pages/<feature>/`, `components/<domain>/`, or `services/`.
 - Moving reader-specific state out of `pages/reader/store/` without preserving per-tab store isolation.
-- Treating `src/App.tsx` as active app architecture.
+- Recreating `src/App.tsx` or starter assets as active app architecture.
 - Treating deleted desktop shell files or `app-tabs` as current architecture.
 - Putting backend/Tauri calls directly inside leaf components when a `services/*-service.ts` wrapper already exists.
