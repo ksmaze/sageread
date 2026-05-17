@@ -666,3 +666,37 @@ Removed the local Llama.cpp backend, plugin, settings UI, model download flow, l
 ### Next Steps
 
 - None - task complete
+
+
+## Session 20: Replace foliate-js with submodule
+
+**Date**: 2026-05-17
+**Task**: Replace foliate-js with submodule
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Converted packages/foliate-js from vendored files to a ksmaze/foliate-js submodule with Sageread app compatibility patches, updated lock/spec/task notes, and verified foliate-js plus app builds.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f7d8905` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
