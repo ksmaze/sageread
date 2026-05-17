@@ -1,0 +1,3 @@
+{"file": ".trellis/tasks/05-17-replace-foliate-js-submodule/research/conflict-analysis.md", "reason": "Checklist source for verifying preserved, accepted, and intentionally dropped foliate-js deltas."}
+{"file": ".trellis/spec/foliate-js/frontend/quality-guidelines.md", "reason": "Quality gate for submodule patch commits and app-facing compatibility behavior."}
+{"file": ".trellis/spec/app/frontend/type-safety.md", "reason": "App build/type-check expectations for ambient module declarations consumed from foliate-js."}
