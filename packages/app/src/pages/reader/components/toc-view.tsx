@@ -1,7 +1,7 @@
 import { useOverlayScrollbars } from "overlayscrollbars-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FixedSizeList as VirtualList } from "react-window";
+import { List as VirtualList, type ListImperativeAPI } from "react-window";
 import "overlayscrollbars/overlayscrollbars.css";
 import type { TOCItem } from "@/lib/document";
 import { useAppSettingsStore } from "@/store/app-settings-store";
@@ -46,8 +46,7 @@ const TOCView: React.FC<{
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const listOuterRef = useRef<HTMLDivElement | null>(null);
-  const vitualListRef = useRef<VirtualList | null>(null);
+  const virtualListRef = useRef<ListImperativeAPI | null>(null);
   const staticListRef = useRef<HTMLDivElement | null>(null);
 
   const [initialize] = useOverlayScrollbars({
@@ -69,7 +68,7 @@ const TOCView: React.FC<{
 
   useEffect(() => {
     const { current: root } = containerRef;
-    const { current: virtualOuter } = listOuterRef;
+    const virtualOuter = virtualListRef.current?.element;
 
     if (root && virtualOuter) {
       initialize({
@@ -79,7 +78,7 @@ const TOCView: React.FC<{
         },
       });
     }
-  }, [initialize]);
+  }, [initialize, toc.length, expandedItems]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -115,9 +114,6 @@ const TOCView: React.FC<{
 
   const activeHref = useMemo(() => progress?.sectionHref || null, [progress?.sectionHref]);
   const flatItems = useFlattenedTOC(toc, expandedItems);
-  const activeItemIndex = useMemo(() => {
-    return flatItems.findIndex((item) => item.item.href === activeHref);
-  }, [flatItems, activeHref]);
 
   const handleToggleExpand = useCallback((item: TOCItem) => {
     const href = item.href || "";
@@ -154,10 +150,10 @@ const TOCView: React.FC<{
   const scrollToActiveItem = useCallback(() => {
     if (!activeHref) return;
 
-    if (vitualListRef.current) {
+    if (virtualListRef.current) {
       const activeIndex = flatItems.findIndex((flatItem) => flatItem.item.href === activeHref);
       if (activeIndex !== -1) {
-        vitualListRef.current.scrollToItem(activeIndex, "center");
+        virtualListRef.current.scrollToRow({ index: activeIndex, align: "center" });
       }
     }
 
@@ -212,20 +208,14 @@ const TOCView: React.FC<{
   return flatItems.length > 256 ? (
     <div className="virtual-list rounded pt-2" data-overlayscrollbars-initialize="" ref={containerRef}>
       <VirtualList
-        ref={vitualListRef}
-        outerRef={listOuterRef}
-        width="100%"
-        height={containerHeight}
-        itemCount={flatItems.length}
-        itemSize={virtualItemSize}
-        itemData={virtualListData}
+        listRef={virtualListRef}
+        style={{ height: containerHeight, width: "100%" }}
+        rowComponent={VirtualListRow}
+        rowCount={flatItems.length}
+        rowHeight={virtualItemSize}
+        rowProps={virtualListData}
         overscanCount={20}
-        initialScrollOffset={
-          activeItemIndex >= 0 ? Math.max(0, activeItemIndex * virtualItemSize - containerHeight / 2) : undefined
-        }
-      >
-        {VirtualListRow}
-      </VirtualList>
+      />
     </div>
   ) : (
     <div className="static-list rounded pt-2" ref={staticListRef}>

@@ -2,7 +2,7 @@ import type { TOCItem } from "@/lib/document";
 import { getContentMd5 } from "@/utils/misc";
 import clsx from "clsx";
 import React, { useCallback } from "react";
-import type { ListChildComponentProps } from "react-window";
+import type { RowComponentProps } from "react-window";
 
 const createExpanderIcon = (isExpanded: boolean) => {
   return (
@@ -134,23 +134,30 @@ export const StaticListRow: React.FC<ListRowProps> = ({
   );
 };
 
-export const VirtualListRow: React.FC<
-  ListChildComponentProps & {
-    data: {
-      bookId: string;
-      flatItems: FlatTOCItem[];
-      itemSize: number;
-      activeHref: string | null;
-      onToggleExpand: (item: TOCItem) => void;
-      onItemClick: (item: TOCItem) => void;
-    };
-  }
-> = ({ index, style, data }) => {
-  const { flatItems, bookId, activeHref, itemSize, onToggleExpand, onItemClick } = data;
+export interface VirtualListRowProps {
+  bookId: string;
+  flatItems: FlatTOCItem[];
+  itemSize: number;
+  activeHref: string | null;
+  onToggleExpand: (item: TOCItem) => void;
+  onItemClick: (item: TOCItem) => void;
+}
+
+export function VirtualListRow({
+  index,
+  style,
+  ariaAttributes,
+  flatItems,
+  bookId,
+  activeHref,
+  itemSize,
+  onToggleExpand,
+  onItemClick,
+}: RowComponentProps<VirtualListRowProps>) {
   const flatItem = flatItems[index];
 
   return (
-    <div style={style}>
+    <div style={style} {...ariaAttributes}>
       <StaticListRow
         bookId={bookId}
         flatItem={flatItem}
