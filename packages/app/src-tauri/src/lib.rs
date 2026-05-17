@@ -43,16 +43,17 @@ use tauri::Manager;
 
 #[cfg(target_os = "android")]
 use jni::{
+    errors::ThrowRuntimeExAndDefault,
     objects::{JClass, JObject},
-    JNIEnv,
+    EnvUnowned,
 };
 
 #[tauri::command]
-async fn app_ready(app: tauri::AppHandle) {
+async fn app_ready(_app: tauri::AppHandle) {
     // Show the main window now that the frontend DOM is ready
     // show() is only available on desktop platforms
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    if let Some(main_window) = app.get_webview_window("main") {
+    if let Some(main_window) = _app.get_webview_window("main") {
         let _ = main_window.show();
     }
 }
@@ -157,10 +158,10 @@ pub fn run() {
 #[cfg(target_os = "android")]
 #[no_mangle]
 pub extern "C" fn Java_com_xincmm_sageread_MainActivity_java_1init(
-    mut env: JNIEnv,
+    mut env: EnvUnowned,
     _class: JClass,
     context: JObject,
 ) {
-    rustls_platform_verifier::android::init_hosted(&mut env, context)
-        .expect("Failed to initialize Android platform verifier");
+    env.with_env(|env| rustls_platform_verifier::android::init_with_env(env, context))
+        .resolve::<ThrowRuntimeExAndDefault>();
 }

@@ -13,9 +13,7 @@ impl EpubReader {
     pub fn new() -> Result<Self> {
         let chunker = TextChunker::new().context("Failed to initialize text chunker")?;
 
-        Ok(Self {
-            chunker,
-        })
+        Ok(Self { chunker })
     }
 
     /// 读取 EPUB 文件并提取所有文本内容
@@ -25,10 +23,12 @@ impl EpubReader {
         // 获取书籍基本信息
         let title = doc
             .mdata("title")
+            .map(|item| item.value.clone())
             .unwrap_or_else(|| "Unknown Title".to_string());
         let author = doc
             .mdata("creator")
             .or_else(|| doc.mdata("author"))
+            .map(|item| item.value.clone())
             .unwrap_or_else(|| "Unknown Author".to_string());
 
         log::info!("Reading EPUB: {} by {}", title, author);
@@ -36,10 +36,10 @@ impl EpubReader {
         log::info!("EPUB resources count: {}", doc.resources.len());
 
         let mut chapters = Vec::new();
-        let spine_len = doc.get_num_pages();
+        let spine_len = doc.get_num_chapters();
 
         for i in 0..spine_len {
-            doc.set_current_page(i);
+            doc.set_current_chapter(i);
 
             // 获取当前页面的HTML内容
             let html_content = doc.get_current_str().unwrap_or_default();
@@ -160,7 +160,13 @@ impl EpubReader {
 
     /// 专门用于 Markdown 文件的智能分块方法
     /// 考虑 Markdown 格式特性：标题层级、段落边界、代码块等
-    pub fn chunk_md_file(&self, md_content: &str, min_tokens: usize, max_tokens: usize) -> Vec<String> {
-        self.chunker.chunk_md_file(md_content, min_tokens, max_tokens)
+    pub fn chunk_md_file(
+        &self,
+        md_content: &str,
+        min_tokens: usize,
+        max_tokens: usize,
+    ) -> Vec<String> {
+        self.chunker
+            .chunk_md_file(md_content, min_tokens, max_tokens)
     }
 }
