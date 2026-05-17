@@ -598,3 +598,37 @@ Resolved the unresolved Android reader note regression by fixing sqlx dynamic no
 ### Next Steps
 
 - None - task complete
+
+
+## Session 18: Data backup import export
+
+**Date**: 2026-05-16
+**Task**: Data backup import export
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Implemented manual zip backup export and merge/overwrite import for SageRead data, including SQLite content, book files, selected config/localStorage, Android-capability permissions, Settings UI controls, tests, and code-spec documentation.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b991393` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
