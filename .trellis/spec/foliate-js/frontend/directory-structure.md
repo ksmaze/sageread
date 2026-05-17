@@ -6,7 +6,9 @@
 
 ## Overview
 
-`packages/foliate-js` is a native ES module ebook-rendering library vendored into this workspace. It is not a React package and it has no `src/` directory. Most modules live directly at the package root and are imported by file path, for example `foliate-js/view.js` or `foliate-js/epubcfi.js`.
+`packages/foliate-js` is a native ES module ebook-rendering library checked out as a git submodule. It is not a React package and it has no `src/` directory. Most modules live directly at the package root and are imported by file path, for example `foliate-js/view.js` or `foliate-js/epubcfi.js`.
+
+The parent repository tracks only the submodule gitlink. Source edits inside this package must be committed inside the submodule, and that submodule commit must be reachable from `https://github.com/ksmaze/foliate-js.git` before the parent commit is shared.
 
 The root README is unusually important for this package: it documents the book interface, renderer interface, custom elements, security constraints, and module categories. Keep code and specs aligned with that README.
 
@@ -28,9 +30,11 @@ packages/foliate-js/
 +-- mobi.js               # MOBI/KF8 adapter
 +-- fb2.js                # FictionBook adapter
 +-- comic-book.js         # CBZ adapter
++-- pdf.js                # PDF adapter and PDF.js worker/asset wiring
 +-- overlayer.js          # SVG annotation overlay helpers
 +-- progress.js           # Reading progress helpers
 +-- search.js             # Text search helpers
++-- selection.js          # Selection helper utilities
 +-- text-walker.js        # DOM text walker
 +-- tts.js                # SSML/TTS helpers
 +-- dict.js               # Dictd/StarDict helpers
@@ -44,10 +48,13 @@ packages/foliate-js/
 |   +-- tests.html
 |   +-- tests.js
 |   +-- epubcfi-tests.js
+|   +-- overlayer-tests.js
+|   +-- selection-tests.js
 +-- rollup/
 |   +-- fflate.js
 |   +-- zip.js
 +-- vendor/
+|   +-- pdfjs/             # PDF.js assets copied by build tooling
     +-- fflate.js
     +-- zip.js
 ```
@@ -59,7 +66,7 @@ packages/foliate-js/
 - `view.js` defines `makeBook()` and the `foliate-view` custom element.
 - `paginator.js` defines `foliate-paginator` for reflowable books.
 - `fixed-layout.js` defines `foliate-fxl` for fixed-layout books.
-- `epub.js`, `mobi.js`, `fb2.js`, and `comic-book.js` adapt file formats to the documented book interface.
+- `epub.js`, `mobi.js`, `fb2.js`, `comic-book.js`, and `pdf.js` adapt file formats to the documented book interface.
 
 ### Utility Modules
 
@@ -68,7 +75,7 @@ Keep format-agnostic DOM and reader helpers in standalone modules:
 - `epubcfi.js` for CFI parsing, stringifying, comparison, and range conversion
 - `overlayer.js` for SVG overlays
 - `progress.js` for TOC and section progress
-- `search.js`, `text-walker.js`, and `tts.js` for text processing
+- `search.js`, `selection.js`, `text-walker.js`, and `tts.js` for text processing
 - `opds.js` and `dict.js` for optional catalog/dictionary features
 
 ### Demo UI
@@ -79,7 +86,7 @@ Keep format-agnostic DOM and reader helpers in standalone modules:
 
 - `vendor/*` contains generated or bundled third-party files. Do not hand-edit vendored output except for a dedicated vendor update.
 - `rollup/*` contains small entry files used to generate `vendor/fflate.js` and `vendor/zip.js`.
-- The package build copies PDF.js assets and bundles vendor dependencies; it does not bundle the whole library.
+- The package build copies PDF.js assets into `vendor/pdfjs/` and bundles vendor dependencies; it does not bundle the whole library.
 
 ## Naming Conventions
 
@@ -124,6 +131,7 @@ export function FoliateView() {
 ## Common Mistakes
 
 - Looking for `src/`; this package is intentionally flat root ESM.
+- Expecting parent-repo diffs to show source edits after the submodule conversion. Use `git -C packages/foliate-js status` and `git -C packages/foliate-js diff`.
 - Treating `reader.js` as the core API. It is a demo reader and integration example.
 - Adding cross-module imports where the README says modules are interface-based and mostly independent.
 - Editing `vendor/*` directly instead of changing `rollup/*` or dependency inputs.

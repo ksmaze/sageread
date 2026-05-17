@@ -16,6 +16,62 @@ pnpm --filter foliate-js build
 
 The package has an ESLint config but no package `lint` script today.
 
+## Scenario: Submodule Compatibility Patches
+
+### 1. Scope / Trigger
+
+- Applies when updating `packages/foliate-js`, changing app-facing exports, or preserving Sageread-specific compatibility behavior on top of upstream `foliate-js`.
+
+### 2. Signatures
+
+- Parent repo submodule path: `packages/foliate-js`
+- Submodule remote: `https://github.com/ksmaze/foliate-js.git`
+- Parent dependency: `packages/app/package.json` uses `"foliate-js": "workspace:*"`
+- App-facing module imports include direct file paths such as `foliate-js/view.js`, `foliate-js/overlayer.js`, `foliate-js/epubcfi.js`, and `foliate-js/vendor/fflate.js`
+
+### 3. Contracts
+
+- The parent repository must record `packages/foliate-js` as a gitlink, not regular source files.
+- Any source edit inside `packages/foliate-js` must be committed in the submodule before updating the parent gitlink.
+- The submodule commit referenced by the parent must be pushed to `https://github.com/ksmaze/foliate-js.git` before sharing the parent commit with another clone.
+- App compatibility APIs such as `View.addAnnotation()` overlay keys, `View.setSearchIndicator()`, `Overlayer.noteMarker()`, and `Overlayer.arrow()` are app-facing behavior and must not be dropped during upstream updates.
+
+### 4. Validation & Error Matrix
+
+- Parent points at an unpushed local submodule commit -> other clones cannot initialize the referenced commit.
+- App-facing API removed without updating `packages/app/src/vite-env.d.ts` and consumers -> app build/type checks fail or runtime annotation/search behavior regresses.
+- `vendor/pdfjs/*` edited by hand -> generated assets drift from dependency/build inputs.
+- PDF.js assets referenced without a relative `./vendor/pdfjs/` URL in `pdf.js` -> Vite may warn or fail to transform the worker/asset path correctly.
+
+### 5. Good/Base/Bad Cases
+
+- Good: rebase/apply compatibility patches on latest upstream, commit them inside the submodule, verify app build, then update the parent gitlink.
+- Base: updating only the submodule pointer to a reachable upstream commit is acceptable when no app compatibility patches are needed.
+- Bad: copying upstream files into the parent repo as regular files or leaving uncommitted source edits inside the submodule.
+
+### 6. Tests Required
+
+- Run `pnpm --filter foliate-js build`.
+- Run focused foliate tests for touched helpers, for example `node --test packages/foliate-js/tests/selection-tests.js`.
+- Run `pnpm --filter app build` when app-facing modules, ambient declarations, or package wiring changed.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```bash
+git add packages/foliate-js/view.js
+git commit -m "patch foliate"
+```
+
+#### Correct
+
+```bash
+git -C packages/foliate-js add view.js overlayer.js
+git -C packages/foliate-js commit -m "chore: preserve sageread app compatibility"
+git add packages/foliate-js
+```
+
 ## Forbidden Patterns
 
 - Do not add React, Zustand, Tailwind, Radix, Tauri, or app-specific imports to `foliate-js`.

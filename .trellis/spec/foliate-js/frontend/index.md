@@ -6,7 +6,7 @@
 
 ## Overview
 
-This directory contains the current conventions for `packages/foliate-js`, the vendored native ES module ebook-rendering library consumed by the app.
+This directory contains the current conventions for `packages/foliate-js`, the git submodule native ES module ebook-rendering library consumed by the app.
 
 ---
 
