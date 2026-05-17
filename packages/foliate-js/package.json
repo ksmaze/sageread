@@ -17,15 +17,15 @@
     "./*.js": "./*.js"
   },
   "devDependencies": {
-    "@eslint/js": "^9.9.1",
-    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@eslint/js": "^9.39.4",
+    "@rollup/plugin-node-resolve": "^15.3.1",
     "@rollup/plugin-terser": "^0.4.4",
-    "@zip.js/zip.js": "^2.7.52",
-    "fflate": "^0.8.2",
-    "fs-extra": "^11.2.0",
-    "globals": "^15.9.0",
-    "pdfjs-dist": "^4.7.76",
-    "rollup": "^4.22.4"
+    "@zip.js/zip.js": "^2.8.26",
+    "fflate": "^0.8.3",
+    "fs-extra": "^11.3.5",
+    "globals": "^15.15.0",
+    "pdfjs-dist": "^4.10.38",
+    "rollup": "^4.60.4"
   },
   "scripts": {
     "build": "npx rollup -c"

@@ -11,10 +11,10 @@
     "build:foliate": "pnpm --filter foliate-js build"
   },
   "devDependencies": {
-    "typescript": "~5.8.3"
+    "typescript": "~6.0.3"
   },
   "dependencies": {
-    "@biomejs/biome": "1.9.4",
-    "keepalive-for-react": "^4.0.3"
+    "@biomejs/biome": "2.4.15",
+    "keepalive-for-react": "^5.0.11"
   }
 }
