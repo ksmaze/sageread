@@ -55,7 +55,9 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "log:default",
+    "fs:allow-read-file",
     "fs:allow-write-file",
+    "fs:allow-remove",
     {
       "identifier": "llamacpp:default",
       "allow": [

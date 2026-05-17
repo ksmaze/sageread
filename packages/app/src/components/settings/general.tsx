@@ -7,6 +7,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import clsx from "clsx";
 import { ChevronDownIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import DataBackupSection from "./data-backup-section";
 import { GENERAL_SETTINGS_SECTIONS } from "./general-settings-model";
 
 export default function GeneralSettings() {
@@ -95,6 +96,7 @@ export default function GeneralSettings() {
           </div>
         </section>
       ))}
+      <DataBackupSection />
     </div>
   );
 }

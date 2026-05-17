@@ -19,6 +19,7 @@ This directory contains the current frontend conventions for `packages/app`. The
 | [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | Captured |
 | [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | Captured |
 | [State Management](./state-management.md) | Local state, global state, server state | Captured |
+| [Data Backup And Restore](./data-backup.md) | Manual zip export/import contracts across Settings, Tauri commands, SQLite, app files, and config | Captured |
 | [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | Captured |
 | [Type Safety](./type-safety.md) | Type patterns, validation | Captured |
 

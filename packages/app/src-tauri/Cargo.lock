@@ -28,8 +28,11 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-os",
  "tauri-plugin-sql",
+ "tempfile",
  "tokio",
  "uuid",
+ "walkdir",
+ "zip",
 ]
 
 [[package]]

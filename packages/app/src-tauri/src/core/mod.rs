@@ -1,3 +1,4 @@
+pub mod backup;
 pub mod books;
 pub mod database;
 pub mod llama;

@@ -2,6 +2,7 @@
 
 mod core;
 use crate::core::{
+    backup::{create_backup_archive, import_backup_archive},
     books::commands::{
         create_book_note,
         create_reading_session,
@@ -91,7 +92,7 @@ pub fn run() {
                     }
                 }
             }
-            
+
             tauri::async_runtime::spawn(async move {
                 let pool = database::initialize(&app_handle)
                     .await
@@ -162,6 +163,8 @@ pub fn run() {
             download_model_file,
             delete_local_model,
             app_ready,
+            create_backup_archive,
+            import_backup_archive,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {

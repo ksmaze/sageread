@@ -8,5 +8,38 @@
     "main"
   ],
   "permissions": [
+    "core:default",
+    "os:default",
+    "core:path:default",
+    "fs:allow-appconfig-read-recursive",
+    "fs:allow-appconfig-write-recursive",
+    "fs:allow-appdata-read-recursive",
+    "fs:allow-appdata-write-recursive",
+    "fs:allow-temp-read-recursive",
+    "fs:allow-temp-write-recursive",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
+    "fs:allow-remove",
+    "dialog:allow-ask",
+    "dialog:allow-confirm",
+    "dialog:allow-message",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "sql:default",
+    "sql:allow-execute",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://*:*"
+        },
+        {
+          "url": "http://*:*"
+        }
+      ],
+      "deny": []
+    },
+    "log:default",
+    "epub:default"
   ]
 }
