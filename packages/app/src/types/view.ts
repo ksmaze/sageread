@@ -13,16 +13,16 @@ export interface ReaderNoteMarker {
 export interface FoliateView extends HTMLElement {
   open: (book: BookDoc) => Promise<void>;
   close: () => void;
-  init: (options: { lastLocation: string }) => void;
-  goTo: (href: string) => void;
-  goToFraction: (fraction: number) => void;
-  prev: (distance?: number) => void;
-  next: (distance?: number) => void;
-  goLeft: () => void;
-  goRight: () => void;
+  init: (options: { lastLocation: string }) => Promise<void>;
+  goTo: (href: string) => Promise<unknown>;
+  goToFraction: (fraction: number) => Promise<void>;
+  prev: (distance?: number) => Promise<void>;
+  next: (distance?: number) => Promise<void>;
+  goLeft: () => Promise<void>;
+  goRight: () => Promise<void>;
   getCFI: (index: number, range: Range) => string;
   resolveCFI: (cfi: string) => { index: number; anchor: (doc: Document) => Range };
-  addAnnotation: (note: BookNote | ReaderNoteMarker, remove?: boolean) => { index: number; label: string };
+  addAnnotation: (note: BookNote | ReaderNoteMarker, remove?: boolean) => Promise<{ index: number; label: string } | void>;
   search: (config: BookSearchConfig) => AsyncGenerator<BookSearchResult | string, void, void>;
   clearSearch: () => void;
   setSearchIndicator: (type: string, options: any) => void;

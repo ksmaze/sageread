@@ -1,6 +1,7 @@
 import ReaderViewer from "@/pages/reader";
 import { ReaderProvider } from "@/pages/reader/components/reader-provider";
 import { createReaderStore } from "@/pages/reader/store/create-reader-store";
+import type { ReaderNavigationTarget } from "@/pages/reader/store/create-reader-store";
 import { useEffect, useMemo } from "react";
 import { ReaderToolDock } from "../components/reader-tool-dock";
 import { useMobileShellStore } from "../shell/mobile-shell-store";
@@ -17,9 +18,18 @@ export function MobileReader() {
   const openReaderSheet = useMobileShellStore((state) => state.openReaderSheet);
   const activeBookId = activeBook?.id;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pending navigation is sampled only when the store is created; later targets are handled by the effect below.
   const readerStore = useMemo(() => {
     if (!activeBookId || !isReaderOpen) return null;
-    return createReaderStore(activeBookId);
+    const initialNavigationTarget: ReaderNavigationTarget | undefined =
+      pendingReaderNavigationTarget?.bookId === activeBookId
+        ? {
+            cfi: pendingReaderNavigationTarget.cfi,
+            requestedAt: pendingReaderNavigationTarget.requestedAt,
+            source: pendingReaderNavigationTarget.source,
+          }
+        : undefined;
+    return createReaderStore(activeBookId, initialNavigationTarget);
   }, [activeBookId, isReaderOpen]);
 
   useEffect(() => {

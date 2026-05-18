@@ -159,10 +159,15 @@ export class FoliateViewerManager {
 
     const { config } = this.config;
     if (config.location) {
-      await this.view.init({ lastLocation: config.location });
-    } else {
-      await this.view.goToFraction(0);
+      try {
+        await this.view.init({ lastLocation: config.location });
+        return;
+      } catch (error) {
+        console.warn("[FoliateViewerManager] Failed to restore initial location, falling back to start:", error);
+      }
     }
+
+    await this.view.goToFraction(0);
   }
 
   private handleLoad(event: CustomEvent): void {

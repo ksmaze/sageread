@@ -1,25 +1,72 @@
 import { useReadingSession } from "@/hooks/use-reading-session";
 import { useSafeAreaInsets } from "@/hooks/use-safe-areaInsets";
+import type { BookDoc } from "@/lib/document";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useLayoutStore } from "@/store/layout-store";
 import { useLibraryStore } from "@/store/library-store";
+import type { BookConfig } from "@/types/book";
+import type { Insets } from "@/types/misc";
 import { getInsetEdges } from "@/utils/grid";
 import { getViewInsets } from "@/utils/insets";
 import { useEffect, useMemo } from "react";
 import useBookShortcuts from "../hooks/use-book-shortcuts";
 import { useFoliateViewer } from "../hooks/use-foliate-viewer";
+import { consumeReaderNavigationTarget, getInitialReaderLocation } from "../store/reader-navigation";
 import Annotator from "./annotator";
 import FooterBar from "./footer-bar";
 import HeaderBar from "./header-bar";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
 
+interface ReaderViewerSurfaceProps {
+  bookId: string;
+  bookDoc: BookDoc;
+  config: BookConfig;
+  contentInsets: Insets;
+}
+
+const ReaderViewerSurface: React.FC<ReaderViewerSurfaceProps> = ({ bookId, bookDoc, config, contentInsets }) => {
+  const view = useReaderStore((state) => state.view);
+  const isViewerReady = useReaderStore((state) => state.isViewerReady);
+  const pendingNavigationTarget = useReaderStore((state) => state.pendingNavigationTarget);
+  const store = useReaderStoreApi();
+
+  const initialLocation = getInitialReaderLocation(config.location, pendingNavigationTarget);
+  const viewerConfig = useMemo(
+    () => (initialLocation === config.location ? config : { ...config, location: initialLocation }),
+    [config, initialLocation],
+  );
+
+  const foliateViewer = useFoliateViewer(bookId, bookDoc, viewerConfig, contentInsets);
+
+  useEffect(() => {
+    if (!view || !isViewerReady || !pendingNavigationTarget) return;
+
+    let cancelled = false;
+    void consumeReaderNavigationTarget({
+      target: pendingNavigationTarget,
+      view,
+      clearTarget: (target) => {
+        if (!cancelled) store.getState().clearNavigationTarget(target);
+      },
+      onError: (error) => {
+        console.error("[ReaderViewer] Failed to navigate to pending note target:", error);
+      },
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isViewerReady, pendingNavigationTarget, store, view]);
+
+  return (
+    <div ref={foliateViewer.containerRef} className="flex-1" data-book-id={bookId} {...foliateViewer.mouseHandlers} />
+  );
+};
+
 const ReaderViewerContent: React.FC = () => {
   const bookId = useReaderStore((state) => state.bookId);
   const bookData = useReaderStore((state) => state.bookData);
   const config = useReaderStore((state) => state.config);
-  const view = useReaderStore((state) => state.view);
-  const isViewerReady = useReaderStore((state) => state.isViewerReady);
-  const pendingNavigationTarget = useReaderStore((state) => state.pendingNavigationTarget);
   const { settings } = useAppSettingsStore();
 
   const screenInsets = useSafeAreaInsets();
@@ -53,22 +100,7 @@ const ReaderViewerContent: React.FC = () => {
     return null;
   }
 
-  const foliateViewer = useFoliateViewer(bookId, bookData.bookDoc, config, contentInsets);
-
-  useEffect(() => {
-    if (!view || !isViewerReady || !pendingNavigationTarget) return;
-
-    try {
-      view.goTo(pendingNavigationTarget.cfi);
-      store.getState().clearNavigationTarget(pendingNavigationTarget);
-    } catch (error) {
-      console.error("[ReaderViewer] Failed to navigate to pending note target:", error);
-    }
-  }, [isViewerReady, pendingNavigationTarget, view]);
-
-  return (
-    <div ref={foliateViewer.containerRef} className="flex-1" data-book-id={bookId} {...foliateViewer.mouseHandlers} />
-  );
+  return <ReaderViewerSurface bookId={bookId} bookDoc={bookData.bookDoc} config={config} contentInsets={contentInsets} />;
 };
 
 interface ReaderViewerProps {

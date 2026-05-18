@@ -44,7 +44,7 @@ export const useLayoutStore = create<LayoutStore>()(
         const { tabs, activateTab, readerStores } = get();
 
         if (!readerStores.has(tabId)) {
-          const store = createReaderStore(bookId);
+          const store = createReaderStore(bookId, navigationTarget);
           readerStores.set(tabId, store);
         }
 

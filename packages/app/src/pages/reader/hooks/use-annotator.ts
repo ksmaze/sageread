@@ -8,11 +8,11 @@ import type { BookMeta, Note, UpdateNoteData } from "@/types/note";
 import type { ReaderNoteMarker } from "@/types/view";
 import { type Position, type TextSelection, getPopupPosition, getPosition } from "@/utils/sel";
 import { useQueryClient } from "@tanstack/react-query";
-import * as CFI from "foliate-js/epubcfi.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useReaderStore, useReaderStoreApi } from "../components/reader-provider";
 import { findSourceBoundNote, mergeUpdatedActiveNote } from "./reader-note-state";
+import { isAnnotationVisibleAtProgress } from "./reader-annotation-visibility";
 
 function getContextByRange(range: Range, win = 30) {
   const container = range.commonAncestorContainer;
@@ -137,8 +137,20 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
               ann.id === existingAnnotation.id ? updatedAnnotation : ann,
             );
             const updatedConfig = store.getState().updateBooknotes(updatedAnnotations);
-            view?.addAnnotation(updatedAnnotation, true);
-            view?.addAnnotation(updatedAnnotation);
+            void view?.addAnnotation(updatedAnnotation, true)?.catch((error) => {
+              console.warn("[useAnnotator] Failed to remove updated highlight before redraw:", {
+                bookId,
+                cfi: updatedAnnotation.cfi,
+                error,
+              });
+            });
+            void view?.addAnnotation(updatedAnnotation)?.catch((error) => {
+              console.warn("[useAnnotator] Failed to redraw updated highlight:", {
+                bookId,
+                cfi: updatedAnnotation.cfi,
+                error,
+              });
+            });
 
             if (updatedConfig) {
               await store.getState().saveConfig(updatedConfig);
@@ -149,7 +161,13 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
             const updatedAnnotations = annotations.filter((ann) => ann.id !== existingAnnotation.id);
             const updatedConfig = store.getState().updateBooknotes(updatedAnnotations);
 
-            view?.addAnnotation(existingAnnotation, true);
+            void view?.addAnnotation(existingAnnotation, true)?.catch((error) => {
+              console.warn("[useAnnotator] Failed to remove deleted highlight:", {
+                bookId,
+                cfi: existingAnnotation.cfi,
+                error,
+              });
+            });
 
             setShowAnnotPopup(false);
 
@@ -178,7 +196,13 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
           const updatedAnnotations = [...annotations, newAnnotation];
           const updatedConfig = store.getState().updateBooknotes(updatedAnnotations);
 
-          view?.addAnnotation(newAnnotation);
+          void view?.addAnnotation(newAnnotation)?.catch((error) => {
+            console.warn("[useAnnotator] Failed to draw new highlight:", {
+              bookId,
+              cfi: newAnnotation.cfi,
+              error,
+            });
+          });
           setSelection({ ...selection, annotated: true });
 
           if (updatedConfig) {
@@ -239,7 +263,13 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
 
       const marker = toReaderNoteMarker(newNote);
       if (marker) {
-        view?.addAnnotation(marker);
+        void view?.addAnnotation(marker)?.catch((error) => {
+          console.warn("[useAnnotator] Failed to draw new note marker:", {
+            bookId,
+            cfi: marker.cfi,
+            error,
+          });
+        });
       }
       handleDismissPopupAndSelection();
     } catch (error) {
@@ -359,50 +389,57 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   // 加载当前页面的标注
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    if (!progress) return;
-    const { location } = progress;
-    const start = CFI.collapse(location);
-    const end = CFI.collapse(location, true);
+    if (!progress || !view) return;
     const { booknotes = [] } = config;
     const annotations = booknotes.filter(
       (item) =>
         !item.deletedAt &&
         item.type === "annotation" &&
         item.style &&
-        CFI.compare(item.cfi, start) >= 0 &&
-        CFI.compare(item.cfi, end) <= 0,
+        isAnnotationVisibleAtProgress(item.cfi, progress, view),
     );
-    try {
-      Promise.all(annotations.map((annotation) => view?.addAnnotation(annotation)));
-    } catch (e) {
-      console.warn(e);
+    for (const annotation of annotations) {
+      void view.addAnnotation(annotation).catch((error) => {
+        console.warn("[useAnnotator] Failed to restore highlight annotation:", {
+          bookId,
+          cfi: annotation.cfi,
+          error,
+        });
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progress]);
+  }, [progress, config, view]);
 
   useEffect(() => {
     for (const marker of currentNoteMarkersRef.current) {
-      view?.addAnnotation(marker, true);
+      void view?.addAnnotation(marker, true)?.catch((error) => {
+        console.warn("[useAnnotator] Failed to remove previous note marker:", {
+          bookId,
+          cfi: marker.cfi,
+          error,
+        });
+      });
     }
     currentNoteMarkersRef.current = [];
 
     if (!progress || !view) return;
 
-    try {
-      const { location } = progress;
-      const start = CFI.collapse(location);
-      const end = CFI.collapse(location, true);
-      const visibleMarkers = sourceBoundNotes
-        .filter((note) => note.cfi && CFI.compare(note.cfi, start) >= 0 && CFI.compare(note.cfi, end) <= 0)
-        .map(toReaderNoteMarker)
-        .filter((marker): marker is ReaderNoteMarker => marker !== null);
+    const visibleMarkers = sourceBoundNotes
+      .filter((note) => note.cfi && isAnnotationVisibleAtProgress(note.cfi, progress, view))
+      .map(toReaderNoteMarker)
+      .filter((marker): marker is ReaderNoteMarker => marker !== null);
 
-      currentNoteMarkersRef.current = visibleMarkers;
-      Promise.all(visibleMarkers.map((marker) => view.addAnnotation(marker)));
-    } catch (e) {
-      console.warn(e);
+    currentNoteMarkersRef.current = visibleMarkers;
+    for (const marker of visibleMarkers) {
+      void view.addAnnotation(marker).catch((error) => {
+        console.warn("[useAnnotator] Failed to restore note marker:", {
+          bookId,
+          cfi: marker.cfi,
+          error,
+        });
+      });
     }
-  }, [progress, sourceBoundNotes, view]);
+  }, [bookId, progress, sourceBoundNotes, view]);
 
   return {
     // 状态

@@ -48,7 +48,7 @@ export interface ReaderState {
   setActiveContext: (context: string | undefined) => void;
   saveConfig: (config: BookConfig) => Promise<void>;
   updateBooknotes: (booknotes: BookNote[]) => BookConfig | undefined;
-  setView: (view: FoliateView) => void;
+  setView: (view: FoliateView | null) => void;
   setViewerReady: (ready: boolean) => void;
   requestNavigation: (target: ReaderNavigationTarget) => void;
   clearNavigationTarget: (target: ReaderNavigationTarget) => void;
@@ -62,7 +62,7 @@ export interface ReaderState {
   setCurrentThread: (thread: Thread | null) => void;
 }
 
-export const createReaderStore = (bookId: string) => {
+export const createReaderStore = (bookId: string, initialNavigationTarget?: ReaderNavigationTarget) => {
   return createStore<ReaderState>((set, get) => ({
     bookId,
     config: null,
@@ -70,7 +70,7 @@ export const createReaderStore = (bookId: string) => {
     bookData: null,
     view: null,
     location: null,
-    pendingNavigationTarget: null,
+    pendingNavigationTarget: initialNavigationTarget ?? null,
     isViewerReady: false,
     isLoading: false,
     error: null,

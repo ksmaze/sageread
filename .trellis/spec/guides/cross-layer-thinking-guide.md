@@ -42,6 +42,8 @@ For each arrow, ask:
 | Dynamic SQL ↔ Service Error UI | malformed generated SQL, hidden backend string errors |
 | Library Runtime Assets ↔ Bundler ↔ Tauri Static Server | computed URLs that bundlers cannot statically discover, missing copied asset directories, production-only `/assets/undefined` URLs |
 | Foliate Renderer ↔ Reader UI/Annotations | one renderer emits/returns the expected navigation and overlayer contract while another renderer silently lacks it |
+| Reader Progress CFI ↔ Annotation Replay | reflowable EPUB progress is a visible range CFI, while fixed-layout/PDF progress can be a page-level CFI with `range: null`; replay logic must branch on that contract |
+| Reader Pending Target ↔ Saved Location Restore | opening from notes requires the pending target to win over stale saved reader location during initialization |
 
 ### Step 3: Define Contracts
 
@@ -84,6 +86,18 @@ For each boundary:
 
 **Good**: Treat runtime-fetched asset trees as an explicit cross-layer contract. Keep directory URLs runtime-relative and make the consuming app copy and test the emitted asset tree.
 
+### Mistake 6: Treating Every Reader Location As A Visible Range
+
+**Bad**: Filtering saved annotations with `CFI.compare(annotation.cfi, collapse(location))` and `collapse(location, true)` for every renderer.
+
+**Good**: Check the renderer/progress contract first. Reflowable renderer progress can expose a visible range, but fixed-layout/PDF relocate events may report `range: null` and a page-level CFI. In that case, resolve the saved annotation CFI and current page CFI to section indexes and compare the indexes.
+
+### Mistake 7: Treating Reader Startup As Separate From Pending Navigation
+
+**Bad**: Always restore the saved book location first, then consume a pending note jump after `isViewerReady`; a stale saved CFI can fail initialization before the note target runs.
+
+**Good**: If a pending reader target exists, use it as the initial foliate location and only fall back to the saved location when no target is pending. Treat both thrown navigation errors and unresolved `goTo()` results as failures.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -96,6 +110,8 @@ Before implementation:
 - [ ] For portalled UI, identified the trigger surface, portal root, z-index layer, collision boundary, and max viewport size
 - [ ] For runtime library assets, identified which layer owns URL construction, asset copying, and packaged static serving
 - [ ] For reader renderer features, checked every mounted renderer type (`foliate-paginator` and `foliate-fxl`) exposes the methods/events consumed by app chrome, annotations, and TOC/progress code
+- [ ] For annotation replay, identified whether the current renderer reports a visible range CFI or a page-level CFI
+- [ ] For reader jumps, identified whether pending navigation or saved location owns initial foliate startup
 
 After implementation:
 - [ ] Tested with edge cases (null, empty, invalid)
@@ -106,6 +122,8 @@ After implementation:
 - [ ] For runtime library assets, verified the production output contains the directories fetched at runtime
 - [ ] For renderer contracts, verified annotation overlays and previous/next/TOC navigation against both reflowable and fixed-layout/PDF books
 - [ ] For close/reopen flows, reopened the same PDF after teardown and verified stale renderer events and cached object URLs do not survive the previous session
+- [ ] For fixed-layout/PDF annotation replay, tested close/reopen and note-jump flows with saved page-internal highlight and note-marker CFIs
+- [ ] For note jumps, tested invalid/stale saved locations do not prevent the pending target from initializing the reader
 
 ---
 

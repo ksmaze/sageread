@@ -118,14 +118,18 @@ useLayoutStore.openBook(bookId: string, title: string, navigationTarget?: Reader
 
 readerStore.getState().requestNavigation(target: ReaderNavigationTarget): void;
 readerStore.getState().clearNavigationTarget(target: ReaderNavigationTarget): void;
+createReaderStore(bookId: string, initialNavigationTarget?: ReaderNavigationTarget): ReaderStore;
 ```
 
 ### 3. Contracts
 
 - The navigation target carries only reader-local data. Mobile shell may attach `bookId` internally while handing the target to `MobileReader`.
 - Callers pass `undefined` when they only need to open the book at the existing saved location.
+- If a pending navigation target exists while mounting a reader, initialize foliate with the pending target CFI before the saved book location. The saved location is only the initial target when there is no pending note/navigation request.
 - `ReaderViewer` must wait for the foliate view to be ready before calling `view.goTo(target.cfi)`.
 - Clearing a completed target must only clear the same `{ cfi, requestedAt }` target so a newer request cannot be accidentally removed by an older effect.
+- Treat `view.goTo(cfi)` resolving to `undefined`/`null` as a navigation failure. Foliate can catch renderer errors internally, so "the promise resolved" is not enough proof that navigation succeeded.
+- Restoring an initial saved location must not be allowed to abort reader initialization. If initial restore fails, log it and fall back to the book start so the reader remains mounted.
 
 ### 4. Validation & Error Matrix
 
@@ -136,6 +140,8 @@ readerStore.getState().clearNavigationTarget(target: ReaderNavigationTarget): vo
 | Reader view is not ready | Keep the target pending in the reader store. |
 | A newer target arrives before an older target clears | Keep the newer target. |
 | `view.goTo(cfi)` throws | Log the failure and leave the reader mounted. |
+| `view.goTo(cfi)` resolves without a destination | Log the failure, leave the target pending, and leave the reader mounted. |
+| Saved reader location is stale or invalid | Fall back to book start; do not blank or close the reader. |
 
 ### 5. Good/Base/Bad Cases
 
@@ -145,7 +151,7 @@ readerStore.getState().clearNavigationTarget(target: ReaderNavigationTarget): vo
 
 ### 6. Tests Required
 
-- `reader-navigation.test.ts` must cover stale-target clearing behavior.
+- `reader-navigation-consume.test.ts` must cover stale-target clearing, await-before-clear, unresolved navigation, and pending-target initial-location precedence.
 - Unified note model tests must cover whether a display item can produce a reader target.
 - Run `pnpm --filter app build` after signature changes to stores or reader hooks.
 
@@ -380,6 +386,7 @@ interface ChatContext {
 | PDF has embedded outline | Keep the outline as the TOC. |
 | PDF has no embedded outline | Do not synthesize a page-list TOC. |
 | PDF page creates or reloads an annotation | The underlying fixed-layout renderer must expose a page overlayer through `getContents()` so the saved CFI can draw visibly. |
+| PDF/fixed-layout progress reports `range: null` | Treat `progress.location` as a page-level CFI. Replay highlights and reader note markers by resolving the saved CFI and current page CFI to section indexes, not by comparing the saved range CFI to `CFI.collapse(location)`/`collapse(location, true)`. |
 | PDF reader previous/next controls are tapped | Use the mounted renderer's adjacent-section/page movement contract; do not assume only `foliate-paginator` supports reader chrome. |
 | PDF chat has no selected text reference | Block submission with a selected-text-only message. |
 | EPUB chat has vector capability | Keep attaching EPUB RAG tools. |
@@ -387,15 +394,18 @@ interface ChatContext {
 ### 5. Good/Base/Bad Cases
 
 - Good: A PDF import creates a library item, opens through `DocumentLoader`, renders via Foliate/PDF.js, and selected text can be sent to AI without enabling book-wide RAG.
+- Good: A saved PDF annotation with a page-internal fake CFI is replayed on reopen because the reader compares the annotation's resolved section index to the current fixed-layout page index.
 - Base: An EPUB import continues to use EPUB metadata, cover extraction, EPUB MIME, EPUB TOC, notes, and RAG behavior.
 - Bad: Reconstructing every stored book as `new File(..., "book.epub", { type: "application/epub+zip" })`; this breaks PDF opening and hides format-specific failures.
 - Bad: Letting PDF use `plugin:epub|search_db`, `parse_toc`, or other EPUB RAG tools.
+- Bad: Reusing the EPUB visible-range filter for PDF annotation replay. A PDF page location such as `epubcfi(/6/2)` collapses to the same start and end, so a page-internal annotation CFI like `epubcfi(/6/2!...range...)` will never compare inside that range.
 
 ### 6. Tests Required
 
 - Format helper tests must assert PDF/EPUB detection, MIME mapping, fallback filenames, and unsupported extension behavior.
 - TOC tests must cover async PDF outline destination resolution and must not add fake page-list items.
 - Fixed-layout renderer tests must assert PDF-style frame overlays and adjacent-section navigation.
+- Reader annotation visibility tests must assert that page-level fixed-layout progress matches saved page-internal PDF annotation CFIs.
 - Chat context tests must assert PDF selected-text-only behavior and EPUB-only RAG attachment.
 - Run `pnpm --filter app build` after reader store, upload, chat context, or `DocumentLoader` changes.
 
