@@ -1,6 +1,7 @@
 import { DocumentLoader } from "@/lib/document";
 import type { BookDoc } from "@/lib/document";
 import { loadBookConfig, saveBookConfig } from "@/services/app-service";
+import { getBookFileName, getBookMimeType } from "@/services/book-format";
 import { getBookWithStatusById } from "@/services/book-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useLibraryStore } from "@/store/library-store";
@@ -8,6 +9,7 @@ import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
 import type { SessionStats } from "@/types/reading-session";
 import type { Thread } from "@/types/thread";
 import type { FoliateView } from "@/types/view";
+import { updateToc } from "@/utils/toc";
 import { appDataDir } from "@tauri-apps/api/path";
 import { createStore } from "zustand";
 import { type ReaderNavigationTarget, clearReaderNavigationTarget } from "./reader-navigation";
@@ -97,9 +99,9 @@ export const createReaderStore = (bookId: string) => {
         }
 
         const arrayBuffer = await response.arrayBuffer();
-        const filename = simpleBook.filePath.split("/").pop() || "book.epub";
+        const filename = getBookFileName(simpleBook.filePath, simpleBook.format);
         const file = new File([arrayBuffer], filename, {
-          type: "application/epub+zip",
+          type: getBookMimeType(simpleBook.format),
         });
 
         const book = {
@@ -117,6 +119,10 @@ export const createReaderStore = (bookId: string) => {
 
         const config = await loadBookConfig(bookId, settings);
         const { book: bookDoc } = await new DocumentLoader(file).open();
+        await updateToc(bookDoc, settings.globalViewSettings.sortedTOC);
+        bookDoc.metadata.title ||= simpleBook.title;
+        bookDoc.metadata.author ||= simpleBook.author;
+        bookDoc.metadata.language ||= simpleBook.language || "en";
 
         const bookData: BookDataState = {
           id: bookId,

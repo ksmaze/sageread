@@ -11,7 +11,7 @@ import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import { getCurrentVectorModelConfig } from "@/utils/model";
 import { listen } from "@tauri-apps/api/event";
 import { ask } from "@tauri-apps/plugin-dialog";
-import { MoreHorizontal } from "lucide-react";
+import { FileText, MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import BookActionDrawer from "./book-action-drawer";
@@ -188,6 +188,11 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
 
   // Extracted vectorization action
   const handleVectorizeBook = useCallback(async () => {
+    if (book.format !== "EPUB") {
+      toast.info("PDF 暂不支持向量化，请在阅读器中选中文字使用 AI。");
+      return;
+    }
+
     const { addNotification } = useNotificationStore.getState();
 
     const vectorConfig = await getCurrentVectorModelConfig();
@@ -248,7 +253,7 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
       addNotification(errorMessage + ": " + detailedError);
       if (onRefresh) await onRefresh();
     }
-  }, [book.id, book.title, onRefresh]);
+  }, [book.format, book.id, book.title, onRefresh]);
 
   const handleToggleReadStatus = useCallback(async () => {
     if (!onUpdate) return;
@@ -305,6 +310,10 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
   };
 
   const renderVectorizationStatus = () => {
+    if (book.format !== "EPUB") {
+      return null;
+    }
+
     const statusFromMeta = book.status?.metadata?.vectorization?.status ?? "idle";
     const effectiveStatus =
       vectorizeProgress != null && vectorizeProgress >= 0 && vectorizeProgress < 100 ? "processing" : statusFromMeta;
@@ -447,7 +456,14 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800">
                   <div className="p-4 text-center">
-                    <div className="mb-2 font-bold text-2xl text-neutral-500 dark:text-neutral-400">📖</div>
+                    {book.format === "PDF" ? (
+                      <FileText className="mx-auto mb-2 size-9 text-red-500 dark:text-red-300" />
+                    ) : (
+                      <div className="mb-2 font-bold text-2xl text-neutral-500 dark:text-neutral-400">📖</div>
+                    )}
+                    {book.format === "PDF" && (
+                      <div className="mb-2 font-semibold text-red-500 text-xs tracking-wide dark:text-red-300">PDF</div>
+                    )}
                     <div className="line-clamp-3 text-neutral-600 text-xs dark:text-neutral-300">{book.title}</div>
                   </div>
                 </div>

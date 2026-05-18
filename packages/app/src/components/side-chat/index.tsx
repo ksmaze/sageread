@@ -36,6 +36,7 @@ function ChatContent({ bookId }: ChatContentProps) {
   const [showMindmapDialog, setShowMindmapDialog] = useState(false);
   const setActiveContext = useReaderStore((state) => state.setActiveContext)!;
   const progress = useReaderStore((state) => state.progress);
+  const bookFormat = useReaderStore((state) => state.bookData?.book?.format);
   const activeContext = useReaderStore((state) => state.activeContext)!;
   const currentThread = useReaderStore((state) => state.currentThread);
   const setCurrentThread = useReaderStore((state) => state.setCurrentThread)!;
@@ -66,6 +67,7 @@ function ChatContent({ bookId }: ChatContentProps) {
   } = useChatState({
     chatContext: {
       activeBookId: bookId,
+      activeBookFormat: bookFormat,
       activeContext,
       activeSectionLabel: progress?.sectionLabel,
     },
@@ -99,35 +101,39 @@ function ChatContent({ bookId }: ChatContentProps) {
           <div className="space-y-2">
             <h3 className="font-semibold text-neutral-900 text-xl dark:text-neutral-50">AI 阅读助手</h3>
             <p className="max-w-md text-sm dark:text-neutral-400">
-              智能分析文本内容，提供深度理解和个性化解答，帮助你快速掌握书籍要点。你可以：
+              {bookFormat === "PDF"
+                ? "PDF 暂不支持整本书 AI。请在阅读器中选中文字后使用解释或询问 AI。"
+                : "智能分析文本内容，提供深度理解和个性化解答，帮助你快速掌握书籍要点。你可以："}
             </p>
           </div>
         </div>
-        <div className="space-y-1">
-          {promptSuggestions.map(({ text, icon: Icon, isNew }) => (
-            <div
-              key={text}
-              onClick={() => {
-                setInput(text);
-                void handleSubmit(text);
-              }}
-              className="flex w-full cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:hover:bg-neutral-800/80"
-            >
-              <span className="flex items-center gap-3 text-neutral-800 text-sm dark:text-neutral-200">
-                <Icon className="size-4" />
-                {text}
-              </span>
-              {isNew ? (
-                <Badge
-                  variant="secondary"
-                  className="border-transparent bg-primary/10 font-medium text-[10px] text-primary uppercase tracking-wide"
-                >
-                  New
-                </Badge>
-              ) : null}
-            </div>
-          ))}
-        </div>
+        {bookFormat !== "PDF" && (
+          <div className="space-y-1">
+            {promptSuggestions.map(({ text, icon: Icon, isNew }) => (
+              <div
+                key={text}
+                onClick={() => {
+                  setInput(text);
+                  void handleSubmit(text);
+                }}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:hover:bg-neutral-800/80"
+              >
+                <span className="flex items-center gap-3 text-neutral-800 text-sm dark:text-neutral-200">
+                  <Icon className="size-4" />
+                  {text}
+                </span>
+                {isNew ? (
+                  <Badge
+                    variant="secondary"
+                    className="border-transparent bg-primary/10 font-medium text-[10px] text-primary uppercase tracking-wide"
+                  >
+                    New
+                  </Badge>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -213,6 +219,7 @@ function ChatContent({ bookId }: ChatContentProps) {
             onStop={stop}
             status={status}
             activeBookId={bookId}
+            selectedTextOnly={bookFormat === "PDF"}
             setActiveBookId={() => {}}
           />
         )}

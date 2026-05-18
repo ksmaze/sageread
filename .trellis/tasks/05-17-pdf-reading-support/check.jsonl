@@ -1,0 +1,4 @@
+{"file": ".trellis/tasks/05-17-pdf-reading-support/prd.md", "reason": "Acceptance criteria and scope decisions to verify before implementation completion."}
+{"file": ".trellis/tasks/05-17-pdf-reading-support/research/pdf-feasibility.md", "reason": "Risk checklist for PDF notes, AI, upload, and reader compatibility."}
+{"file": ".trellis/spec/app/frontend/quality-guidelines.md", "reason": "App quality checks and frontend behavior expectations."}
+{"file": ".trellis/spec/app/frontend/type-safety.md", "reason": "Type-safety expectations for BookFormat, BookDoc, and reader state changes."}

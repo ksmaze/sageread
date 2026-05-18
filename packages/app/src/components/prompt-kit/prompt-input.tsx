@@ -33,6 +33,7 @@ function usePromptInput() {
 
 type PromptInputProps = {
   isLoading?: boolean;
+  disabled?: boolean;
   value?: string;
   onValueChange?: (value: string) => void;
   maxHeight?: number | string;
@@ -44,6 +45,7 @@ type PromptInputProps = {
 function PromptInput({
   className,
   isLoading = false,
+  disabled = false,
   maxHeight = 240,
   value,
   onValueChange,
@@ -63,6 +65,7 @@ function PromptInput({
       <PromptInputContext.Provider
         value={{
           isLoading,
+          disabled,
           value: value ?? internalValue,
           setValue: onValueChange ?? handleChange,
           maxHeight,

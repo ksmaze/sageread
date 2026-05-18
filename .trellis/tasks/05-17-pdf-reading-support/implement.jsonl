@@ -1,0 +1,4 @@
+{"file": ".trellis/tasks/05-17-pdf-reading-support/prd.md", "reason": "Evolving requirements and scope decisions for PDF reading support."}
+{"file": ".trellis/tasks/05-17-pdf-reading-support/research/pdf-feasibility.md", "reason": "Feasibility findings, blockers, and implementation approach options for PDF support."}
+{"file": ".trellis/spec/app/frontend/index.md", "reason": "App frontend conventions for implementation planning."}
+{"file": ".trellis/spec/foliate-js/frontend/quality-guidelines.md", "reason": "Submodule and app-facing foliate-js compatibility constraints if PDF support requires foliate-js patches."}

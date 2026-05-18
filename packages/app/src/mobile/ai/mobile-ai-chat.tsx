@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useChatReaderStore } from "@/store/chat-reader-store";
+import { useLibraryStore } from "@/store/library-store";
 import { useThemeStore } from "@/store/theme-store";
 import type { Thread } from "@/types/thread";
 import { Brain, History, Lightbulb, MessageCirclePlus, Search, Settings, Sparkles, UserSearch } from "lucide-react";
@@ -37,7 +38,13 @@ function MobileChatLoadingState() {
   );
 }
 
-function MobileChatEmptyState({ onPrompt }: { onPrompt: (prompt: string) => void }) {
+function MobileChatEmptyState({
+  onPrompt,
+  selectedTextOnly,
+}: {
+  onPrompt: (prompt: string) => void;
+  selectedTextOnly: boolean;
+}) {
   return (
     <div className="mobile-scroll-area min-h-0 flex-1 overflow-y-auto px-1 py-4">
       <div className="flex min-h-full flex-col justify-end gap-5 pb-2">
@@ -48,24 +55,28 @@ function MobileChatEmptyState({ onPrompt }: { onPrompt: (prompt: string) => void
           <div className="space-y-1.5">
             <h2 className="font-semibold text-foreground text-lg">AI 阅读助手</h2>
             <p className="max-w-md text-muted-foreground text-sm leading-6">
-              可以围绕当前书籍、最近阅读和已有笔记提问，也可以从下面的问题开始。
+              {selectedTextOnly
+                ? "PDF 暂不支持整本书 AI。请在阅读器中选中文字后使用解释或询问 AI。"
+                : "可以围绕当前书籍、最近阅读和已有笔记提问，也可以从下面的问题开始。"}
             </p>
           </div>
         </div>
 
-        <div className="grid gap-2">
-          {promptSuggestions.map(({ text, icon: Icon }) => (
-            <button
-              key={text}
-              type="button"
-              onClick={() => onPrompt(text)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-foreground text-sm transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
-            >
-              <Icon className="size-4 shrink-0 text-muted-foreground" />
-              <span>{text}</span>
-            </button>
-          ))}
-        </div>
+        {!selectedTextOnly && (
+          <div className="grid gap-2">
+            {promptSuggestions.map(({ text, icon: Icon }) => (
+              <button
+                key={text}
+                type="button"
+                onClick={() => onPrompt(text)}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-foreground text-sm transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                <Icon className="size-4 shrink-0 text-muted-foreground" />
+                <span>{text}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -81,17 +92,23 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
   const readerActiveContext = useReaderStore((state) => state.activeContext);
   const readerSetActiveContext = useReaderStore((state) => state.setActiveContext);
   const readerProgress = useReaderStore((state) => state.progress);
+  const readerBookFormat = useReaderStore((state) => state.bookData?.book?.format);
   const readerCurrentThread = useReaderStore((state) => state.currentThread);
   const readerSetCurrentThread = useReaderStore((state) => state.setCurrentThread);
 
   const globalActiveBookId = useChatReaderStore((state) => state.activeBookId);
   const globalActiveContext = useChatReaderStore((state) => state.activeContext);
+  const globalBookFormat = useChatReaderStore((state) => state.bookData?.book?.format);
   const globalSetActiveBookId = useChatReaderStore((state) => state.setActiveBookId);
   const globalSetActiveContext = useChatReaderStore((state) => state.setActiveContext);
   const globalCurrentThread = useChatReaderStore((state) => state.currentThread);
   const globalSetCurrentThread = useChatReaderStore((state) => state.setCurrentThread);
+  const libraryBooks = useLibraryStore((state) => state.library);
 
   const activeBookId = readerScoped ? bookId : globalActiveBookId;
+  const activeBookFormat = readerScoped
+    ? readerBookFormat
+    : globalBookFormat ?? libraryBooks.find((book) => book.id === globalActiveBookId)?.format;
   const activeContext = readerScoped ? (readerActiveContext ?? undefined) : globalActiveContext;
   const currentThread = readerScoped ? (readerCurrentThread ?? null) : globalCurrentThread;
   const setActiveContext: (context: string | undefined) => void =
@@ -129,6 +146,7 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
   } = useChatState({
     chatContext: {
       activeBookId,
+      activeBookFormat,
       activeContext,
       activeSectionLabel: readerScoped ? readerProgress?.sectionLabel : undefined,
     },
@@ -214,7 +232,7 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
         ) : !isInit.current ? (
           <MobileChatLoadingState />
         ) : messages.length === 0 ? (
-          <MobileChatEmptyState onPrompt={handlePrompt} />
+          <MobileChatEmptyState onPrompt={handlePrompt} selectedTextOnly={activeBookFormat === "PDF"} />
         ) : (
           <ChatContainerRoot className="relative min-h-0 flex-1" autoScroll={autoScroll}>
             <ChatMessages
@@ -247,6 +265,7 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
             onStop={stop}
             status={status}
             activeBookId={activeBookId}
+            selectedTextOnly={activeBookFormat === "PDF"}
             setActiveBookId={(nextBookId) => {
               if (nextBookId) {
                 setActiveBookId(nextBookId);

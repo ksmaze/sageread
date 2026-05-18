@@ -1,5 +1,6 @@
 import { type BookDoc, DocumentLoader } from "@/lib/document";
 import { loadBookConfig, saveBookConfig } from "@/services/app-service";
+import { getBookFileName, getBookMimeType } from "@/services/book-format";
 import { getBookById } from "@/services/book-service";
 import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
 import type { SystemSettings } from "@/types/settings";
@@ -440,8 +441,8 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       const fileUrl = convertFileSrc(book.filePath!);
       const response = await fetch(fileUrl);
       const arrayBuffer = await response.arrayBuffer();
-      const filename = book.filePath!.split("/").pop() || "book.epub";
-      const file = new File([arrayBuffer], filename, { type: "application/epub+zip" });
+      const filename = getBookFileName(book.filePath, book.format);
+      const file = new File([arrayBuffer], filename, { type: getBookMimeType(book.format) });
       const config = await loadBookConfig(bookId, settings);
       if (!config) {
         throw new Error("Config not found");
@@ -450,7 +451,7 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
 
       // 使用全局设置中的 sortedTOC
       const { settings: appSettings } = useAppSettingsStore.getState();
-      updateToc(bookDoc, appSettings.globalViewSettings.sortedTOC);
+      await updateToc(bookDoc, appSettings.globalViewSettings.sortedTOC);
 
       if (!bookDoc.metadata.title) {
         bookDoc.metadata.title = getBaseFilename(file.name);

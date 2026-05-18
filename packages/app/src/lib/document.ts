@@ -43,7 +43,7 @@ export type Location = {
 };
 
 export interface TOCItem {
-  id: number;
+  id?: number;
   label: string;
   href: string;
   cfi?: string;
@@ -52,10 +52,10 @@ export interface TOCItem {
 }
 
 export interface SectionItem {
-  id: string;
-  cfi: string;
+  id: string | number;
+  cfi?: string;
   size: number;
-  linear: string;
+  linear?: string;
   location?: Location;
 }
 
@@ -91,7 +91,7 @@ export interface BookDoc {
   toc?: Array<TOCItem>;
   sections?: Array<SectionItem>;
   transformTarget?: EventTarget;
-  splitTOCHref(href: string): Array<string | number>;
+  splitTOCHref(href: string): Array<string | number | null> | Promise<Array<string | number | null>>;
   getCover(): Promise<Blob | null>;
 }
 
@@ -208,6 +208,10 @@ export class DocumentLoader {
         book = await new EPUB(loader).init();
         format = "EPUB";
       }
+    } else if (await this.isPDF()) {
+      const { makePDF } = await import("foliate-js/pdf.js");
+      book = await makePDF(this.file);
+      format = "PDF";
     } else if (await (await import("foliate-js/mobi.js")).isMOBI(this.file)) {
       const fflate = await import("foliate-js/vendor/fflate.js");
       const { MOBI } = await import("foliate-js/mobi.js");
@@ -217,6 +221,9 @@ export class DocumentLoader {
       const { makeFB2 } = await import("foliate-js/fb2.js");
       book = await makeFB2(this.file);
       format = "FB2";
+    }
+    if (!book) {
+      throw new Error("File type not supported");
     }
     return { book, format } as { book: BookDoc; format: BookFormat };
   }

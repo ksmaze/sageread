@@ -2,6 +2,7 @@ import { Upload as UploadIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useBookUpload } from "@/hooks/use-book-upload";
+import { FILE_ACCEPT_FORMATS } from "@/services/constants";
 import { useThemeStore } from "@/store/theme-store";
 
 export default function Upload() {
@@ -27,7 +28,7 @@ export default function Upload() {
         <input
           type="file"
           multiple
-          accept=".epub"
+          accept={FILE_ACCEPT_FORMATS}
           className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
           onChange={handleFileSelect}
           disabled={isUploading}
@@ -47,7 +48,7 @@ export default function Upload() {
               <h2 className="font-medium text-neutral-900 text-xl dark:text-neutral-100">
                 {isUploading ? "上传中..." : "拖拽书籍到此处上传"}
               </h2>
-              <p className="text-neutral-600 text-sm dark:text-neutral-400">支持的格式：.epub</p>
+              <p className="text-neutral-600 text-sm dark:text-neutral-400">支持的格式：{FILE_ACCEPT_FORMATS}</p>
             </div>
 
             <div className="relative">

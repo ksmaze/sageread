@@ -339,6 +339,81 @@ currentView?.renderer.setStyles?.(getStyles(updatedSettings));
 - Tags and book operations use feature hooks under `pages/library/hooks/`.
 - Notes and annotations use dedicated hooks under `components/notepad/hooks/`.
 
+## Reader Book Format Contract
+
+### 1. Scope / Trigger
+
+Use this contract when adding or changing reader-supported book formats, upload accept lists, reader file reconstruction, TOC handling, or AI behavior that depends on the active book format.
+
+### 2. Signatures
+
+```ts
+getBookFormat(fileName: string): BookFormat | null;
+getFileMimeType(fileName: string): string;
+getBookMimeType(format: BookFormat): string;
+getBookFileName(filePath: string | null | undefined, format: BookFormat): string;
+isSemanticIndexingSupported(format: BookFormat | null | undefined): boolean;
+
+interface ChatContext {
+  activeBookId?: string;
+  activeBookFormat?: BookFormat;
+  activeContext?: string;
+  activeSectionLabel?: string;
+}
+```
+
+### 3. Contracts
+
+- Upload entry points must validate against `SUPPORTED_FILE_EXTS` / `FILE_ACCEPT_FORMATS`.
+- Reader stores must reconstruct `File` objects with `getBookFileName(filePath, format)` and `getBookMimeType(format)`; do not hard-code EPUB names or MIME types.
+- `DocumentLoader.open()` is the single frontend loader boundary for EPUB/PDF/MOBI/CBZ/FB2/FBZ. PDF files route through `foliate-js/pdf.js`.
+- PDF library metadata is best-effort: embedded metadata when available, filename/title fallback, and no first-page thumbnail generation in the MVP.
+- EPUB remains the only semantic indexing/RAG format. PDF AI is selected-text-only until a PDF indexing pipeline exists.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Unknown upload extension | Return `null` from `getBookFormat`, reject upload, and do not default to EPUB. |
+| Stored book format is `PDF` | Reconstruct reader `File` as `application/pdf` with a `.pdf` fallback name. |
+| PDF has embedded outline | Keep the outline as the TOC. |
+| PDF has no embedded outline | Do not synthesize a page-list TOC. |
+| PDF chat has no selected text reference | Block submission with a selected-text-only message. |
+| EPUB chat has vector capability | Keep attaching EPUB RAG tools. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: A PDF import creates a library item, opens through `DocumentLoader`, renders via Foliate/PDF.js, and selected text can be sent to AI without enabling book-wide RAG.
+- Base: An EPUB import continues to use EPUB metadata, cover extraction, EPUB MIME, EPUB TOC, notes, and RAG behavior.
+- Bad: Reconstructing every stored book as `new File(..., "book.epub", { type: "application/epub+zip" })`; this breaks PDF opening and hides format-specific failures.
+- Bad: Letting PDF use `plugin:epub|search_db`, `parse_toc`, or other EPUB RAG tools.
+
+### 6. Tests Required
+
+- Format helper tests must assert PDF/EPUB detection, MIME mapping, fallback filenames, and unsupported extension behavior.
+- TOC tests must cover async PDF outline destination resolution and must not add fake page-list items.
+- Chat context tests must assert PDF selected-text-only behavior and EPUB-only RAG attachment.
+- Run `pnpm --filter app build` after reader store, upload, chat context, or `DocumentLoader` changes.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+const file = new File([arrayBuffer], "book.epub", {
+  type: "application/epub+zip",
+});
+```
+
+#### Correct
+
+```ts
+const filename = getBookFileName(simpleBook.filePath, simpleBook.format);
+const file = new File([arrayBuffer], filename, {
+  type: getBookMimeType(simpleBook.format),
+});
+```
+
 ## Common Mistakes
 
 - Storing `Map`, class instances, or reader stores directly in persisted JSON without reconstructing them on merge.

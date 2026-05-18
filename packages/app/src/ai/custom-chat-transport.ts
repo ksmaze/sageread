@@ -12,6 +12,7 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
+import { shouldAttachBookWideRagTools } from "./chat-context";
 import {
   createRagContextTool,
   createRagSearchTool,
@@ -86,7 +87,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       mindmap: mindmapTool,
     };
 
-    if (hasVectorCapability && activeBookId) {
+    if (shouldAttachBookWideRagTools(chatContext, hasVectorCapability)) {
       tools.ragSearch = createRagSearchTool(activeBookId);
       tools.ragToc = createRagTocTool(activeBookId);
       tools.ragContext = createRagContextTool(activeBookId);

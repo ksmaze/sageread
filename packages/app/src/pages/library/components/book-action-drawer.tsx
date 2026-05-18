@@ -44,6 +44,7 @@ export default function BookActionDrawer({
   const isUnread = !book.status || book.status.status === "unread";
   const vectorMeta = book.status?.metadata?.vectorization;
   const isVectorized = vectorMeta?.status === "success";
+  const canVectorize = book.format === "EPUB";
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
@@ -150,40 +151,40 @@ export default function BookActionDrawer({
 
             <div className="my-2 border-t" />
 
-            <div className="text-sm font-medium text-muted-foreground mb-2">
-              向量化 {isVectorized && "✓"}
-            </div>
+            <div className="text-sm font-medium text-muted-foreground mb-2">向量化 {isVectorized && "✓"}</div>
 
-            {isVectorized && (
-              <div className="grid grid-cols-2 gap-2 mb-2 text-xs text-muted-foreground">
-                <div className="bg-muted/50 p-2 rounded">
-                  模型: {vectorMeta?.model || "未知"}
-                </div>
-                <div className="bg-muted/50 p-2 rounded">
-                  维度: {vectorMeta?.dimension || 0}
-                </div>
-                <div className="bg-muted/50 p-2 rounded">
-                  分块: {vectorMeta?.chunkCount || 0}
-                </div>
+            {canVectorize ? (
+              <>
+                {isVectorized && (
+                  <div className="grid grid-cols-2 gap-2 mb-2 text-xs text-muted-foreground">
+                    <div className="bg-muted/50 p-2 rounded">模型: {vectorMeta?.model || "未知"}</div>
+                    <div className="bg-muted/50 p-2 rounded">维度: {vectorMeta?.dimension || 0}</div>
+                    <div className="bg-muted/50 p-2 rounded">分块: {vectorMeta?.chunkCount || 0}</div>
+                  </div>
+                )}
+
+                <Button
+                  variant="outline"
+                  className="justify-start gap-2"
+                  onClick={() => {
+                    onVectorize();
+                    onOpenChange(false);
+                  }}
+                  disabled={vectorizeProgress !== null && vectorizeProgress !== undefined}
+                >
+                  <BrainCircuit className="h-4 w-4" />
+                  {vectorizeProgress !== null && vectorizeProgress !== undefined
+                    ? `向量化中 ${vectorizeProgress}%`
+                    : isVectorized
+                      ? "重新向量化"
+                      : "开始向量化"}
+                </Button>
+              </>
+            ) : (
+              <div className="rounded-md bg-muted/50 p-2 text-muted-foreground text-xs">
+                PDF 暂不支持整本书 AI 或向量化，可在阅读器中选中文字询问 AI。
               </div>
             )}
-
-            <Button
-              variant="outline"
-              className="justify-start gap-2"
-              onClick={() => {
-                onVectorize();
-                onOpenChange(false);
-              }}
-              disabled={vectorizeProgress !== null && vectorizeProgress !== undefined}
-            >
-              <BrainCircuit className="h-4 w-4" />
-              {vectorizeProgress !== null && vectorizeProgress !== undefined
-                ? `向量化中 ${vectorizeProgress}%`
-                : isVectorized
-                ? "重新向量化"
-                : "开始向量化"}
-            </Button>
 
             <div className="my-2 border-t" />
 

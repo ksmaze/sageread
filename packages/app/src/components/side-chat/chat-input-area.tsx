@@ -14,6 +14,7 @@ interface ChatInputAreaProps {
   showToolDetail?: boolean;
   showContextPicker?: boolean;
   showQuickActions?: boolean;
+  selectedTextOnly?: boolean;
 
   setInput: (value: string) => void;
   onRemoveReference: (id: string) => void;
@@ -36,6 +37,7 @@ export function ChatInputArea({
   showToolDetail = false,
   showContextPicker,
   showQuickActions,
+  selectedTextOnly = false,
 
   setActiveBookId,
   onRemoveReference,
@@ -47,8 +49,9 @@ export function ChatInputArea({
   const isStandaloneChat = useIsStandaloneChatSurface();
   const shouldShowContextPicker = showContextPicker ?? isStandaloneChat;
   const shouldShowQuickActions = showQuickActions ?? true;
-  const shouldShowQuickActionsAboveInput = shouldShowQuickActions && !isStandaloneChat;
-  const shouldShowQuickActionsInInput = shouldShowQuickActions && isStandaloneChat;
+  const isSelectedTextRequired = selectedTextOnly && references.length === 0 && status === "ready";
+  const shouldShowQuickActionsAboveInput = shouldShowQuickActions && !isStandaloneChat && !selectedTextOnly;
+  const shouldShowQuickActionsInInput = shouldShowQuickActions && isStandaloneChat && !selectedTextOnly;
   const handleQuickPrompt = (prompt: string) => {
     setInput(prompt);
     if (status === "ready") {
@@ -58,6 +61,11 @@ export function ChatInputArea({
 
   return (
     <div className="z-10 shrink-0 px-2 pr-0 pl-1.5">
+      {selectedTextOnly && (
+        <div className="px-2 py-1.5 text-muted-foreground text-xs">
+          PDF 暂不支持整本书 AI，请先选中 PDF 文本后使用解释或询问 AI。
+        </div>
+      )}
       {shouldShowQuickActionsAboveInput && (
         <div className="flex items-center justify-between gap-2 py-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -80,6 +88,7 @@ export function ChatInputArea({
       <div className="mx-auto max-w-3xl">
         <PromptInput
           isLoading={status !== "ready"}
+          disabled={isSelectedTextRequired}
           value={input}
           onValueChange={setInput}
           onSubmit={() => {
@@ -139,7 +148,7 @@ export function ChatInputArea({
             </div>
           )}
           <PromptInputTextarea
-            placeholder="问我任何问题..."
+            placeholder={isSelectedTextRequired ? "选中 PDF 文本后可询问 AI" : "问我任何问题..."}
             className="flex-1 py-2 pl-2 text-sm leading-[1.3] placeholder:font-light dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-400"
           />
           <div className="flex items-center justify-between gap-2">
@@ -161,7 +170,10 @@ export function ChatInputArea({
             <Button
               type="submit"
               size="icon"
-              disabled={status === "ready" ? !input.trim() : status !== "submitted" && status !== "streaming"}
+              disabled={
+                isSelectedTextRequired ||
+                (status === "ready" ? !input.trim() : status !== "submitted" && status !== "streaming")
+              }
               onClick={() => {
                 if (status === "ready") {
                   void onSubmit();

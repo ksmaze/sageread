@@ -1,6 +1,7 @@
 import type { BookDoc } from "@/lib/document";
 import { DocumentLoader } from "@/lib/document";
 import { loadBookConfig } from "@/services/app-service";
+import { getBookFileName, getBookMimeType } from "@/services/book-format";
 import { getBookWithStatusById } from "@/services/book-service";
 import type { Book, BookConfig } from "@/types/book";
 import type { Thread } from "@/types/thread";
@@ -77,9 +78,9 @@ export const useChatReaderStore = create<ChatReaderStore>((set, get) => ({
         }
 
         const arrayBuffer = await response.arrayBuffer();
-        const filename = simpleBook.filePath.split("/").pop() || "book.epub";
+        const filename = getBookFileName(simpleBook.filePath, simpleBook.format);
         const file = new File([arrayBuffer], filename, {
-          type: "application/epub+zip",
+          type: getBookMimeType(simpleBook.format),
         });
 
         const book = {
@@ -97,6 +98,9 @@ export const useChatReaderStore = create<ChatReaderStore>((set, get) => ({
 
         const config = await loadBookConfig(bookId, settings);
         const { book: bookDoc } = await new DocumentLoader(file).open();
+        bookDoc.metadata.title ||= simpleBook.title;
+        bookDoc.metadata.author ||= simpleBook.author;
+        bookDoc.metadata.language ||= simpleBook.language || "en";
 
         const bookData: BookDataState = {
           id: bookId,

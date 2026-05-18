@@ -37,7 +37,7 @@ export const findTocItemBS = (toc: TOCItem[], cfi: string): TOCItem | null => {
   return result;
 };
 
-export const updateToc = (bookDoc: BookDoc, sortedTOC: boolean): void => {
+export const updateToc = async (bookDoc: BookDoc, sortedTOC: boolean): Promise<void> => {
   const items = bookDoc?.toc || [];
   const sections = bookDoc?.sections || [];
   if (!items.length || !sections.length) return;
@@ -60,42 +60,43 @@ export const updateToc = (bookDoc: BookDoc, sortedTOC: boolean): void => {
   });
 
   const sectionsMap = sections.reduce((map: Record<string, SectionItem>, section) => {
-    map[section.id] = section;
+    map[String(section.id)] = section;
     return map;
   }, {});
 
-  updateTocData(bookDoc, items, sections, sectionsMap);
+  await updateTocData(bookDoc, items, sectionsMap);
 
   if (sortedTOC) {
     sortTocItems(items);
   }
 };
 
-const updateTocData = (
+const updateTocData = async (
   bookDoc: BookDoc,
   items: TOCItem[],
-  sections: SectionItem[],
   sectionsMap: { [id: string]: SectionItem },
   index = 0,
-): number => {
-  items.forEach((item) => {
+): Promise<number> => {
+  for (const item of items) {
     item.id ??= index++;
     if (item.href) {
-      const id = bookDoc.splitTOCHref(item.href)[0]!;
-      const section = sectionsMap[id];
+      const [id] = await Promise.resolve(bookDoc.splitTOCHref(item.href));
+      const section = id === null || id === undefined ? undefined : sectionsMap[String(id)];
       if (section) {
-        item.cfi = section.cfi;
+        if (section.cfi) {
+          item.cfi = section.cfi;
+        }
         // Add location only when toc item is at the same level as the section
         // otherwise the location will not be accurate
-        if (id === item.href || items.length <= sections.length) {
+        if (String(id) === item.href || items.length <= Object.keys(sectionsMap).length) {
           item.location = section.location;
         }
       }
     }
     if (item.subitems) {
-      index = updateTocData(bookDoc, item.subitems, sections, sectionsMap, index);
+      index = await updateTocData(bookDoc, item.subitems, sectionsMap, index);
     }
-  });
+  }
   return index;
 };
 

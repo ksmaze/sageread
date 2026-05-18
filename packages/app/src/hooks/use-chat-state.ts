@@ -1,4 +1,5 @@
 import { useChat } from "@/ai/hooks/use-chat";
+import { canSubmitBookChatPrompt, canUseBookWideContext } from "@/ai/chat-context";
 import { completeThreadInitialization } from "@/hooks/chat-initialization";
 import { useForceUpdate } from "@/hooks/use-force-update";
 import { useModelSelector } from "@/hooks/use-model-selector";
@@ -16,6 +17,7 @@ import {
 import { type SelectedModel, useProviderStore } from "@/store/provider-store";
 import { useThreadStore } from "@/store/thread-store";
 import type { ChatReference, MessageMetadata } from "@/types/message";
+import type { BookFormat } from "@/types/simple-book";
 import type { Thread, ThreadSummary } from "@/types/thread";
 import type { UIMessage } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -62,6 +64,7 @@ export interface UseChatStateReturn {
 
 export interface ChatContext {
   activeBookId?: string;
+  activeBookFormat?: BookFormat;
   activeContext?: string;
   activeSectionLabel?: string;
 }
@@ -76,7 +79,7 @@ interface UseChatStateOptions {
 
 export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
   const { chatContext, setActiveBookId, setActiveContext } = options;
-  const { activeBookId } = chatContext;
+  const { activeBookId, activeBookFormat } = chatContext;
   const [input, setInput] = useState("");
   const [showThreads, setShowThreads] = useState(false);
   const [threadsKey, setThreadsKey] = useState(0);
@@ -345,6 +348,10 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
    */
   const generateSemanticContextAsync = useCallback(
     async (userQuestion: string) => {
+      if (!canUseBookWideContext(chatContext)) {
+        return;
+      }
+
       try {
         const thread = currentThreadRef.current;
         if (!thread) {
@@ -375,7 +382,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
         console.error("Failed to generate semantic context:", error);
       }
     },
-    [selectedModel, setActiveContext],
+    [chatContext, selectedModel, setActiveContext],
   );
 
   const handleSubmit = useCallback(
@@ -389,6 +396,12 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
       setDisplayError(null);
 
       const referenceSnapshot = references.map((reference) => ({ ...reference }));
+      const submitRule = canSubmitBookChatPrompt(chatContext, referenceSnapshot.length);
+      if (!submitRule.allowed) {
+        setDisplayError(new Error(submitRule.reason));
+        return;
+      }
+
       const messageParts = buildMessageParts(trimmedInput, referenceSnapshot);
 
       if (messages.length === 0 && !currentThread) {
@@ -444,6 +457,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
       references,
       messages,
       activeBookId,
+      activeBookFormat,
       currentThread,
       buildMessageParts,
       sendMessage,

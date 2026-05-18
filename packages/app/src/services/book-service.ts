@@ -24,13 +24,14 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { appDataDir, tempDir } from "@tauri-apps/api/path";
 import { join } from "@tauri-apps/api/path";
 import { writeFile } from "@tauri-apps/plugin-fs";
+import { getBookFormat, getFileMimeType } from "./book-format";
 import { toGetBooksBackendOptions } from "./book-query-options";
 
 export async function uploadBook(file: File): Promise<SimpleBook> {
   try {
     const format = getBookFormat(file.name);
-    if (!["EPUB", "PDF", "MOBI", "CBZ", "FB2", "FBZ"].includes(format)) {
-      throw new Error(`不支持的文件格式: ${format}`);
+    if (!format) {
+      throw new Error(`不支持的文件格式: ${file.name}`);
     }
 
     const bookHash = await partialMD5(file);
@@ -39,12 +40,12 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
     const tempFilePath = await join(tempDirPath, tempFileName);
     const fileData = await file.arrayBuffer();
     await writeFile(tempFilePath, new Uint8Array(fileData));
-    const metadata = await extractMetadataOnly(file);
+    const metadata = await extractMetadataOnly(file, fileData, format);
 
     let coverTempFilePath: string | undefined;
     if (format === "EPUB") {
       try {
-        const bookDoc = await parseEpubFile(fileData, file.name);
+        const bookDoc = await parseBookFile(fileData, file.name);
         const coverBlob = await bookDoc.getCover();
         if (coverBlob) {
           const coverTempFileName = `cover_${bookHash}.jpg`;
@@ -78,12 +79,16 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
   }
 }
 
-async function extractMetadataOnly(file: File): Promise<any> {
+async function extractMetadataOnly(file: File, fileData: ArrayBuffer, format: SimpleBook["format"]): Promise<any> {
   try {
-    if (file.name.toLowerCase().endsWith(".epub")) {
-      const arrayBuffer = await file.arrayBuffer();
-      const bookDoc = await parseEpubFile(arrayBuffer, file.name);
-      return bookDoc.metadata;
+    if (format === "EPUB" || format === "PDF") {
+      const bookDoc = await parseBookFile(fileData, file.name);
+      return {
+        ...bookDoc.metadata,
+        title: bookDoc.metadata.title || getFileNameWithoutExt(file.name),
+        author: bookDoc.metadata.author || "Unknown",
+        language: bookDoc.metadata.language || "en",
+      };
     }
 
     return {
@@ -328,53 +333,13 @@ export async function updateBookVectorizationMeta(
   return updateBookStatus(bookId, { metadata: newMetadata });
 }
 
-async function parseEpubFile(fileData: ArrayBuffer, fileName: string) {
+async function parseBookFile(fileData: ArrayBuffer, fileName: string) {
   const file = new File([fileData], fileName, {
     type: getFileMimeType(fileName),
   });
   const loader = new DocumentLoader(file);
   const { book } = await loader.open();
   return book;
-}
-
-function getBookFormat(fileName: string): SimpleBook["format"] {
-  const ext = fileName.toLowerCase().split(".").pop();
-  switch (ext) {
-    case "epub":
-      return "EPUB";
-    case "pdf":
-      return "PDF";
-    case "mobi":
-      return "MOBI";
-    case "cbz":
-      return "CBZ";
-    case "fb2":
-      return "FB2";
-    case "fbz":
-      return "FBZ";
-    default:
-      return "EPUB";
-  }
-}
-
-function getFileMimeType(fileName: string): string {
-  const ext = fileName.toLowerCase().split(".").pop();
-  switch (ext) {
-    case "epub":
-      return "application/epub+zip";
-    case "pdf":
-      return "application/pdf";
-    case "mobi":
-      return "application/x-mobipocket-ebook";
-    case "cbz":
-      return "application/vnd.comicbook+zip";
-    case "fb2":
-      return "application/x-fictionbook+xml";
-    case "fbz":
-      return "application/x-zip-compressed-fb2";
-    default:
-      return "application/octet-stream";
-  }
 }
 
 function getFileNameWithoutExt(fileName: string): string {

@@ -1,4 +1,5 @@
 import type { ChatContext } from "@/hooks/use-chat-state";
+import { canUseBookWideContext } from "@/ai/chat-context";
 import { getSkills } from "@/services/skill-service";
 import { useVectorModelStore } from "@/store/vector-model-store";
 import { appDataDir } from "@tauri-apps/api/path";
@@ -8,6 +9,7 @@ export async function buildReadingPrompt(chatContext: ChatContext | undefined): 
   const activeBookId = chatContext?.activeBookId;
   const semanticContext = chatContext?.activeContext;
   const sectionLabel = chatContext?.activeSectionLabel;
+  const canUseContext = canUseBookWideContext(chatContext);
   let systemPromptBase = "";
   let activeSkillNames: string[] = [];
 
@@ -24,7 +26,7 @@ export async function buildReadingPrompt(chatContext: ChatContext | undefined): 
 
   let metadataMd: string | null = null;
   try {
-    if (activeBookId) {
+    if (activeBookId && canUseContext) {
       const base = await appDataDir();
       const activeBookBaseDir = `${base}/books/${activeBookId}`;
       const metaPath = `${activeBookBaseDir}/metadata.md`;
@@ -38,7 +40,7 @@ export async function buildReadingPrompt(chatContext: ChatContext | undefined): 
 
   let base = systemPromptBase;
 
-  if (hasVectorCapability === false) {
+  if (hasVectorCapability === false || !canUseContext) {
     base = base.replace(/—— RAG 工具使用策略 ——[\s\S]*?—— 引用标注规范 ——/m, "");
     base = base.replace(/—— 引用标注规范 ——[\s\S]*?—— 图片输出规范 ——/m, "");
     base = base.replace(/—— 图片输出规范 ——[\s\S]*?—— 书籍与笔记管理工具 ——/m, "—— 书籍与笔记管理工具 ——");
@@ -52,11 +54,11 @@ export async function buildReadingPrompt(chatContext: ChatContext | undefined): 
     prompt += activeSkillNames.map((name) => `• ${name}`).join("\n");
   }
 
-  if (semanticContext && semanticContext.trim().length > 0) {
+  if (canUseContext && semanticContext && semanticContext.trim().length > 0) {
     prompt += `\n\n【语义上下文】\n${semanticContext}`;
   }
 
-  if (sectionLabel && sectionLabel.trim().length > 0) {
+  if (canUseContext && sectionLabel && sectionLabel.trim().length > 0) {
     prompt += `\n\n【当前阅读章节】\n${sectionLabel}`;
   }
 
