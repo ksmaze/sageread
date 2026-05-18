@@ -700,3 +700,37 @@ Converted packages/foliate-js from vendored files to a ksmaze/foliate-js submodu
 ### Next Steps
 
 - None - task complete
+
+
+## Session 21: Fix PDF reopen lifecycle
+
+**Date**: 2026-05-18
+**Task**: Fix PDF reopen lifecycle
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Fixed repeated PDF reopen white-screen/loading issue by destroying foliate books on close, ignoring stale renderer events, revoking PDF page blob URLs, and documenting the lifecycle contract. Foliate-js submodule commit: 1973512.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4d7c1ec` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
