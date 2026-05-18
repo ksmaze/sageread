@@ -1,3 +1,0 @@
-{"file": ".trellis/tasks/05-17-replace-foliate-js-submodule/prd.md", "reason": "Task requirements, acceptance criteria, and verified upstream/submodule resolution."}
-{"file": ".trellis/tasks/05-17-replace-foliate-js-submodule/research/conflict-analysis.md", "reason": "Vendored-vs-upstream conflict classification and app compatibility decisions."}
-{"file": ".trellis/spec/foliate-js/frontend/quality-guidelines.md", "reason": "Submodule maintenance contract and required verification for app-facing foliate-js changes."}
