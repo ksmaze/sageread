@@ -368,6 +368,7 @@ interface ChatContext {
 - Reader stores must reconstruct `File` objects with `getBookFileName(filePath, format)` and `getBookMimeType(format)`; do not hard-code EPUB names or MIME types.
 - `DocumentLoader.open()` is the single frontend loader boundary for EPUB/PDF/MOBI/CBZ/FB2/FBZ. PDF files route through `foliate-js/pdf.js`.
 - PDF library metadata is best-effort: embedded metadata when available, filename/title fallback, and no first-page thumbnail generation in the MVP.
+- PDF rendering uses `foliate-fxl` through the pre-paginated renderer path. The app relies on fixed-layout exposing paginator-equivalent `create-overlayer`, `getContents()` with `{ doc, index, overlayer }`, and adjacent-section methods so highlights, note markers, TOC state, and reader controls remain format-agnostic.
 - EPUB remains the only semantic indexing/RAG format. PDF AI is selected-text-only until a PDF indexing pipeline exists.
 
 ### 4. Validation & Error Matrix
@@ -378,6 +379,8 @@ interface ChatContext {
 | Stored book format is `PDF` | Reconstruct reader `File` as `application/pdf` with a `.pdf` fallback name. |
 | PDF has embedded outline | Keep the outline as the TOC. |
 | PDF has no embedded outline | Do not synthesize a page-list TOC. |
+| PDF page creates or reloads an annotation | The underlying fixed-layout renderer must expose a page overlayer through `getContents()` so the saved CFI can draw visibly. |
+| PDF reader previous/next controls are tapped | Use the mounted renderer's adjacent-section/page movement contract; do not assume only `foliate-paginator` supports reader chrome. |
 | PDF chat has no selected text reference | Block submission with a selected-text-only message. |
 | EPUB chat has vector capability | Keep attaching EPUB RAG tools. |
 
@@ -392,6 +395,7 @@ interface ChatContext {
 
 - Format helper tests must assert PDF/EPUB detection, MIME mapping, fallback filenames, and unsupported extension behavior.
 - TOC tests must cover async PDF outline destination resolution and must not add fake page-list items.
+- Fixed-layout renderer tests must assert PDF-style frame overlays and adjacent-section navigation.
 - Chat context tests must assert PDF selected-text-only behavior and EPUB-only RAG attachment.
 - Run `pnpm --filter app build` after reader store, upload, chat context, or `DocumentLoader` changes.
 

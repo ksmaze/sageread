@@ -41,6 +41,7 @@ For each arrow, ask:
 | Trigger Surface ↔ Portal Root | z-index, collision boundary, viewport clamping, focus/outside-click behavior |
 | Dynamic SQL ↔ Service Error UI | malformed generated SQL, hidden backend string errors |
 | Library Runtime Assets ↔ Bundler ↔ Tauri Static Server | computed URLs that bundlers cannot statically discover, missing copied asset directories, production-only `/assets/undefined` URLs |
+| Foliate Renderer ↔ Reader UI/Annotations | one renderer emits/returns the expected navigation and overlayer contract while another renderer silently lacks it |
 
 ### Step 3: Define Contracts
 
@@ -94,6 +95,7 @@ Before implementation:
 - [ ] Decided where validation happens
 - [ ] For portalled UI, identified the trigger surface, portal root, z-index layer, collision boundary, and max viewport size
 - [ ] For runtime library assets, identified which layer owns URL construction, asset copying, and packaged static serving
+- [ ] For reader renderer features, checked every mounted renderer type (`foliate-paginator` and `foliate-fxl`) exposes the methods/events consumed by app chrome, annotations, and TOC/progress code
 
 After implementation:
 - [ ] Tested with edge cases (null, empty, invalid)
@@ -102,6 +104,7 @@ After implementation:
 - [ ] For dynamic SQL, tested the generated query against a real/in-memory database, not only by reading the builder code
 - [ ] For Tauri/backend string errors, verified the frontend service preserves the real message instead of replacing it with a generic fallback
 - [ ] For runtime library assets, verified the production output contains the directories fetched at runtime
+- [ ] For renderer contracts, verified annotation overlays and previous/next/TOC navigation against both reflowable and fixed-layout/PDF books
 
 ---
 

@@ -67,6 +67,89 @@ if (this.isFixedLayout) {
 
 Keep optional format and renderer modules dynamically imported so the library stays modular and avoids hard dependencies until a file type needs them.
 
+## Fixed Layout Renderer Contract
+
+### 1. Scope / Trigger
+
+Use this contract when changing `fixed-layout.js`, `pdf.js`, `foliate-view` renderer selection, or any app-facing behavior for pre-paginated formats such as PDF and fixed-layout EPUB.
+
+### 2. Signatures
+
+```js
+renderer.addEventListener('create-overlayer', event => {
+    const { doc, index, attach } = event.detail
+    attach(new Overlayer())
+})
+
+renderer.getContents()
+// [{ doc, index, overlayer }]
+
+renderer.prevSection()
+renderer.nextSection()
+renderer.firstSection()
+renderer.lastSection()
+```
+
+### 3. Contracts
+
+- `foliate-fxl` must emit `load`, `relocate`, and `create-overlayer` with the same app-facing semantics as `foliate-paginator`.
+- `create-overlayer` detail must include `{ doc, index, attach }`; `attach(overlayer)` must store the overlayer on that frame and append `overlayer.element` over the matching iframe.
+- `getContents()` must return each loaded non-blank frame with its `doc`, section `index`, and attached `overlayer`. Annotation drawing in `View.addAnnotation()` depends on `index` and `overlayer`.
+- `prevSection()`, `nextSection()`, `firstSection()`, and `lastSection()` must navigate between linear book sections for fixed-layout renderers. App chrome may call these methods without knowing whether the active renderer is paginated or fixed-layout.
+- Navigating to another page in the same spread must update the active side and emit `relocate`; otherwise progress, TOC highlighting, and annotation loading can remain on the old page.
+- Overlay geometry must be redrawn after fixed-layout zoom/fit changes because PDF render frames can change iframe dimensions without remounting the document.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| A PDF page frame loads | Emit `create-overlayer` before the next `relocate` for that frame. |
+| `View.addAnnotation()` targets a loaded PDF page | `renderer.getContents()` finds a matching `{ index, overlayer }`, and the annotation draws on the PDF. |
+| App reader chrome calls `nextSection()` on a PDF | Move to the next linear page/section or no-op at the boundary. |
+| Target page is in the currently loaded spread | Update `#side`, redraw, and emit `relocate`. |
+| Frame is blank filler for a spread | Exclude it from `getContents()` and do not create an overlayer. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: A selected PDF highlight is saved, `view.addAnnotation()` resolves its fake CFI to the PDF page index, and fixed-layout exposes that page's overlayer so the highlight is visible.
+- Good: The mobile reader dock calls `renderer.nextSection()` and a PDF moves from page 1 to page 2 through the same renderer contract used by reflowable books.
+- Base: A fixed-layout EPUB without annotations still emits `load` and `relocate` normally.
+- Bad: Returning only `{ doc }` from `getContents()`; annotations cannot find the page overlayer.
+- Bad: Implementing page movement only in `next()`/`prev()` while leaving adjacent-section methods undefined; app controls can silently no-op.
+
+### 6. Tests Required
+
+- Run `node --test packages/foliate-js/tests/fixed-layout-tests.js` after changing `fixed-layout.js` renderer contracts.
+- Run `pnpm --filter foliate-js build` after changing `fixed-layout.js`, `view.js`, or renderer event shapes.
+- Run `pnpm --filter app build` after changing app-facing renderer methods, emitted event details, or ambient declarations.
+- Manual reader checks for PDF must cover creating a highlight, reloading/navigating back to the page, tapping previous/next reader controls, and selecting a TOC item that targets a loaded spread side.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```js
+getContents() {
+    return Array.from(this.#root.querySelectorAll('iframe'), frame => ({
+        doc: frame.contentDocument,
+    }))
+}
+```
+
+#### Correct
+
+```js
+getContents() {
+    return [this.#left, this.#right, this.#center]
+        .filter(frame => frame?.iframe?.contentDocument && !frame.blank)
+        .map(frame => ({
+            doc: frame.iframe.contentDocument,
+            index: frame.index,
+            overlayer: frame.overlayer,
+        }))
+}
+```
+
 ## Annotation Overlay Key Contract
 
 ### 1. Scope / Trigger
