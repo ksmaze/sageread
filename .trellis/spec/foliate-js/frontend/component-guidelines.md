@@ -150,6 +150,75 @@ getContents() {
 }
 ```
 
+## View Lifecycle Contract
+
+### 1. Scope / Trigger
+
+Use this contract when changing `view.js`, renderer teardown, or any book adapter that allocates document workers, blob URLs, or other per-open resources.
+
+### 2. Signatures
+
+```js
+view.close()
+book.destroy()
+```
+
+### 3. Contracts
+
+- `View.close()` must destroy the active renderer, remove it from the DOM, call the active book's `destroy()` method if present, and clear live `book`/`renderer` references.
+- `View.open()` must ignore late `load`, `relocate`, and `create-overlayer` events from a stale renderer after close or reopen.
+- PDF and other cached-resource book adapters must make `destroy()` idempotent and release cached `blob:` URLs or similar per-open resources before delegating to the underlying parser cleanup.
+- A closed view must not retain a stale book object that can keep PDF.js workers, transports, or cache maps alive after the UI is torn down.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| `close()` runs after `open()` | Destroy the renderer, destroy the book, and clear references. |
+| A stale renderer emits `load` after `close()` | Ignore the event and do not read from the old book. |
+| A book adapter exposes cached object URLs | Revoke them inside `destroy()` and clear the cache map. |
+| `destroy()` is called more than once | No throw; repeated cleanup should be safe. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: Closing a PDF reader leaves no active renderer/book references and the same PDF can be reopened cleanly.
+- Good: A late `load` event from an orphaned iframe is ignored because the renderer is no longer current.
+- Base: A book adapter without extra resources can still implement `destroy()` as a no-op.
+- Bad: Clearing only the renderer element while leaving `this.book` pointing at a live PDF document.
+- Bad: Letting a stale renderer call `#onLoad()` after a close because its listeners were never gated.
+
+### 6. Tests Required
+
+- Run `node --test packages/foliate-js/tests/view-lifecycle-tests.js` after changing `view.js` or adapter cleanup behavior.
+- Run `node --test packages/foliate-js/tests/pdf-lifecycle-tests.js` after changing PDF cache or `book.destroy()` behavior.
+- Run `pnpm --filter foliate-js build` after changing close/reopen behavior.
+- Exercise close/reopen manually with the same PDF file to verify no blank white state or stuck loading indicator appears on the second open.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```js
+close() {
+    this.renderer?.destroy()
+    this.renderer?.remove()
+}
+```
+
+#### Correct
+
+```js
+close() {
+    const { renderer, book } = this
+    this.renderer = null
+    this.book = null
+    renderer?.destroy()
+    renderer?.remove()
+    const destroy = book?.destroy?.()
+    destroy?.catch?.(e => console.warn(e))
+}
+```
+
 ## Annotation Overlay Key Contract
 
 ### 1. Scope / Trigger

@@ -151,3 +151,5 @@ For app integration changes:
 - Replacing DOM `Range` objects with strings and breaking annotations or CFI conversion.
 - Forgetting that files can be large and archive loaders should avoid reading whole books when the current adapter uses random access.
 - Adding a formatting-only sweep while making behavior changes.
+- Leaving a closed reader's book or renderer object referenced after `close()`, which keeps stale PDF state alive and can cause repeat-open white screens.
+- Letting renderer listeners process late `load` or `relocate` events after the active view has been torn down.

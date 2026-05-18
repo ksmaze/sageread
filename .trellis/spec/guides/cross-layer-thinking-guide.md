@@ -105,6 +105,7 @@ After implementation:
 - [ ] For Tauri/backend string errors, verified the frontend service preserves the real message instead of replacing it with a generic fallback
 - [ ] For runtime library assets, verified the production output contains the directories fetched at runtime
 - [ ] For renderer contracts, verified annotation overlays and previous/next/TOC navigation against both reflowable and fixed-layout/PDF books
+- [ ] For close/reopen flows, reopened the same PDF after teardown and verified stale renderer events and cached object URLs do not survive the previous session
 
 ---
 
