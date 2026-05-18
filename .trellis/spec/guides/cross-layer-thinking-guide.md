@@ -40,6 +40,7 @@ For each arrow, ask:
 | Component ↔ Component | Props shape changes |
 | Trigger Surface ↔ Portal Root | z-index, collision boundary, viewport clamping, focus/outside-click behavior |
 | Dynamic SQL ↔ Service Error UI | malformed generated SQL, hidden backend string errors |
+| Library Runtime Assets ↔ Bundler ↔ Tauri Static Server | computed URLs that bundlers cannot statically discover, missing copied asset directories, production-only `/assets/undefined` URLs |
 
 ### Step 3: Define Contracts
 
@@ -76,6 +77,12 @@ For each boundary:
 
 **Good**: Map the trigger surface, portal root, stacking layer, collision boundary, and viewport constraints. Use the relevant layer spec for concrete contracts; for Android mobile overlays see `../app/frontend/android-mobile-shell.md`.
 
+### Mistake 5: Trusting Bundlers To Discover Runtime Asset Directories
+
+**Bad**: A library builds a computed `./vendor/pdfjs/${path}` URL for both files and directories, then assumes the production bundle will copy `cmaps/` and `standard_fonts/`.
+
+**Good**: Treat runtime-fetched asset trees as an explicit cross-layer contract. Keep directory URLs runtime-relative and make the consuming app copy and test the emitted asset tree.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -86,6 +93,7 @@ Before implementation:
 - [ ] Defined format at each boundary
 - [ ] Decided where validation happens
 - [ ] For portalled UI, identified the trigger surface, portal root, z-index layer, collision boundary, and max viewport size
+- [ ] For runtime library assets, identified which layer owns URL construction, asset copying, and packaged static serving
 
 After implementation:
 - [ ] Tested with edge cases (null, empty, invalid)
@@ -93,6 +101,7 @@ After implementation:
 - [ ] Checked data survives round-trip
 - [ ] For dynamic SQL, tested the generated query against a real/in-memory database, not only by reading the builder code
 - [ ] For Tauri/backend string errors, verified the frontend service preserves the real message instead of replacing it with a generic fallback
+- [ ] For runtime library assets, verified the production output contains the directories fetched at runtime
 
 ---
 

@@ -42,18 +42,23 @@ The package has an ESLint config but no package `lint` script today.
 - App-facing API removed without updating `packages/app/src/vite-env.d.ts` and consumers -> app build/type checks fail or runtime annotation/search behavior regresses.
 - `vendor/pdfjs/*` edited by hand -> generated assets drift from dependency/build inputs.
 - PDF.js assets referenced without a relative `./vendor/pdfjs/` URL in `pdf.js` -> Vite may warn or fail to transform the worker/asset path correctly.
+- PDF.js directory assets (`cmaps/`, `standard_fonts/`) referenced through a Vite-transformable dynamic `new URL()` template -> production builds can rewrite the helper into a file-only asset map and emit `/assets/undefined`.
+- Parent app does not copy `vendor/pdfjs` directory assets beside emitted chunks -> PDF.js loads but cmap/font fetches fail in packaged readers.
 
 ### 5. Good/Base/Bad Cases
 
 - Good: rebase/apply compatibility patches on latest upstream, commit them inside the submodule, verify app build, then update the parent gitlink.
+- Good: keep PDF.js runtime asset URLs relative to `import.meta.url`, and verify the parent app copies `assets/vendor/pdfjs/` in production output.
 - Base: updating only the submodule pointer to a reachable upstream commit is acceptable when no app compatibility patches are needed.
 - Bad: copying upstream files into the parent repo as regular files or leaving uncommitted source edits inside the submodule.
+- Bad: relying on Vite to infer runtime directory assets from a computed `./vendor/pdfjs/${path}` URL when `path` may be `cmaps/` or `standard_fonts/`.
 
 ### 6. Tests Required
 
 - Run `pnpm --filter foliate-js build`.
 - Run focused foliate tests for touched helpers, for example `node --test packages/foliate-js/tests/selection-tests.js`.
 - Run `pnpm --filter app build` when app-facing modules, ambient declarations, or package wiring changed.
+- When touching `pdf.js` runtime asset URLs, run `pnpm --filter app exec tsx --test src/lib/pdf-assets.test.ts` after the app build.
 
 ### 7. Wrong vs Correct
 

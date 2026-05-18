@@ -17,6 +17,7 @@ Quality in this package means preserving the Android phone/tablet reader workflo
 - Keep feature-only state and hooks inside the feature folder.
 - Use `min-w-0` in flex panes with long or dynamic content.
 - Clean up global event listeners, iframe listeners, Tauri listeners, observers, and timers.
+- Copy runtime asset trees explicitly in `vite.config.ts` when a bundled library fetches files by computed URL at runtime.
 
 ```tsx
 return () => {
@@ -74,6 +75,7 @@ If a setting affects the foliate view, update persisted settings and the live re
 | Sidebar resize | Show overlay during resize; dispatch `foliate-resize-update` on stop. |
 | Invalid edit info form | Disable save and show invalid input styling. |
 | Settings dialog | Use full-screen content on phones and the bounded `800px` two-column modal from `sm` upward. |
+| Runtime library asset trees | Production build copies required runtime directories and keeps emitted URLs resolvable under Tauri static assets. |
 
 ## Testing Requirements
 
@@ -81,6 +83,12 @@ There is no dedicated frontend test script in `packages/app/package.json` today.
 
 ```bash
 pnpm --filter app build
+```
+
+When bundler/runtime asset wiring changes, also run the focused build-output regression:
+
+```bash
+pnpm --filter app exec tsx --test src/lib/pdf-assets.test.ts
 ```
 
 For docs-only changes, verify the edited docs have no placeholders and links point to existing files.
@@ -104,6 +112,7 @@ When UI behavior changes, manually or with device emulation verify the relevant 
 - Does dark mode use semantic tokens?
 - Are global listeners cleaned up?
 - Are persisted settings and live runtime state kept in sync?
+- If a dependency fetches runtime assets by URL, does the production build copy and test those assets?
 - Are route/URL states preserved where users expect them, such as tag filters?
 - Did the change avoid unrelated refactors?
 
