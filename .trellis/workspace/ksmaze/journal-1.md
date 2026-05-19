@@ -768,3 +768,38 @@ Fixed Android PDF note/open-original freezes by removing generated PDF blob ifra
 ### Next Steps
 
 - None - task complete
+
+
+## Session 23: Fix Biome major upgrade
+
+**Date**: 2026-05-18
+**Task**: Fix Biome major upgrade
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Migrated Biome 2 config, scoped checks to the app workspace, enabled gitignore-aware scanning, and documented the workspace rule in the app quality spec.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9ea8f3d` | (see git log) |
+| `662457a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
