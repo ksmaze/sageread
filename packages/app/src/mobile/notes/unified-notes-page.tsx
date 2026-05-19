@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { ReaderNavigationTarget } from "@/pages/reader/store/create-reader-store";
 import { useLayoutStore } from "@/store/layout-store";
+import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
 import { useCallback, useState } from "react";
 import { useMobileShellStore } from "../shell/mobile-shell-store";
 import type { UnifiedNoteReaderTarget, UnifiedNoteType } from "./unified-note-model";
@@ -35,19 +36,47 @@ export function UnifiedNotesPage({ className, variant = "mobile" }: UnifiedNotes
   const styles = PAGE_STYLES[variant];
   const handleOpenReaderTarget = useCallback(
     (target: UnifiedNoteReaderTarget) => {
+      const requestedAt = Date.now();
       const navigationTarget: ReaderNavigationTarget | undefined = target.cfi
         ? {
             cfi: target.cfi,
-            requestedAt: Date.now(),
+            requestedAt,
             source: "unified-notes",
           }
         : undefined;
 
+      readerNavigationInfo("unified-notes-page.open-reader-target", {
+        navigationTarget: navigationTarget
+          ? describeReaderNavigationTarget({
+              bookId: target.bookId,
+              cfi: navigationTarget.cfi,
+              requestedAt: navigationTarget.requestedAt,
+              source: navigationTarget.source,
+              title: target.title,
+            })
+          : {
+              bookId: target.bookId,
+              hasCfi: false,
+              title: target.title,
+            },
+        variant,
+      });
+
       if (variant === "desktop") {
+        readerNavigationInfo("unified-notes-page.open-reader-target.desktop", {
+          bookId: target.bookId,
+          title: target.title,
+          target: navigationTarget ? describeReaderNavigationTarget(navigationTarget) : { hasCfi: false },
+        });
         openDesktopBook(target.bookId, target.title, navigationTarget);
         return;
       }
 
+      readerNavigationInfo("unified-notes-page.open-reader-target.mobile", {
+        bookId: target.bookId,
+        title: target.title,
+        target: navigationTarget ? describeReaderNavigationTarget(navigationTarget) : { hasCfi: false },
+      });
       openMobileBook({ id: target.bookId, title: target.title }, navigationTarget);
     },
     [openDesktopBook, openMobileBook, variant],

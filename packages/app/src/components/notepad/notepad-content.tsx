@@ -1,4 +1,5 @@
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
+import { traceReaderGoTo } from "@/utils/reader-navigation-debug";
 import { useEffect, useRef } from "react";
 import { AnnotationItem } from "./annotation-item";
 import { useAnnotations, useNotepad } from "./hooks";
@@ -80,7 +81,17 @@ export const NotepadContent = ({ activeTab, bookId }: NotepadContentProps) => {
                         onDelete={handleDeleteNote}
                         onSave={handleUpdateNote}
                         onOpenOriginal={(item) => {
-                          if (item.cfi) view?.goTo(item.cfi);
+                          void traceReaderGoTo({
+                            event: "notepad-content.open-original",
+                            target: {
+                              bookId,
+                              cfi: item.cfi,
+                              id: item.id,
+                              source: "reader-notes",
+                              title: activeBook?.title,
+                            },
+                            view,
+                          });
                         }}
                       />
                     ))}

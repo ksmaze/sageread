@@ -14,6 +14,11 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
+import {
+  describeReaderNavigationTarget,
+  readerNavigationInfo,
+  readerNavigationWarn,
+} from "@/utils/reader-navigation-debug";
 import dayjs from "dayjs";
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
@@ -149,9 +154,21 @@ function UnifiedNoteDetailDialog({
               type="button"
               className="h-11 w-full sm:w-auto"
               onClick={() => {
+                const target = describeReaderNavigationTarget({
+                  bookId: readerTarget.bookId,
+                  cfi: readerTarget.cfi,
+                  id: item.id,
+                  source: "unified-notes-detail",
+                  title: readerTarget.title,
+                  type: item.type,
+                });
+                readerNavigationInfo("unified-notes.detail.open-reader-target.click", { target });
                 runAfterDialogClose(
                   () => onOpenChange(false),
-                  () => onOpenReaderTarget(readerTarget),
+                  () => {
+                    readerNavigationInfo("unified-notes.detail.open-reader-target.dispatch", { target });
+                    onOpenReaderTarget(readerTarget);
+                  },
                 );
               }}
             >
@@ -225,15 +242,59 @@ export function UnifiedNotesList({
             if (!open) setSelectedItem(null);
           }}
           onOpenOriginal={(note) => {
-            if (!selectedItem) return;
+            const noteTarget = describeReaderNavigationTarget({
+              bookId: note.bookId,
+              cfi: note.cfi,
+              id: note.id,
+              source: "unified-notes-note-editor",
+              title: note.bookMeta?.title,
+            });
+            readerNavigationInfo("unified-notes.note-editor.open-original.received", { target: noteTarget });
+
+            if (!selectedItem) {
+              readerNavigationWarn("unified-notes.note-editor.open-original.missing-selected-item", {
+                target: noteTarget,
+              });
+              return;
+            }
+
             const target = getUnifiedNoteReaderTarget({
               ...selectedItem,
               cfi: note.cfi,
             });
-            if (!target || !onOpenReaderTarget) return;
+            if (!target) {
+              readerNavigationWarn("unified-notes.note-editor.open-original.missing-reader-target", {
+                item: {
+                  bookId: selectedItem.bookId,
+                  id: selectedItem.id,
+                  type: selectedItem.type,
+                },
+                target: noteTarget,
+              });
+              return;
+            }
+
+            const readerTarget = describeReaderNavigationTarget({
+              bookId: target.bookId,
+              cfi: target.cfi,
+              id: selectedItem.id,
+              source: "unified-notes-note-editor",
+              title: target.title,
+              type: selectedItem.type,
+            });
+            if (!onOpenReaderTarget) {
+              readerNavigationWarn("unified-notes.note-editor.open-original.missing-handler", {
+                target: readerTarget,
+              });
+              return;
+            }
+
             runAfterDialogClose(
               () => setSelectedItem(null),
-              () => onOpenReaderTarget(target),
+              () => {
+                readerNavigationInfo("unified-notes.note-editor.open-original.dispatch", { target: readerTarget });
+                onOpenReaderTarget(target);
+              },
             );
           }}
           onSave={handleUpdateNote}

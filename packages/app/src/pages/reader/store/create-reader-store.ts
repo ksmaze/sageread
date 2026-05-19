@@ -9,6 +9,12 @@ import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
 import type { SessionStats } from "@/types/reading-session";
 import type { Thread } from "@/types/thread";
 import type { FoliateView } from "@/types/view";
+import {
+  describeReaderNavigationError,
+  describeReaderNavigationTarget,
+  readerNavigationError,
+  readerNavigationInfo,
+} from "@/utils/reader-navigation-debug";
 import { updateToc } from "@/utils/toc";
 import { appDataDir } from "@tauri-apps/api/path";
 import { createStore } from "zustand";
@@ -63,6 +69,11 @@ export interface ReaderState {
 }
 
 export const createReaderStore = (bookId: string, initialNavigationTarget?: ReaderNavigationTarget) => {
+  readerNavigationInfo("reader-store.create", {
+    bookId,
+    initialTarget: describeReaderNavigationTarget(initialNavigationTarget),
+  });
+
   return createStore<ReaderState>((set, get) => ({
     bookId,
     config: null,
@@ -82,6 +93,7 @@ export const createReaderStore = (bookId: string, initialNavigationTarget?: Read
 
     initBook: async () => {
       try {
+        readerNavigationInfo("reader-store.init-book.start", { bookId });
         set({ isLoading: true, error: null });
 
         const { settings } = useAppSettingsStore.getState();
@@ -137,8 +149,17 @@ export const createReaderStore = (bookId: string, initialNavigationTarget?: Read
           bookData,
           isLoading: false,
         });
+        readerNavigationInfo("reader-store.init-book.success", {
+          bookId,
+          format: simpleBook.format,
+          title: simpleBook.title,
+        });
       } catch (err) {
         console.error("[ReaderStore] Error loading book:", err);
+        readerNavigationError("reader-store.init-book.error", {
+          bookId,
+          error: describeReaderNavigationError(err),
+        });
         set({
           error: err instanceof Error ? err.message : String(err),
           isLoading: false,
@@ -180,11 +201,26 @@ export const createReaderStore = (bookId: string, initialNavigationTarget?: Read
     },
     setView: (view) => set({ view }),
     setViewerReady: (ready) => set({ isViewerReady: ready }),
-    requestNavigation: (target) => set({ pendingNavigationTarget: target }),
+    requestNavigation: (target) => {
+      readerNavigationInfo("reader-store.request-navigation", {
+        bookId,
+        target: describeReaderNavigationTarget({ ...target, bookId }),
+      });
+      set({ pendingNavigationTarget: target });
+    },
     clearNavigationTarget: (target) =>
-      set((state) => ({
-        pendingNavigationTarget: clearReaderNavigationTarget(state.pendingNavigationTarget, target),
-      })),
+      set((state) => {
+        const nextTarget = clearReaderNavigationTarget(state.pendingNavigationTarget, target);
+        readerNavigationInfo("reader-store.clear-navigation-target", {
+          bookId,
+          cleared: nextTarget === null,
+          completedTarget: describeReaderNavigationTarget({ ...target, bookId }),
+          currentTarget: describeReaderNavigationTarget(state.pendingNavigationTarget),
+        });
+        return {
+          pendingNavigationTarget: nextTarget,
+        };
+      }),
     setLocation: (location) => set({ location }),
     setProgress: (progress) => set({ progress }),
     setSessionStats: (stats) => set({ sessionStats: stats }),

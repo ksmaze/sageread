@@ -5,6 +5,7 @@ import type { BookNote } from "@/types/book";
 import type { ReaderNoteMarker } from "@/types/view";
 import { eventDispatcher } from "@/utils/event";
 import { getOSPlatform } from "@/utils/misc";
+import { traceReaderGoTo } from "@/utils/reader-navigation-debug";
 import { Overlayer } from "foliate-js/overlayer.js";
 import { NotebookPen } from "lucide-react";
 import type React from "react";
@@ -257,7 +258,17 @@ const Annotator: React.FC = () => {
           if (!open) setActiveNote(null);
         }}
         onOpenOriginal={(note) => {
-          if (note.cfi) view?.goTo(note.cfi);
+          void traceReaderGoTo({
+            event: "annotator.open-original",
+            target: {
+              bookId,
+              cfi: note.cfi,
+              id: note.id,
+              source: "annotator",
+              title: store.getState().bookData?.book?.title,
+            },
+            view,
+          });
         }}
         onSave={handleUpdateNote}
       />

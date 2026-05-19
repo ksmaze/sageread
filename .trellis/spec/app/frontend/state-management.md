@@ -130,6 +130,9 @@ createReaderStore(bookId: string, initialNavigationTarget?: ReaderNavigationTarg
 - Clearing a completed target must only clear the same `{ cfi, requestedAt }` target so a newer request cannot be accidentally removed by an older effect.
 - Treat `view.goTo(cfi)` resolving to `undefined`/`null` as a navigation failure. Foliate can catch renderer errors internally, so "the promise resolved" is not enough proof that navigation succeeded.
 - Restoring an initial saved location must not be allowed to abort reader initialization. If initial restore fails, log it and fall back to the book start so the reader remains mounted.
+- Reader jumps from notes, annotations, unified notes, layout/mobile shell stores, reader stores, `ReaderViewer`, and foliate initialization must log with the `[SageRead:ReaderNav]` prefix. Include the full CFI, CFI length, source, `requestedAt`, book id/title where available, and whether foliate returned a resolved destination.
+- Direct `view.goTo(cfi)` calls from mounted reader surfaces must use the shared reader navigation tracing helper instead of ignoring the returned value. A missing view, missing CFI, thrown error, or unresolved result must be visible in logcat.
+- When note-to-original navigation is reported as intermittent or cannot be reproduced locally, add or preserve boundary logs before attempting another behavioral fix. The first debugging artifact should show whether the request reached the UI click handler, shell/layout store, reader store, `ReaderViewer`, and foliate manager.
 
 ### 4. Validation & Error Matrix
 
@@ -142,6 +145,7 @@ createReaderStore(bookId: string, initialNavigationTarget?: ReaderNavigationTarg
 | `view.goTo(cfi)` throws | Log the failure and leave the reader mounted. |
 | `view.goTo(cfi)` resolves without a destination | Log the failure, leave the target pending, and leave the reader mounted. |
 | Saved reader location is stale or invalid | Fall back to book start; do not blank or close the reader. |
+| User reports a note jump freeze but local reproduction is unclear | Preserve `[SageRead:ReaderNav]` logs across every navigation boundary before changing behavior again. |
 
 ### 5. Good/Base/Bad Cases
 
@@ -152,6 +156,7 @@ createReaderStore(bookId: string, initialNavigationTarget?: ReaderNavigationTarg
 ### 6. Tests Required
 
 - `reader-navigation-consume.test.ts` must cover stale-target clearing, await-before-clear, unresolved navigation, and pending-target initial-location precedence.
+- Reader navigation debug helpers must keep stable target/result summaries so logcat output stays searchable and comparable across layers.
 - Unified note model tests must cover whether a display item can produce a reader target.
 - Run `pnpm --filter app build` after signature changes to stores or reader hooks.
 

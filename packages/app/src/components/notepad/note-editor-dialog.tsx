@@ -10,6 +10,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import type { Note, UpdateNoteData } from "@/types/note";
+import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
 import { BookOpen, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { runAfterDialogClose } from "./dialog-navigation";
@@ -104,9 +105,23 @@ export function NoteEditorDialog({
                   type="button"
                   variant="outline"
                   onClick={() => {
+                    const target = describeReaderNavigationTarget({
+                      bookId: note.bookId,
+                      cfi: note.cfi,
+                      id: note.id,
+                      source: "note-editor-dialog",
+                      title: note.bookMeta?.title,
+                    });
+                    readerNavigationInfo("note-editor-dialog.open-original.click", {
+                      hasHandler: Boolean(onOpenOriginal),
+                      target,
+                    });
                     runAfterDialogClose(
                       () => onOpenChange(false),
-                      () => onOpenOriginal?.(note),
+                      () => {
+                        readerNavigationInfo("note-editor-dialog.open-original.dispatch", { target });
+                        onOpenOriginal?.(note);
+                      },
                     );
                   }}
                 >

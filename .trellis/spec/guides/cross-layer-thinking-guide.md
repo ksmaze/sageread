@@ -46,6 +46,7 @@ For each arrow, ask:
 | Reader Pending Target ↔ Saved Location Restore | opening from notes requires the pending target to win over stale saved reader location during initialization |
 | Fixed-Layout/PDF Async Renderer ↔ Annotation Replay | app replay treats `relocate` as page-ready, so stale section/iframe/render completions must not mutate current frames or emit readiness events |
 | Note Dialog Portal ↔ Reader Navigation | modal focus cleanup must finish before PDF/fixed-layout navigation replaces iframes |
+| Reader Navigation Request ↔ Logcat Observability | when note jumps stay intermittent, every layer must log the same request metadata so the failing boundary can be identified from Android logcat without guessing |
 
 ### Step 3: Define Contracts
 
@@ -112,6 +113,12 @@ For each boundary:
 
 **Good**: Close the dialog first, then schedule the reader navigation on the next turn. This keeps modal focus cleanup separate from foliate iframe replacement and page render work.
 
+### Mistake 10: Chasing A Cross-Layer Reader Jump Without Runtime Evidence
+
+**Bad**: Re-running a note-to-original flow, seeing it fail in different ways, and applying another behavioral fix without logs that show which boundary dropped the request.
+
+**Good**: Add a shared log prefix and emit the target/request metadata at each boundary: click handler, dialog dismissal, shell/store handoff, reader-store request, `ReaderViewer` consume, foliate initialization, and `relocate`. Once the logs show the first failing boundary, change behavior there.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -140,6 +147,7 @@ After implementation:
 - [ ] For note jumps, tested invalid/stale saved locations do not prevent the pending target from initializing the reader
 - [ ] For fixed-layout/PDF navigation races, tested stale section loads, stale iframe loads, and stale PDF render completions resolving after a newer page navigation
 - [ ] For note-dialog "open original", verified the dialog closes before reader navigation is scheduled
+- [ ] For intermittent note jumps, verified the same request metadata appears in logcat across the UI, shell/store, reader, and foliate layers
 
 ---
 

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, beforeEach, describe, it, mock } from "node:test";
 import {
   consumeReaderNavigationTarget,
   getInitialReaderLocation,
@@ -11,6 +11,16 @@ const target: ReaderNavigationTarget = {
   requestedAt: 100,
   source: "unified-notes",
 };
+
+beforeEach(() => {
+  mock.method(console, "error", () => undefined);
+  mock.method(console, "info", () => undefined);
+  mock.method(console, "warn", () => undefined);
+});
+
+afterEach(() => {
+  mock.restoreAll();
+});
 
 describe("consume reader navigation target", () => {
   it("clears the pending target only after goTo resolves", async () => {

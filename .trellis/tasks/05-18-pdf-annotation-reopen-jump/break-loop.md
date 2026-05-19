@@ -35,6 +35,41 @@
 
 - [x] Updated `.trellis/spec/app/frontend/state-management.md`
 - [x] Updated `.trellis/spec/guides/cross-layer-thinking-guide.md`
+
+---
+
+## Bug Analysis: Note Jump Debuggability Gap
+
+### 1. Root Cause Category
+
+- **Category**: B - Cross-Layer Contract, D - Test Coverage Gap, E - Implicit Assumption.
+- **Specific Cause**: The note-to-original path spans dialog UI, unified notes, mobile/desktop shell stores, per-book reader stores, `ReaderViewer`, and foliate. Previous fixes changed individual layers, but the runtime chain did not expose whether a failed Android jump lost the request at the click handler, shell handoff, reader store, viewer readiness, foliate `goTo`, or fixed-layout relocate boundary.
+
+### 2. Why Fixes Failed
+
+1. The renderer lifecycle and pending-target fixes addressed real bugs, but they still relied on local reasoning when Android behavior remained intermittent.
+2. The dialog sequencing fix closed a plausible portal/focus race, but did not prove that the scheduled navigation reached the shell and reader layers.
+3. Direct `view.goTo()` paths in mounted reader notes/annotations ignored missing views, thrown errors, and unresolved foliate results, so failures could look identical to a no-op.
+
+### 3. Prevention Mechanisms
+
+| Priority | Mechanism | Specific Action | Status |
+|----------|-----------|-----------------|--------|
+| P0 | Runtime Observability | Add `[SageRead:ReaderNav]` logcat-visible logs at every note-to-reader boundary. | DONE |
+| P0 | Runtime Guard | Route direct mounted-reader note/annotation jumps through a shared helper that logs missing CFI/view, thrown errors, and unresolved results. | DONE |
+| P1 | Test Coverage | Add stable tests for reader navigation debug target/result summaries. | DONE |
+| P1 | Documentation | Document reader-jump observability requirements in state-management and cross-layer specs. | DONE |
+
+### 4. Systematic Expansion
+
+- **Similar Issues**: Search result jumps, TOC jumps, and annotation list jumps can fail silently if they ignore `goTo` results.
+- **Design Improvement**: Treat cross-layer reader navigation as a traceable request, not a fire-and-forget UI callback.
+- **Process Improvement**: After two failed fixes in a cross-layer Android reader flow, add boundary logs before another behavioral change.
+
+### 5. Knowledge Capture
+
+- [x] Updated `.trellis/spec/app/frontend/state-management.md`
+- [x] Updated `.trellis/spec/guides/cross-layer-thinking-guide.md`
 - [x] Verified no `src/templates/markdown/spec/` tree exists in this repo to sync.
 
 ---

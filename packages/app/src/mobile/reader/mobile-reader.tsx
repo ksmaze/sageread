@@ -2,6 +2,7 @@ import ReaderViewer from "@/pages/reader";
 import { ReaderProvider } from "@/pages/reader/components/reader-provider";
 import { createReaderStore } from "@/pages/reader/store/create-reader-store";
 import type { ReaderNavigationTarget } from "@/pages/reader/store/create-reader-store";
+import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
 import { useEffect, useMemo } from "react";
 import { ReaderToolDock } from "../components/reader-tool-dock";
 import { useMobileShellStore } from "../shell/mobile-shell-store";
@@ -29,6 +30,12 @@ export function MobileReader() {
             source: pendingReaderNavigationTarget.source,
           }
         : undefined;
+    readerNavigationInfo("mobile-reader.create-reader-store", {
+      activeBookId,
+      activeBookTitle: activeBook?.title,
+      initialTarget: describeReaderNavigationTarget(initialNavigationTarget),
+      pendingShellTarget: describeReaderNavigationTarget(pendingReaderNavigationTarget),
+    });
     return createReaderStore(activeBookId, initialNavigationTarget);
   }, [activeBookId, isReaderOpen]);
 
@@ -63,15 +70,33 @@ export function MobileReader() {
   }, [activeBookId, isReaderOpen, toggleReaderChrome]);
 
   useEffect(() => {
-    if (!activeBookId || !readerStore || pendingReaderNavigationTarget?.bookId !== activeBookId) return;
+    if (!activeBookId || !readerStore || pendingReaderNavigationTarget?.bookId !== activeBookId) {
+      if (pendingReaderNavigationTarget) {
+        readerNavigationInfo("mobile-reader.pending-target.waiting-for-active-book", {
+          activeBookId,
+          hasReaderStore: Boolean(readerStore),
+          pendingShellTarget: describeReaderNavigationTarget(pendingReaderNavigationTarget),
+        });
+      }
+      return;
+    }
 
-    readerStore.getState().requestNavigation({
+    const target = {
       cfi: pendingReaderNavigationTarget.cfi,
       requestedAt: pendingReaderNavigationTarget.requestedAt,
       source: pendingReaderNavigationTarget.source,
+    };
+    readerNavigationInfo("mobile-reader.request-reader-navigation", {
+      activeBookId,
+      target: describeReaderNavigationTarget({ ...target, bookId: activeBookId, title: activeBook?.title }),
     });
+    readerStore.getState().requestNavigation(target);
     clearPendingReaderNavigationTarget(activeBookId);
-  }, [activeBookId, clearPendingReaderNavigationTarget, pendingReaderNavigationTarget, readerStore]);
+    readerNavigationInfo("mobile-reader.clear-shell-target.requested", {
+      activeBookId,
+      target: describeReaderNavigationTarget({ ...target, bookId: activeBookId, title: activeBook?.title }),
+    });
+  }, [activeBook?.title, activeBookId, clearPendingReaderNavigationTarget, pendingReaderNavigationTarget, readerStore]);
 
   if (!activeBook || !isReaderOpen || !readerStore) return null;
 

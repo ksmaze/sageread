@@ -1,6 +1,7 @@
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { HIGHLIGHT_COLOR_HEX, HIGHLIGHT_COLOR_RGBA } from "@/services/constants";
 import type { BookNote } from "@/types/book";
+import { traceReaderGoTo } from "@/utils/reader-navigation-debug";
 import { Menu } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
@@ -14,17 +15,26 @@ interface AnnotationItemProps {
   onDelete?: (id: string) => void;
 }
 
-export const AnnotationItem = ({ annotation, onDelete }: AnnotationItemProps) => {
+export const AnnotationItem = ({ annotation, bookId, bookTitle, onDelete }: AnnotationItemProps) => {
   const view = useReaderStore((state) => state.view);
   const bgColor = annotation.color ? HIGHLIGHT_COLOR_RGBA[annotation.color] : HIGHLIGHT_COLOR_RGBA.yellow;
   const lineColor = annotation.color ? HIGHLIGHT_COLOR_HEX[annotation.color] : HIGHLIGHT_COLOR_HEX.yellow;
   const style = annotation.style || "highlight";
 
   const handleClick = useCallback(() => {
-    if (view) {
-      view.goTo(annotation.cfi);
-    }
-  }, [annotation.cfi, view]);
+    void traceReaderGoTo({
+      event: "annotation-item.open-original",
+      target: {
+        bookId,
+        cfi: annotation.cfi,
+        id: annotation.id,
+        source: "reader-annotations",
+        title: bookTitle,
+        type: annotation.type,
+      },
+      view,
+    });
+  }, [annotation.cfi, annotation.id, annotation.type, bookId, bookTitle, view]);
 
   const handleNativeDelete = useCallback(async () => {
     try {

@@ -7,6 +7,14 @@ import { getBookDirFromLanguage, getBookDirFromWritingMode } from "@/utils/book"
 import { mountAdditionalFonts } from "@/utils/font";
 import { manageSyntaxHighlighting } from "@/utils/highlightjs";
 import { isCJKLang } from "@/utils/lang";
+import {
+  describeReaderNavigationError,
+  describeReaderNavigationResult,
+  describeReaderNavigationTarget,
+  readerNavigationError,
+  readerNavigationInfo,
+  readerNavigationWarn,
+} from "@/utils/reader-navigation-debug";
 import { getDirFromUILanguage } from "@/utils/rtl";
 import { applyFixedlayoutStyles, applyImageStyle, applyTranslationStyle, transformStylesheet } from "@/utils/style";
 import {
@@ -65,6 +73,12 @@ export class FoliateViewerManager {
     }
 
     try {
+      readerNavigationInfo("foliate-manager.initialize.start", {
+        bookId: this.config.bookId,
+        hasInitialLocation: Boolean(this.config.config.location),
+        initialLocation: describeReaderNavigationTarget({ cfi: this.config.config.location }),
+        renditionLayout: this.config.bookDoc.rendition?.layout,
+      });
       await this.createFoliateView();
       await this.setupEventHandlers();
       await this.openBook();
@@ -72,8 +86,15 @@ export class FoliateViewerManager {
       await this.navigateToInitialPosition();
 
       this.isInitialized = true;
+      readerNavigationInfo("foliate-manager.initialize.success", {
+        bookId: this.config.bookId,
+      });
     } catch (error) {
       console.error("[FoliateViewerManager] Initialization failed:", error);
+      readerNavigationError("foliate-manager.initialize.error", {
+        bookId: this.config.bookId,
+        error: describeReaderNavigationError(error),
+      });
       throw error;
     }
   }
@@ -88,6 +109,10 @@ export class FoliateViewerManager {
 
     this.view = view;
     this.eventManager = new EventManager(view);
+    readerNavigationInfo("foliate-manager.view-created", {
+      bookId: this.config.bookId,
+      viewId: view.id,
+    });
 
     // Notify that view is created and ready for use
     if (this.config.onViewCreated) {
@@ -114,6 +139,11 @@ export class FoliateViewerManager {
     if (!this.view) return;
 
     const { bookDoc, globalViewSettings } = this.config;
+    readerNavigationInfo("foliate-manager.open-book.start", {
+      bookId: this.config.bookId,
+      renditionLayout: bookDoc.rendition?.layout,
+      title: bookDoc.metadata?.title,
+    });
 
     // Set writing mode and direction
     const writingMode = globalViewSettings.writingMode;
@@ -128,6 +158,10 @@ export class FoliateViewerManager {
     }
 
     await this.view.open(bookDoc);
+    readerNavigationInfo("foliate-manager.open-book.success", {
+      bookId: this.config.bookId,
+      renditionLayout: bookDoc.rendition?.layout,
+    });
 
     // Setup transform handlers
     const { book } = this.view;
@@ -159,15 +193,40 @@ export class FoliateViewerManager {
 
     const { config } = this.config;
     if (config.location) {
+      const target = describeReaderNavigationTarget({
+        bookId: this.config.bookId,
+        cfi: config.location,
+        source: "initial-location",
+      });
+      readerNavigationInfo("foliate-manager.initial-position.init.start", {
+        bookId: this.config.bookId,
+        target,
+      });
       try {
         await this.view.init({ lastLocation: config.location });
+        readerNavigationInfo("foliate-manager.initial-position.init.success", {
+          bookId: this.config.bookId,
+          target,
+        });
         return;
       } catch (error) {
         console.warn("[FoliateViewerManager] Failed to restore initial location, falling back to start:", error);
+        readerNavigationWarn("foliate-manager.initial-position.init.error-fallback", {
+          bookId: this.config.bookId,
+          error: describeReaderNavigationError(error),
+          target,
+        });
       }
     }
 
-    await this.view.goToFraction(0);
+    readerNavigationInfo("foliate-manager.initial-position.fraction-start.start", {
+      bookId: this.config.bookId,
+    });
+    const result = await this.view.goToFraction(0);
+    readerNavigationInfo("foliate-manager.initial-position.fraction-start.success", {
+      bookId: this.config.bookId,
+      result: describeReaderNavigationResult(result),
+    });
   }
 
   private handleLoad(event: CustomEvent): void {
@@ -224,6 +283,15 @@ export class FoliateViewerManager {
 
   private handleRelocate(event: CustomEvent): void {
     const detail = event.detail;
+    readerNavigationInfo("foliate-manager.relocate", {
+      bookId: this.config.bookId,
+      hasRange: Boolean(detail.range),
+      location: detail.cfi,
+      pageinfo: detail.location,
+      section: detail.section,
+      tocHref: detail.tocItem?.href,
+      tocLabel: detail.tocItem?.label,
+    });
     this.onProgressUpdate?.(
       {
         location: detail.cfi,

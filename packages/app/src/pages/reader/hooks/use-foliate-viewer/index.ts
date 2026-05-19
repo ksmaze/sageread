@@ -6,6 +6,12 @@ import type { BookConfig } from "@/types/book";
 import type { ViewSettings } from "@/types/book";
 import type { Insets } from "@/types/misc";
 import type { FoliateView } from "@/types/view";
+import {
+  describeReaderNavigationError,
+  describeReaderNavigationTarget,
+  readerNavigationError,
+  readerNavigationInfo,
+} from "@/utils/reader-navigation-debug";
 import { applyFixedlayoutStyles, getStyles } from "@/utils/style";
 import { useEffect, useRef, useState } from "react";
 import { useReaderStoreApi } from "../../components/reader-provider";
@@ -31,16 +37,18 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     if (isInitialized.current || !containerRef.current) {
-      console.log(
-        "[useFoliateViewer] Skipping init - isInitialized:",
-        isInitialized.current,
-        "containerRef:",
-        !!containerRef.current,
-      );
+      readerNavigationInfo("use-foliate-viewer.init.skip", {
+        bookId,
+        hasContainer: Boolean(containerRef.current),
+        isInitialized: isInitialized.current,
+      });
       return;
     }
 
-    console.log("[useFoliateViewer] Starting initialization");
+    readerNavigationInfo("use-foliate-viewer.init.start", {
+      bookId,
+      initialLocation: describeReaderNavigationTarget({ bookId, cfi: config.location }),
+    });
     isInitialized.current = true;
     store.getState().setViewerReady(false);
     store.getState().setView(null);
@@ -54,6 +62,10 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
       container: containerRef.current,
       globalViewSettings: settings.globalViewSettings,
       onViewCreated: (view) => {
+        readerNavigationInfo("use-foliate-viewer.view-created", {
+          bookId,
+          viewId: view.id,
+        });
         store.getState().setView(view);
         viewRef.current = view;
       },
@@ -76,11 +88,16 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
     manager
       .initialize()
       .then(() => {
+        readerNavigationInfo("use-foliate-viewer.init.success", { bookId });
         store.getState().setViewerReady(true);
         forceUpdate({});
       })
       .catch((error) => {
         console.error("Failed to initialize foliate viewer:", error);
+        readerNavigationError("use-foliate-viewer.init.error", {
+          bookId,
+          error: describeReaderNavigationError(error),
+        });
         if (managerRef.current === manager) {
           manager.destroy();
           managerRef.current = null;
@@ -93,6 +110,7 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
       });
 
     return () => {
+      readerNavigationInfo("use-foliate-viewer.destroy", { bookId });
       if (managerRef.current) {
         managerRef.current.destroy();
         managerRef.current = null;

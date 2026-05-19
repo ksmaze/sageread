@@ -6,6 +6,12 @@ import { useLayoutStore } from "@/store/layout-store";
 import { useLibraryStore } from "@/store/library-store";
 import type { BookConfig } from "@/types/book";
 import type { Insets } from "@/types/misc";
+import {
+  describeReaderNavigationError,
+  describeReaderNavigationTarget,
+  readerNavigationError,
+  readerNavigationInfo,
+} from "@/utils/reader-navigation-debug";
 import { getInsetEdges } from "@/utils/grid";
 import { getViewInsets } from "@/utils/insets";
 import { useEffect, useMemo } from "react";
@@ -39,9 +45,22 @@ const ReaderViewerSurface: React.FC<ReaderViewerSurfaceProps> = ({ bookId, bookD
   const foliateViewer = useFoliateViewer(bookId, bookDoc, viewerConfig, contentInsets);
 
   useEffect(() => {
+    readerNavigationInfo("reader-viewer.initial-location", {
+      bookId,
+      initialLocation,
+      pendingTarget: describeReaderNavigationTarget(pendingNavigationTarget),
+      savedLocation: config.location,
+    });
+  }, [bookId, config.location, initialLocation, pendingNavigationTarget]);
+
+  useEffect(() => {
     if (!view || !isViewerReady || !pendingNavigationTarget) return;
 
     let cancelled = false;
+    readerNavigationInfo("reader-viewer.consume-pending-target.start", {
+      bookId,
+      pendingTarget: describeReaderNavigationTarget(pendingNavigationTarget),
+    });
     void consumeReaderNavigationTarget({
       target: pendingNavigationTarget,
       view,
@@ -49,14 +68,24 @@ const ReaderViewerSurface: React.FC<ReaderViewerSurfaceProps> = ({ bookId, bookD
         if (!cancelled) store.getState().clearNavigationTarget(target);
       },
       onError: (error) => {
-        console.error("[ReaderViewer] Failed to navigate to pending note target:", error);
+        readerNavigationError("reader-viewer.consume-pending-target.error", {
+          bookId,
+          error: describeReaderNavigationError(error),
+          target: describeReaderNavigationTarget(pendingNavigationTarget),
+        });
       },
+    }).then((consumed) => {
+      readerNavigationInfo("reader-viewer.consume-pending-target.done", {
+        bookId,
+        consumed,
+        pendingTarget: describeReaderNavigationTarget(pendingNavigationTarget),
+      });
     });
 
     return () => {
       cancelled = true;
     };
-  }, [isViewerReady, pendingNavigationTarget, store, view]);
+  }, [bookId, isViewerReady, pendingNavigationTarget, store, view]);
 
   return (
     <div ref={foliateViewer.containerRef} className="flex-1" data-book-id={bookId} {...foliateViewer.mouseHandlers} />

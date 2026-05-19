@@ -3,6 +3,7 @@ import { tauriStorage } from "@/lib/tauri-storage";
 import type { ReaderNavigationTarget, ReaderStore } from "@/pages/reader/store/create-reader-store";
 import { createReaderStore } from "@/pages/reader/store/create-reader-store";
 import type { TabProperties } from "@/types/tabs";
+import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -42,6 +43,18 @@ export const useLayoutStore = create<LayoutStore>()(
       openBook: (bookId: string, title: string, navigationTarget?: ReaderNavigationTarget) => {
         const tabId = `reader-${bookId}`;
         const { tabs, activateTab, readerStores } = get();
+        const existingTab = tabs.find((t) => t.id === tabId);
+
+        readerNavigationInfo("layout-store.open-book", {
+          bookId,
+          hasExistingStore: readerStores.has(tabId),
+          hasExistingTab: Boolean(existingTab),
+          tabId,
+          target: navigationTarget
+            ? describeReaderNavigationTarget({ ...navigationTarget, bookId, title })
+            : { cfiLength: 0, hasCfi: false },
+          title,
+        });
 
         if (!readerStores.has(tabId)) {
           const store = createReaderStore(bookId, navigationTarget);
@@ -50,11 +63,16 @@ export const useLayoutStore = create<LayoutStore>()(
 
         const readerStore = readerStores.get(tabId);
         if (navigationTarget) {
+          readerNavigationInfo("layout-store.request-reader-navigation", {
+            bookId,
+            tabId,
+            target: describeReaderNavigationTarget({ ...navigationTarget, bookId, title }),
+          });
           readerStore?.getState().requestNavigation(navigationTarget);
         }
 
-        const existingTab = tabs.find((t) => t.id === tabId);
         if (existingTab) {
+          readerNavigationInfo("layout-store.activate-existing-tab", { bookId, tabId });
           activateTab(tabId);
           return;
         }
