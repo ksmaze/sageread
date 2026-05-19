@@ -837,3 +837,37 @@ Added Android ACTION_PROCESS_TEXT translation action to the reader selection pop
 ### Next Steps
 
 - None - task complete
+
+
+## Session 25: Remove unused jan-utils crate
+
+**Date**: 2026-05-19
+**Task**: Remove unused jan-utils crate
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Removed the unused local Rust jan-utils path dependency from the Tauri backend, deleted the dead crate, and verified cargo check plus pnpm app build.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `526b7dc` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
