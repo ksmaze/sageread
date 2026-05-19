@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Note, UpdateNoteData } from "@/types/note";
 import { BookOpen, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { runAfterDialogClose } from "./dialog-navigation";
 import { getNoteDisplayTitle, getNoteSourceExcerpt } from "./note-utils";
 
 interface NoteEditorDialogProps {
@@ -103,8 +104,10 @@ export function NoteEditorDialog({
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    onOpenOriginal?.(note);
-                    onOpenChange(false);
+                    runAfterDialogClose(
+                      () => onOpenChange(false),
+                      () => onOpenOriginal?.(note),
+                    );
                   }}
                 >
                   <BookOpen className="size-4" />

@@ -64,6 +64,27 @@ Outbound state changes are published with events. Use event detail objects for s
 - `load` reports loaded document and section index
 - `create-overlayer` lets consumers attach an overlayer to a page
 
+For fixed-layout/PDF pages, `relocate` is also the app-facing readiness signal for
+annotation replay. Do not emit it until the active page iframe has loaded, the PDF
+`onZoom()` render has completed, and the page overlayer can be returned from
+`getContents()`.
+
+### Async Renderer State
+
+Fixed-layout navigation crosses several async boundaries:
+
+- section `load()`
+- iframe `load`
+- PDF `onZoom()` rendering
+- resize/zoom-triggered redraw
+
+Guard those boundaries with a navigation generation or equivalent token. A stale
+section load, iframe load, or render promise must not replace the current frame,
+mutate `#left`/`#right`/`#center`, update the visible side, redraw overlays, or emit
+`relocate` after a newer navigation has started. Keep the current index aligned
+with the frames actually displayed; do not mark a target index current before the
+new spread is ready.
+
 ## When to Use Global State
 
 Do not add global state to `foliate-js`. If a value is user preference or application workflow state, it belongs in the consumer.
@@ -102,3 +123,4 @@ Keep derived state close to its source:
 - Replacing `Range` or `Element` values with serialized strings too early. Many features need live DOM objects.
 - Sharing one mutable singleton across multiple reader instances.
 - Making format adapters depend on `View` internals instead of the documented book interface.
+- Letting late fixed-layout/PDF async work write into the active renderer after a newer navigation. This can make the app think page N is active while the iframe still displays page N-1, which breaks annotation replay and can leave stale PDF render tasks alive.

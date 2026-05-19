@@ -129,6 +129,7 @@ For renderer or custom element changes:
 - exercise `reader.html` through a local server with at least one EPUB or supported sample file
 - verify `load` and `relocate` events still fire
 - verify selection/range behavior if touching pagination, annotations, search, or TTS
+- for fixed-layout/PDF navigation, add focused tests where an older section `load()`, iframe `load`, or async page render resolves after a newer navigation; the stale operation must not replace frames or emit `relocate`
 
 For app integration changes:
 
@@ -153,3 +154,4 @@ For app integration changes:
 - Adding a formatting-only sweep while making behavior changes.
 - Leaving a closed reader's book or renderer object referenced after `close()`, which keeps stale PDF state alive and can cause repeat-open white screens.
 - Letting renderer listeners process late `load` or `relocate` events after the active view has been torn down.
+- Updating fixed-layout/PDF page state before async page readiness. Annotation replay depends on `relocate` meaning the active iframe, rendered PDF text layer, and overlayer are all available through `getContents()`.

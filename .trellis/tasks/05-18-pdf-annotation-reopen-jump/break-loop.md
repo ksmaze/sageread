@@ -36,3 +36,73 @@
 - [x] Updated `.trellis/spec/app/frontend/state-management.md`
 - [x] Updated `.trellis/spec/guides/cross-layer-thinking-guide.md`
 - [x] Verified no `src/templates/markdown/spec/` tree exists in this repo to sync.
+
+---
+
+## Bug Analysis: PDF Fixed-Layout Stale Navigation Race
+
+### 1. Root Cause Category
+
+- **Category**: B - Cross-Layer Contract, D - Test Coverage Gap, E - Implicit Assumption.
+- **Specific Cause**: `FixedLayout.goToSpread()` updated navigation state and allowed `section.load()`, iframe `load`, and PDF `onZoom()` completions to continue after a newer navigation had started. A stale page could replace the active iframe or emit `relocate` after the app had already moved on, so app annotation replay sometimes targeted a page that was not actually displayed.
+
+### 2. Why Fixes Failed
+
+1. Overlay exposure fixes made `getContents()` include overlayers, but did not prove that the returned frame still belonged to the latest navigation.
+2. PDF render awaiting made `relocate` later, but the first version only suppressed stale `relocate`; it still allowed stale async loads to replace the DOM before the suppression check.
+3. Lifecycle cleanup reduced repeat-open white screens, but stale fixed-layout navigations could still leave orphan render work alive while the app paged through the document.
+
+### 3. Prevention Mechanisms
+
+| Priority | Mechanism | Specific Action | Status |
+|----------|-----------|-----------------|--------|
+| P0 | Architecture | Treat fixed-layout navigation as a tokened async transaction; stale work cannot mutate frames, sides, current index, overlays, or readiness events. | DONE |
+| P0 | Test Coverage | Add regression tests for stale `section.load()`, stale iframe `load`, stale async render completion, and unchanged-scale PDF rerender suppression. | DONE |
+| P0 | Runtime Cleanup | Cancel in-flight PDF page renders and destroy frames when a page is replaced or the renderer closes. | DONE |
+| P1 | Documentation | Document the fixed-layout/PDF readiness and stale-navigation contract in foliate specs and cross-layer guide. | DONE |
+
+### 4. Systematic Expansion
+
+- **Similar Issues**: Any renderer that emits readiness before async document construction finishes can break annotations, search indicators, TTS, or note jumps.
+- **Design Improvement**: Keep fixed-layout current index aligned with the frames actually displayed; do not commit requested navigation state before the spread is ready.
+- **Process Improvement**: Future reader renderer tests need adversarial async ordering, not only happy-path `await goTo()` cases.
+
+### 5. Knowledge Capture
+
+- [x] Updated `.trellis/spec/foliate-js/frontend/state-management.md`
+- [x] Updated `.trellis/spec/foliate-js/frontend/quality-guidelines.md`
+- [x] Updated `.trellis/spec/guides/cross-layer-thinking-guide.md`
+- [x] Verified no `src/templates/markdown/spec/` tree exists in this repo to sync.
+
+---
+
+## Bug Analysis: Note Dialog Navigation Freeze
+
+### 1. Root Cause Category
+
+- **Category**: B - Cross-Layer Contract, E - Implicit Assumption.
+- **Specific Cause**: The note editor and unified notes dialog triggered reader navigation synchronously from inside an open Radix dialog. For PDF/fixed-layout books, that let foliate replace iframe/page state while the modal was still closing and restoring focus, which could hang the note-to-original flow even though normal reading and annotation replay worked.
+
+### 2. Why Fixes Failed
+
+1. The renderer race fix was necessary but not sufficient; it did not address dialog focus cleanup.
+2. Direct `view.goTo()` from modal button handlers assumed navigation and dialog teardown could happen in the same turn.
+
+### 3. Prevention Mechanisms
+
+| Priority | Mechanism | Specific Action | Status |
+|----------|-----------|-----------------|--------|
+| P0 | UI sequencing | Close note dialogs first, then schedule foliate navigation on the next turn. | DONE |
+| P0 | Test Coverage | Add a regression test for dialog-close-before-navigation ordering. | DONE |
+| P1 | Documentation | Record the note-dialog portal vs reader-navigation contract in the app state guide and cross-layer guide. | DONE |
+
+### 4. Systematic Expansion
+
+- **Similar Issues**: Any portal dialog that launches reader navigation, sheet switching, or book opening can race focus cleanup.
+- **Design Improvement**: Keep portal teardown and reader navigation in separate turns.
+- **Process Improvement**: For modal actions, verify the close path and the navigation path independently.
+
+### 5. Knowledge Capture
+
+- [x] Updated `.trellis/spec/app/frontend/state-management.md`
+- [x] Updated `.trellis/spec/guides/cross-layer-thinking-guide.md`

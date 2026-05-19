@@ -1,4 +1,5 @@
 import { useNotepad } from "@/components/notepad/hooks";
+import { runAfterDialogClose } from "@/components/notepad/dialog-navigation";
 import { NoteEditorDialog } from "@/components/notepad/note-editor-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -148,8 +149,10 @@ function UnifiedNoteDetailDialog({
               type="button"
               className="h-11 w-full sm:w-auto"
               onClick={() => {
-                onOpenChange(false);
-                onOpenReaderTarget(readerTarget);
+                runAfterDialogClose(
+                  () => onOpenChange(false),
+                  () => onOpenReaderTarget(readerTarget),
+                );
               }}
             >
               <BookOpen className="size-4" />
@@ -228,8 +231,10 @@ export function UnifiedNotesList({
               cfi: note.cfi,
             });
             if (!target || !onOpenReaderTarget) return;
-            setSelectedItem(null);
-            onOpenReaderTarget(target);
+            runAfterDialogClose(
+              () => setSelectedItem(null),
+              () => onOpenReaderTarget(target),
+            );
           }}
           onSave={handleUpdateNote}
         />

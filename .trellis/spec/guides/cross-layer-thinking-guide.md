@@ -44,6 +44,8 @@ For each arrow, ask:
 | Foliate Renderer ↔ Reader UI/Annotations | one renderer emits/returns the expected navigation and overlayer contract while another renderer silently lacks it |
 | Reader Progress CFI ↔ Annotation Replay | reflowable EPUB progress is a visible range CFI, while fixed-layout/PDF progress can be a page-level CFI with `range: null`; replay logic must branch on that contract |
 | Reader Pending Target ↔ Saved Location Restore | opening from notes requires the pending target to win over stale saved reader location during initialization |
+| Fixed-Layout/PDF Async Renderer ↔ Annotation Replay | app replay treats `relocate` as page-ready, so stale section/iframe/render completions must not mutate current frames or emit readiness events |
+| Note Dialog Portal ↔ Reader Navigation | modal focus cleanup must finish before PDF/fixed-layout navigation replaces iframes |
 
 ### Step 3: Define Contracts
 
@@ -98,6 +100,18 @@ For each boundary:
 
 **Good**: If a pending reader target exists, use it as the initial foliate location and only fall back to the saved location when no target is pending. Treat both thrown navigation errors and unresolved `goTo()` results as failures.
 
+### Mistake 8: Emitting Reader Readiness Before Fixed-Layout/PDF Async Work Settles
+
+**Bad**: A fixed-layout renderer sets the current index or emits `relocate` as soon as a target page is requested, while old section loads, iframe loads, or PDF renders can still complete later and replace the visible frame.
+
+**Good**: Treat fixed-layout/PDF navigation as a tokened async transaction. Only the latest navigation may mutate active frame fields, redraw overlays, or emit `relocate`, and the event should fire after the PDF text layer and overlayer are ready for annotation replay.
+
+### Mistake 9: Navigating The Reader Before Closing A Note Dialog
+
+**Bad**: A note dialog button calls `view.goTo(cfi)` first and closes the Radix dialog afterward. PDF/fixed-layout navigation can replace iframe content while the portal is still trapping/restoring focus.
+
+**Good**: Close the dialog first, then schedule the reader navigation on the next turn. This keeps modal focus cleanup separate from foliate iframe replacement and page render work.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -124,6 +138,8 @@ After implementation:
 - [ ] For close/reopen flows, reopened the same PDF after teardown and verified stale renderer events and cached object URLs do not survive the previous session
 - [ ] For fixed-layout/PDF annotation replay, tested close/reopen and note-jump flows with saved page-internal highlight and note-marker CFIs
 - [ ] For note jumps, tested invalid/stale saved locations do not prevent the pending target from initializing the reader
+- [ ] For fixed-layout/PDF navigation races, tested stale section loads, stale iframe loads, and stale PDF render completions resolving after a newer page navigation
+- [ ] For note-dialog "open original", verified the dialog closes before reader navigation is scheduled
 
 ---
 

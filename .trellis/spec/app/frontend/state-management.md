@@ -240,6 +240,7 @@ pub struct UpdateNoteData {
 - Editing writes only the user's `content` unless the caller explicitly updates source fields. Do not expose manual title editing for source-bound notes.
 - Reader marker clicks emit `note:<id>` and must open the independent note editor from the latest note state. If the note is not present in the current source-bound reader list, fetch it by id instead of silently ignoring the marker.
 - Saving from the reader note editor must merge the backend-returned `Note` into the current active note state when ids match; do not keep a stale pre-save `activeNote` object.
+- "Open original" actions from note dialogs must close the dialog first and defer reader navigation to the next turn. Do not synchronously call `view.goTo()` while a Radix dialog is still open; PDF/fixed-layout navigation can replace iframes while dialog focus cleanup is still running.
 - Mutations through `useNotepad` must invalidate `["notes"]`, per-note detail, and `["mobile-unified-notes"]` so reader sheets and management screens stay in sync.
 - `UpdateNoteData` uses `Option<Option<T>>` partial-update semantics: outer `None` means leave the field unchanged, `Some(None)` means clear it to SQL `NULL`, and `Some(Some(value))` means write a new value.
 - Dynamic note updates must append assignment fragments and bind placeholders as one logical `SET` item. When using `sqlx::QueryBuilder::separated(", ")`, call `push_bind_unseparated()` after `push("field = ")`; otherwise sqlx can insert a comma before the bind and produce invalid SQL such as `content = , ?`.
