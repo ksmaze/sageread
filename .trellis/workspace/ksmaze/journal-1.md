@@ -803,3 +803,37 @@ Migrated Biome 2 config, scoped checks to the app workspace, enabled gitignore-a
 ### Next Steps
 
 - None - task complete
+
+
+## Session 24: Android Process Text Translation
+
+**Date**: 2026-05-19
+**Task**: Android Process Text Translation
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Added Android ACTION_PROCESS_TEXT translation action to the reader selection popup with frontend tests, Tauri bridge, Kotlin plugin, and spec guidance.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4b32bb2` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
