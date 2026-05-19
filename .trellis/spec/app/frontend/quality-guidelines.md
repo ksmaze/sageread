@@ -93,6 +93,70 @@ pnpm --filter app exec tsx --test src/lib/pdf-assets.test.ts
 
 For docs-only changes, verify the edited docs have no placeholders and links point to existing files.
 
+## Scenario: Biome Workspace Configuration
+
+### 1. Scope / Trigger
+
+Use this when changing root `biome.json`, upgrading `@biomejs/biome`, or adding workspace lint/format paths.
+
+### 2. Signatures
+
+- Config file: `biome.json`
+- Upgrade check: `pnpm exec biome migrate`
+- Focused config check: `pnpm exec biome check biome.json package.json pnpm-workspace.yaml --diagnostic-level=error --max-diagnostics=20`
+- Full app check: `pnpm exec biome check . --diagnostic-level=error --max-diagnostics=1`
+
+### 3. Contracts
+
+- `$schema` must match the installed Biome major/minor version.
+- `files.includes` should cover root config files and app-owned file types under `packages/app`.
+- Enable `vcs.useIgnoreFile` so `dist`, `target`, dependency folders, and other `.gitignore` entries stay out of Biome runs.
+- Keep `packages/foliate-js` out of the root Biome config unless it gets a package-specific Biome config. Its package spec documents separate ESLint formatting preferences.
+- Import organization belongs under `assist.actions.source.organizeImports` in Biome 2.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required response |
+|---|---|
+| Schema version mismatch | Run `pnpm exec biome migrate` and update `$schema`. |
+| Unknown config key after upgrade | Replace it with the documented Biome 2 key instead of suppressing diagnostics. |
+| Generated output is scanned | Use `.gitignore` integration and force-ignore generated paths. |
+| Full app check reports existing source formatting/import issues | Treat those as source cleanup work, not as a config migration failure. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: migrate config keys, scope includes to app-owned paths, verify with `biome migrate` and focused config check.
+- Base: full app check reaches source diagnostics, even if existing app files are not yet Biome-clean.
+- Bad: include `.trellis`, generated output, or `packages/foliate-js` in the root Biome config and create thousands of unrelated diagnostics.
+
+### 6. Tests Required
+
+- Run `pnpm exec biome migrate` after changing the config; it must report no migration needed.
+- Run the focused config check above; it must exit 0.
+- Run `pnpm --filter app build` when the change affects app tooling scope.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```json
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "files": { "ignore": [] },
+  "organizeImports": { "enabled": true }
+}
+```
+
+#### Correct
+
+```json
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+  "files": { "includes": ["biome.json", "packages/app/**/*.ts", "packages/app/**/*.tsx"] },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } }
+}
+```
+
 When UI behavior changes, manually or with device emulation verify the relevant Android surfaces:
 
 - `390x844` phone portrait
