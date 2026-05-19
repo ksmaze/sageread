@@ -734,3 +734,37 @@ Fixed repeated PDF reopen white-screen/loading issue by destroying foliate books
 ### Next Steps
 
 - None - task complete
+
+
+## Session 22: Fix Android PDF note navigation freeze
+
+**Date**: 2026-05-18
+**Task**: Fix Android PDF note navigation freeze
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Fixed Android PDF note/open-original freezes by removing generated PDF blob iframe navigation, improving ReaderNav logcat serialization, and documenting the Tauri/WebView iframe URL contract.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `56e915b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
