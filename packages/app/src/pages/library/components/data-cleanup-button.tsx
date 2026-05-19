@@ -1,8 +1,8 @@
-import { getTags } from "@/services/tag-service";
-import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import { Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { getTags } from "@/services/tag-service";
+import type { BookWithStatusAndUrls } from "@/types/simple-book";
 
 interface DataCleanupButtonProps {
   books: BookWithStatusAndUrls[];

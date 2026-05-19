@@ -20,7 +20,7 @@ export interface UseReasoningTimerReturn {
 export function useReasoningTimer(options: UseReasoningTimerOptions = {}): UseReasoningTimerReturn {
   const { messageId, existingTimes = {}, onTimesChange } = options;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const stableExistingTimes = useMemo(() => existingTimes, [JSON.stringify(existingTimes)]);
 
   const [reasoningTimes, setReasoningTimes] = useState<ReasoningTimes>(stableExistingTimes);
@@ -38,7 +38,7 @@ export function useReasoningTimer(options: UseReasoningTimerOptions = {}): UseRe
     timersRef.current = {};
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     clearAllTimers();
     startTimesRef.current = {};
@@ -127,7 +127,7 @@ export function useReasoningTimer(options: UseReasoningTimerOptions = {}): UseRe
     const result = { ...reasoningTimes };
 
     Object.entries(currentTimesRef.current).forEach(([index, time]) => {
-      const reasoningIndex = Number.parseInt(index);
+      const reasoningIndex = Number.parseInt(index, 10);
       if (time > 0) {
         result[reasoningIndex] = time;
       }

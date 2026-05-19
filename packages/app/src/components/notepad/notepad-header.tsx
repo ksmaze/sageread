@@ -1,6 +1,6 @@
+import { Highlighter, NotebookPen, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Highlighter, NotebookPen, Search } from "lucide-react";
 import type { NotepadTab } from "./notepad-container";
 
 interface NotepadHeaderProps {

@@ -1,3 +1,6 @@
+import { appDataDir } from "@tauri-apps/api/path";
+import { readTextFile } from "@tauri-apps/plugin-fs";
+import { create } from "zustand";
 import { type BookDoc, DocumentLoader } from "@/lib/document";
 import { loadBookConfig, saveBookConfig } from "@/services/app-service";
 import { getBookFileName, getBookMimeType } from "@/services/book-format";
@@ -5,13 +8,10 @@ import { getBookById } from "@/services/book-service";
 import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
 import type { SystemSettings } from "@/types/settings";
 import type { SimpleBook } from "@/types/simple-book";
+import type { TabProperties } from "@/types/tabs";
 import type { FoliateView } from "@/types/view";
 import { getBaseFilename, getPrimaryLanguage } from "@/utils/book";
 import { updateToc } from "@/utils/toc";
-import { appDataDir } from "@tauri-apps/api/path";
-import { readTextFile } from "@tauri-apps/plugin-fs";
-import type { TabProperties } from "@/types/tabs";
-import { create } from "zustand";
 import { useAppSettingsStore } from "./app-settings-store";
 import { useLibraryStore } from "./library-store";
 

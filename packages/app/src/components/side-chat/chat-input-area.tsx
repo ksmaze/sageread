@@ -1,8 +1,8 @@
+import { ArrowUp, BookOpen, Brain, Notebook, Paperclip, Quote, X } from "lucide-react";
+import { useRef } from "react";
 import { PromptInput, PromptInputAction, PromptInputTextarea } from "@/components/prompt-kit/prompt-input";
 import { Button } from "@/components/ui/button";
 import type { ChatReference } from "@/types/message";
-import { ArrowUp, BookOpen, Brain, Notebook, Paperclip, Quote, X } from "lucide-react";
-import { useRef } from "react";
 import { useIsStandaloneChatSurface } from "./chat-surface-context";
 import { ContextPopover } from "./context-popover";
 
@@ -104,7 +104,7 @@ export function ChatInputArea({
                 <div />
               )}
               {shouldShowQuickActionsInInput && (
-                <div className="flex flex-wrap items-center gap-2 ">
+                <div className="flex flex-wrap items-center gap-2">
                   {quickActions.map(({ label, icon: Icon, prompt }) => (
                     <PromptInputAction key={label} tooltip={label}>
                       <Button

@@ -29,7 +29,7 @@ const MIME_BY_FORMAT: Record<BookFormat, string> = {
 
 export function getBookFormat(fileName: string): BookFormat | null {
   const extension = fileName.toLowerCase().split(".").pop();
-  return extension ? FORMAT_BY_EXTENSION[extension] ?? null : null;
+  return extension ? (FORMAT_BY_EXTENSION[extension] ?? null) : null;
 }
 
 export function getBookMimeType(format: BookFormat): string {

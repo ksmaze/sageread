@@ -1,6 +1,6 @@
+import * as epubcfi from "foliate-js/epubcfi.js";
 import type { BookFormat } from "@/types/book";
 import type { Contributor, LanguageMap } from "@/utils/book";
-import * as epubcfi from "foliate-js/epubcfi.js";
 
 // A groupBy polyfill for foliate-js
 Object.groupBy ??= (iterable, callbackfn) => {

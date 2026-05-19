@@ -1,9 +1,9 @@
+import { useEffect, useRef, useState } from "react";
 import { useUICSS } from "@/hooks/use-ui-css";
 import type { BookDoc } from "@/lib/document";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useThemeStore } from "@/store/theme-store";
-import type { BookConfig } from "@/types/book";
-import type { ViewSettings } from "@/types/book";
+import type { BookConfig, ViewSettings } from "@/types/book";
 import type { Insets } from "@/types/misc";
 import type { FoliateView } from "@/types/view";
 import {
@@ -13,7 +13,6 @@ import {
   readerNavigationInfo,
 } from "@/utils/reader-navigation-debug";
 import { applyFixedlayoutStyles, getStyles } from "@/utils/style";
-import { useEffect, useRef, useState } from "react";
 import { useReaderStoreApi } from "../../components/reader-provider";
 import { useMouseEvent } from "../use-iframe-events";
 import { usePagination } from "../use-pagination";
@@ -34,7 +33,7 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
   useUICSS(bookId);
   useProgressAutoSave(bookId);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     if (isInitialized.current || !containerRef.current) {
       readerNavigationInfo("use-foliate-viewer.init.skip", {
@@ -122,7 +121,7 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
     };
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     const view = managerRef.current?.getView();
     if (view?.renderer && isInitialized.current) {
@@ -131,12 +130,14 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
 
       if (bookDoc.rendition?.layout === "pre-paginated") {
         const docs = view.renderer.getContents();
-        docs.forEach(({ doc }) => applyFixedlayoutStyles(doc, settings.globalViewSettings, themeCode));
+        docs.forEach(({ doc }) => {
+          applyFixedlayoutStyles(doc, settings.globalViewSettings, themeCode);
+        });
       }
     }
   }, [themeCode, isDarkMode, settings.globalViewSettings, bookDoc.rendition?.layout]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     const view = managerRef.current?.getView();
     if (view?.renderer && isInitialized.current) {

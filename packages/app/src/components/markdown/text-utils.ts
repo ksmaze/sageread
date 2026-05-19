@@ -126,7 +126,7 @@ function calculateSentenceScore(sentence: string): number {
     if (spaceCount >= 2) score -= 3;
   }
 
-  const punctuationCount = (sentence.match(/[，,；;：:（）()【】\[\]]/g) || []).length;
+  const punctuationCount = (sentence.match(/[，,；;：:（）()【】[\]]/g) || []).length;
   if (punctuationCount > 3) {
     score -= 1;
   }
@@ -252,7 +252,7 @@ function getCandidatesFromMarkdown(text: string): string[] {
     for (const s of sents) {
       // 过滤明显不适合全文匹配的句子：
       const isHeadingLike = /^[#>\-\d.\s]*[A-Za-z\u4e00-\u9fff]{1,8}$/.test(s);
-      const hasWeirdMarkdown = /[#`\[\]\(\)]/.test(s);
+      const hasWeirdMarkdown = /[#`[\]()]/.test(s);
       const tooShort = s.length < 6;
       const tooLong = s.length > 180;
 

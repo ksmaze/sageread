@@ -1,7 +1,7 @@
-import { deleteThread, getAllThreads, getThreadsBybookId } from "@/services/thread-service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { deleteThread, getAllThreads, getThreadsBybookId } from "@/services/thread-service";
 
 interface UseThreadsProps {
   bookId?: string | null;

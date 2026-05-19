@@ -1,7 +1,7 @@
-import type { ChatContext } from "@/hooks/use-chat-state";
 import { type UIMessage, type UseChatOptions, useChat as useChatSDK } from "@ai-sdk/react";
 import type { ChatInit, LanguageModel } from "ai";
 import { useEffect, useRef } from "react";
+import type { ChatContext } from "@/hooks/use-chat-state";
 import { CustomChatTransport } from "../custom-chat-transport";
 
 type CustomChatOptions = Omit<ChatInit<UIMessage>, "transport"> &

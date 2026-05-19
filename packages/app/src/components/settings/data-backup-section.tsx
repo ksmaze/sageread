@@ -1,3 +1,6 @@
+import { AlertTriangle, ChevronDownIcon, Download, Upload } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,11 +12,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { exportBackup, importBackup, type BackupImportMode } from "@/services/backup-service";
-import { AlertTriangle, ChevronDownIcon, Download, Upload } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { type BackupImportMode, exportBackup, importBackup } from "@/services/backup-service";
 
 const importModeLabels: Record<BackupImportMode, string> = {
   merge: "合并",
@@ -68,21 +73,23 @@ export default function DataBackupSection() {
 
   return (
     <section className="rounded-lg bg-muted/80 p-4">
-      <h2 className="mb-4 text dark:text-neutral-200">数据</h2>
+      <h2 className="text mb-4 dark:text-neutral-200">数据</h2>
 
       <div className="space-y-4">
         <div className="flex gap-2 rounded-md border border-amber-300/70 bg-amber-50 p-3 text-amber-950 dark:border-amber-800/70 dark:bg-amber-950/25 dark:text-amber-100">
           <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
           <div className="space-y-1">
             <p className="text-sm">备份 zip 未加密，包含书籍、笔记、AI 配置和 API Key。</p>
-            <p className="text-xs opacity-80">请只保存到可信位置；合并导入会保留当前设备配置，覆盖导入会恢复备份内配置。</p>
+            <p className="text-xs opacity-80">
+              请只保存到可信位置；合并导入会保留当前设备配置，覆盖导入会恢复备份内配置。
+            </p>
           </div>
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <div>
             <span className="text dark:text-neutral-200">导出数据</span>
-            <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">打包当前书籍、数据库和 Tauri 配置。</p>
+            <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">打包当前书籍、数据库和 Tauri 配置。</p>
           </div>
           <Button onClick={handleExport} disabled={isBusy} variant="outline" className="min-w-24">
             <Download className="h-4 w-4" />
@@ -93,7 +100,7 @@ export default function DataBackupSection() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <span className="text dark:text-neutral-200">导入数据</span>
-            <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">
               合并按更新时间保留较新记录，覆盖会替换本机数据。
             </p>
           </div>

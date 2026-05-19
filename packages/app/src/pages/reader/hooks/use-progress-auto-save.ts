@@ -1,6 +1,6 @@
+import { useCallback, useEffect } from "react";
 import { getBookStatus, updateBookStatus } from "@/services/book-service";
 import { throttle } from "@/utils/throttle";
-import { useCallback, useEffect } from "react";
 import { useReaderStore } from "../components/reader-provider";
 
 export const useProgressAutoSave = (bookId: string) => {
@@ -9,7 +9,7 @@ export const useProgressAutoSave = (bookId: string) => {
 
   const updateBookProgressWithStatus = useCallback(async () => {
     const currentProgress = progress;
-    if (!currentProgress || !currentProgress.pageinfo || !location) {
+    if (!currentProgress?.pageinfo || !location) {
       return;
     }
 
@@ -54,10 +54,10 @@ export const useProgressAutoSave = (bookId: string) => {
 
   const immediateSaveConfig = performSave;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const saveProgress = useCallback(throttle(performSave, 5000), [performSave]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     saveProgress();
     return () => {

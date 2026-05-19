@@ -1,11 +1,11 @@
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { tauriStorageKey } from "@/constants/tauri-storage";
 import { tauriStorage } from "@/lib/tauri-storage";
 import type { ReaderNavigationTarget, ReaderStore } from "@/pages/reader/store/create-reader-store";
 import { createReaderStore } from "@/pages/reader/store/create-reader-store";
 import type { TabProperties } from "@/types/tabs";
 import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface Tab extends TabProperties {
   bookId: string;

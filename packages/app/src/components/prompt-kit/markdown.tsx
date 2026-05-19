@@ -1,6 +1,3 @@
-import { processTextWithAnnotations } from "@/components/markdown";
-import { cn } from "@/lib/utils";
-import { getFullPathFromAppData } from "@/utils/path";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { marked } from "marked";
 import { memo, useEffect, useId, useMemo, useState } from "react";
@@ -8,6 +5,9 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkGfm from "remark-gfm";
+import { processTextWithAnnotations } from "@/components/markdown";
+import { cn } from "@/lib/utils";
+import { getFullPathFromAppData } from "@/utils/path";
 import { CodeBlock, CodeBlockCode } from "./code-block";
 
 export type MarkdownProps = {
@@ -107,6 +107,34 @@ const INITIAL_COMPONENTS: Partial<Components> = {
   },
 };
 
+function MarkdownImage({ src, alt, ...props }: { src?: string; alt?: string; [key: string]: any }) {
+  const [resolvedSrc, setResolvedSrc] = useState<string>(src || "");
+
+  useEffect(() => {
+    if (!src) {
+      return;
+    }
+
+    // 处理相对于appDataDir的路径
+    if (isAppDataRelativePath(src)) {
+      getFullPathFromAppData(src)
+        .then((fullPath) => {
+          const tauriSrc = convertFileSrc(fullPath);
+          setResolvedSrc(tauriSrc);
+        })
+        .catch((error) => {
+          console.warn(`Failed to resolve app-data path: ${src}`, error);
+          setResolvedSrc(src);
+        });
+    } else {
+      // 其他路径直接使用
+      setResolvedSrc(src);
+    }
+  }, [src]);
+
+  return <img src={resolvedSrc} alt={alt} {...props} />;
+}
+
 const MemoizedMarkdownBlock = memo(
   function MarkdownBlock({
     content,
@@ -134,41 +162,9 @@ function MarkdownComponent({ children, id, className, components }: MarkdownProp
   const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children]);
 
   const finalComponents = useMemo(() => {
-    const imgComponent = function ImgComponent({
-      src,
-      alt,
-      ...props
-    }: { src?: string; alt?: string; [key: string]: any }) {
-      const [resolvedSrc, setResolvedSrc] = useState<string>(src || "");
-
-      useEffect(() => {
-        if (!src) {
-          return;
-        }
-
-        // 处理相对于appDataDir的路径
-        if (isAppDataRelativePath(src)) {
-          getFullPathFromAppData(src)
-            .then((fullPath) => {
-              const tauriSrc = convertFileSrc(fullPath);
-              setResolvedSrc(tauriSrc);
-            })
-            .catch((error) => {
-              console.warn(`Failed to resolve app-data path: ${src}`, error);
-              setResolvedSrc(src);
-            });
-        } else {
-          // 其他路径直接使用
-          setResolvedSrc(src);
-        }
-      }, [src]);
-
-      return <img src={resolvedSrc} alt={alt} {...props} />;
-    };
-
     return {
       ...INITIAL_COMPONENTS,
-      img: imgComponent,
+      img: MarkdownImage,
       ...components,
     };
   }, [components]);

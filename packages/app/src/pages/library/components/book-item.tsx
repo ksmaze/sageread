@@ -1,19 +1,18 @@
-import AITagConfirmDialog from "@/components/ai/tag-confirm-dialog";
-import { useDownloadImage } from "@/hooks/use-download-image";
-import { useModelSelector } from "@/hooks/use-model-selector";
-import { type AITagSuggestion, generateTagsWithAI } from "@/services/ai-tag-service";
-import { updateBookVectorizationMeta } from "@/services/book-service";
-import { type EpubIndexResult, indexEpub } from "@/services/book-service";
-import { createTag, getTags } from "@/services/tag-service";
-import { useLayoutStore } from "@/store/layout-store";
-import { useNotificationStore } from "@/store/notification-store";
-import type { BookWithStatusAndUrls } from "@/types/simple-book";
-import { getCurrentVectorModelConfig } from "@/utils/model";
 import { listen } from "@tauri-apps/api/event";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { FileText, MoreHorizontal } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import AITagConfirmDialog from "@/components/ai/tag-confirm-dialog";
+import { useDownloadImage } from "@/hooks/use-download-image";
+import { useModelSelector } from "@/hooks/use-model-selector";
+import { type AITagSuggestion, generateTagsWithAI } from "@/services/ai-tag-service";
+import { type EpubIndexResult, indexEpub, updateBookVectorizationMeta } from "@/services/book-service";
+import { createTag, getTags } from "@/services/tag-service";
+import { useLayoutStore } from "@/store/layout-store";
+import { useNotificationStore } from "@/store/notification-store";
+import type { BookWithStatusAndUrls } from "@/types/simple-book";
+import { getCurrentVectorModelConfig } from "@/utils/model";
 import BookActionDrawer from "./book-action-drawer";
 import EditInfo from "./edit-info";
 
@@ -250,7 +249,7 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
       // Show the actual error message from the backend if available
       const detailedError = err instanceof Error ? err.message : String(err);
       toast.error(`向量化失败: ${detailedError}`);
-      addNotification(errorMessage + ": " + detailedError);
+      addNotification(`${errorMessage}: ${detailedError}`);
       if (onRefresh) await onRefresh();
     }
   }, [book.format, book.id, book.title, onRefresh]);
@@ -258,19 +257,19 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
   const handleToggleReadStatus = useCallback(async () => {
     if (!onUpdate) return;
     const isUnread = !book.status || book.status.status === "unread";
-    // If currently unread, mark as read (progress 100%?). 
+    // If currently unread, mark as read (progress 100%?).
     // Actually the interface is simple status toggle for now or we can set status.
     // The native menu logic was just logging, let's make it real if possible or just log.
     // For now, let's just log and show toast as placeholder since actual logic might depend on backend
     console.log(isUnread ? "Mark as Read" : "Mark as Unread");
     toast.info("Updating read status...");
-    
+
     // Example implementation if we wanted to update:
     // await onUpdate(book.id, { ... });
-    // But BookUpdateData only supports title, author, coverPath, tags. 
+    // But BookUpdateData only supports title, author, coverPath, tags.
     // It seems we can't update status via onUpdate based on the interface.
     // We'll leave it as a placeholder.
-  }, [book.status]);
+  }, [book.status, onUpdate]);
 
   const renderProgress = () => {
     if (!book.status) {
@@ -304,7 +303,7 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
             style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
-        <span className="shrink-0 text-neutral-500 text-[10px] sm:text-xs dark:text-neutral-400">{progress}%</span>
+        <span className="shrink-0 text-[10px] text-neutral-500 sm:text-xs dark:text-neutral-400">{progress}%</span>
       </div>
     );
   };
@@ -351,15 +350,12 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
   const longPressTriggered = useRef(false);
 
-  const showMenuAt = useCallback(
-    async () => {
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
-      setShowActionDrawer(true);
-    },
-    [],
-  );
+  const showMenuAt = useCallback(async () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+    setShowActionDrawer(true);
+  }, []);
 
   const handleMenuClick = useCallback(
     (e: React.MouseEvent) => {
@@ -387,20 +383,17 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
     [showMenuAt],
   );
 
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-      }
-      if (longPressTriggered.current) {
-        e.preventDefault();
-        longPressTriggered.current = false;
-      }
-      touchStartPos.current = null;
-    },
-    [],
-  );
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (longPressTriggered.current) {
+      e.preventDefault();
+      longPressTriggered.current = false;
+    }
+    touchStartPos.current = null;
+  }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchStartPos.current || !longPressTimer.current) return;
@@ -442,17 +435,24 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
           onTouchEnd={handleTouchEnd}
           onTouchMove={handleTouchMove}
           onTouchCancel={handleTouchCancel}
-          className="rounded-r-xl rounded-l-md sm:rounded-r-2xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 select-none"
+          className="select-none rounded-r-xl rounded-l-md border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-md sm:rounded-r-2xl dark:border-neutral-700 dark:bg-neutral-800"
           style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", touchAction: "manipulation" }}
         >
           <div className="relative p-1.5 pb-0 sm:p-2 sm:pb-0">
             <div className="mb-1 sm:mb-2">
-              <h4 className="min-w-0 truncate text-neutral-600 text-xs leading-tight sm:text-sm dark:text-neutral-200">{book.title}</h4>
+              <h4 className="min-w-0 truncate text-neutral-600 text-xs leading-tight sm:text-sm dark:text-neutral-200">
+                {book.title}
+              </h4>
             </div>
 
             <div className="aspect-[4/5] w-full overflow-hidden">
               {book.coverUrl ? (
-                <img src={book.coverUrl} alt={book.title} className="h-full w-full object-cover pointer-events-none" draggable={false} />
+                <img
+                  src={book.coverUrl}
+                  alt={book.title}
+                  className="pointer-events-none h-full w-full object-cover"
+                  draggable={false}
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-300 dark:from-neutral-700 dark:to-neutral-800">
                   <div className="p-4 text-center">
@@ -475,11 +475,8 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
             <div className="min-w-0 flex-1 overflow-hidden">{renderProgress()}</div>
             <div className="flex items-center gap-2">
               {renderVectorizationStatus()}
-              <div
-                className="p-2 -mr-2 cursor-pointer"
-                onClick={handleMenuClick}
-              >
-                <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-500 dark:text-neutral-400" />
+              <div className="-mr-2 cursor-pointer p-2" onClick={handleMenuClick}>
+                <MoreHorizontal className="h-4 w-4 text-neutral-500 sm:h-5 sm:w-5 dark:text-neutral-400" />
               </div>
             </div>
           </div>
@@ -499,10 +496,10 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
         onToggleReadStatus={handleToggleReadStatus}
         onVectorize={handleVectorizeBook}
         onManageTags={() => {
-           // For now, we don't have a separate tag manager dialog, 
-           // we could expand it in the drawer later.
-           toast.info("请在编辑信息中管理标签");
-           setShowEditDialog(true);
+          // For now, we don't have a separate tag manager dialog,
+          // we could expand it in the drawer later.
+          toast.info("请在编辑信息中管理标签");
+          setShowEditDialog(true);
         }}
         onAITags={handleAIGenerateTags}
         vectorizeProgress={vectorizeProgress}
@@ -517,7 +514,6 @@ export default function BookItem({ book, onDelete, onUpdate, onRefresh }: BookIt
         onConfirm={handleAITagConfirm}
         isLoading={isAITagLoading}
       />
-
     </>
   );
 }

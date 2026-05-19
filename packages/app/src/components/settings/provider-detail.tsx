@@ -1,12 +1,12 @@
+import { ask } from "@tauri-apps/plugin-dialog";
+import { Pencil, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { fetchModelsFromProvider } from "@/services/provider-service";
 import { useProviderStore } from "@/store/provider-store";
 import { throttle } from "@/utils/throttle";
-import { ask } from "@tauri-apps/plugin-dialog";
-import { Pencil, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
 import ApiConfigSection from "./api-config-section";
 import ModelsManagement from "./models-management";
 import { ProviderIcons } from "./settings-dialog";
@@ -142,7 +142,7 @@ export default function ProviderDetailSettings({ providerId, onBack }: ProviderD
   };
 
   const handleRefreshModels = async () => {
-    if (!provider || !provider.baseUrl) {
+    if (!provider?.baseUrl) {
       setRefreshError("请先配置基础URL");
       return;
     }

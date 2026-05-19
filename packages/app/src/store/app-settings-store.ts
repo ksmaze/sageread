@@ -1,3 +1,5 @@
+import { create } from "zustand";
+import { createJSONStorage, persist, subscribeWithSelector } from "zustand/middleware";
 import { tauriStorageKey } from "@/constants/tauri-storage";
 import { tauriStorage } from "@/lib/tauri-storage";
 import {
@@ -12,8 +14,6 @@ import {
 } from "@/services/constants";
 import type { SystemSettings } from "@/types/settings";
 import { isCJKEnv } from "@/utils/misc";
-import { create } from "zustand";
-import { createJSONStorage, persist, subscribeWithSelector } from "zustand/middleware";
 
 interface AppSettingsState {
   isSettingsDialogOpen: boolean;

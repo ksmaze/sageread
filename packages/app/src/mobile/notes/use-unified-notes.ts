@@ -1,15 +1,15 @@
+import { useQuery } from "@tanstack/react-query";
 import { getBookNotes } from "@/services/book-note-service";
 import { getBookById, getBooks } from "@/services/book-service";
 import { getNotes } from "@/services/note-service";
 import type { SimpleBook } from "@/types/simple-book";
-import { useQuery } from "@tanstack/react-query";
 import {
   type BookNoteOwner,
-  type UnifiedNoteItem,
-  type UnifiedNoteType,
   createUnifiedNoteFromBookNote,
   createUnifiedNoteFromStandaloneNote,
   filterUnifiedNotesByType,
+  type UnifiedNoteItem,
+  type UnifiedNoteType,
 } from "./unified-note-model";
 
 export type { UnifiedNoteItem, UnifiedNoteType } from "./unified-note-model";

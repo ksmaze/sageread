@@ -1,7 +1,7 @@
+import dayjs from "dayjs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Note } from "@/types/note";
-import dayjs from "dayjs";
 
 interface NoteDetailDialogProps {
   note: Note | null;

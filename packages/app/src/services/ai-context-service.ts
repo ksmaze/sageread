@@ -1,6 +1,6 @@
+import { generateText } from "ai";
 import { createModelInstance } from "@/ai/providers/factory";
 import { useProviderStore } from "@/store/provider-store";
-import { generateText } from "ai";
 
 export interface AIContextResponse {
   context: string;

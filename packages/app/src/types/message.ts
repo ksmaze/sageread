@@ -15,18 +15,18 @@ export interface MessageMetadata {
   // Provider information
   provider?: SelectedModel | null;
   selectedModel?: SelectedModel | null;
-  
+
   // Timestamps
   createdAt?: number;
   updatedAt?: number;
-  
+
   // Usage information
   totalUsage?: {
     totalTokens: number;
     promptTokens?: number;
     completionTokens?: number;
   };
-  
+
   // Reasoning timing data
   reasoningTimes?: ReasoningTimes;
 
@@ -37,7 +37,7 @@ export interface MessageMetadata {
 /**
  * Extended UIMessage with typed metadata
  */
-export interface ExtendedUIMessage extends Omit<UIMessage, 'metadata'> {
+export interface ExtendedUIMessage extends Omit<UIMessage, "metadata"> {
   metadata?: MessageMetadata;
 }
 
@@ -45,7 +45,7 @@ export interface ExtendedUIMessage extends Omit<UIMessage, 'metadata'> {
  * Type guard to check if a message has reasoning times
  */
 export function hasReasoningTimes(message: UIMessage): message is ExtendedUIMessage {
-  if (!message || !message.metadata) {
+  if (!message?.metadata) {
     return false;
   }
   return !!(message.metadata as MessageMetadata)?.reasoningTimes;
@@ -55,7 +55,7 @@ export function hasReasoningTimes(message: UIMessage): message is ExtendedUIMess
  * Helper function to get reasoning times from a message
  */
 export function getReasoningTimes(message: UIMessage): ReasoningTimes | undefined {
-  if (!message || !message.metadata) {
+  if (!message?.metadata) {
     return undefined;
   }
   return (message.metadata as MessageMetadata)?.reasoningTimes;
@@ -68,7 +68,7 @@ export function setReasoningTimes(message: UIMessage, reasoningTimes: ReasoningT
   return {
     ...message,
     metadata: {
-      ...(message?.metadata as MessageMetadata || {}),
+      ...((message?.metadata as MessageMetadata) || {}),
       reasoningTimes,
     },
   };
@@ -80,7 +80,7 @@ export function setReasoningTimes(message: UIMessage, reasoningTimes: ReasoningT
 export function createMessageMetadata(
   provider?: SelectedModel | null,
   reasoningTimes?: ReasoningTimes,
-  totalUsage?: MessageMetadata['totalUsage']
+  totalUsage?: MessageMetadata["totalUsage"],
 ): MessageMetadata {
   return {
     provider,

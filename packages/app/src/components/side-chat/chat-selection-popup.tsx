@@ -1,7 +1,7 @@
-import { useReaderStore } from "@/pages/reader/components/reader-provider";
-import { type BookDataState, useChatReaderStore } from "@/store/chat-reader-store";
 import { Check, Copy, NotebookPen, Quote } from "lucide-react";
 import { useCallback, useState } from "react";
+import { useReaderStore } from "@/pages/reader/components/reader-provider";
+import { type BookDataState, useChatReaderStore } from "@/store/chat-reader-store";
 import { useNotepad } from "../notepad/hooks";
 import { useIsStandaloneChatSurface } from "./chat-surface-context";
 
@@ -52,7 +52,7 @@ export const ChatSelectionPopup = ({ selectedText, position, onClose, onAskAi, p
         const content = selectedText.trim();
         const title = content.length > 50 ? `${content.substring(0, 50)}...` : content;
 
-        let bookMeta = undefined;
+        let bookMeta: { title: string; author?: string } | undefined;
         if (bookData?.book) {
           bookMeta = {
             title: bookData.book.title,

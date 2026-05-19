@@ -1,12 +1,17 @@
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useThemeStore } from "@/store/theme-store";
-import type { ThemeMode } from "@/styles/themes";
 import { getVersion } from "@tauri-apps/api/app";
 import clsx from "clsx";
 import { ChevronDownIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useThemeStore } from "@/store/theme-store";
+import type { ThemeMode } from "@/styles/themes";
 import DataBackupSection from "./data-backup-section";
 import { GENERAL_SETTINGS_SECTIONS } from "./general-settings-model";
 
@@ -37,7 +42,7 @@ export default function GeneralSettings() {
     <div className="space-y-8 p-4 pt-3">
       {GENERAL_SETTINGS_SECTIONS.map((section) => (
         <section key={section.id} className="rounded-lg bg-muted/80 p-4">
-          <h2 className="mb-4 text dark:text-neutral-200">{section.title}</h2>
+          <h2 className="text mb-4 dark:text-neutral-200">{section.title}</h2>
 
           <div className="space-y-4">
             {section.items.map((item) => {
@@ -46,7 +51,7 @@ export default function GeneralSettings() {
                   return (
                     <div key={item.id} className="flex items-center justify-between">
                       <span className="text dark:text-neutral-200">{item.label}</span>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400">v{appVersion}</p>
+                      <p className="text-neutral-600 text-xs dark:text-neutral-400">v{appVersion}</p>
                     </div>
                   );
                 case "theme-mode":
@@ -54,7 +59,7 @@ export default function GeneralSettings() {
                     <div key={item.id} className="flex items-start justify-between">
                       <div>
                         <span className="text dark:text-neutral-200">{item.label}</span>
-                        <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">{item.description}</p>
+                        <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">{item.description}</p>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -82,7 +87,7 @@ export default function GeneralSettings() {
                     <div key={item.id} className="flex items-center justify-between">
                       <div>
                         <span className="text dark:text-neutral-200">{item.label}</span>
-                        <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">{item.description}</p>
+                        <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">{item.description}</p>
                       </div>
                       <Checkbox
                         checked={autoScroll}
@@ -91,6 +96,8 @@ export default function GeneralSettings() {
                       />
                     </div>
                   );
+                default:
+                  return null;
               }
             })}
           </div>

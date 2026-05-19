@@ -1,11 +1,11 @@
+import { Loader, SquareArrowOutUpRight } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Markdown } from "@/components/prompt-kit/markdown";
 import { useIsStandaloneChatSurface } from "@/components/side-chat/chat-surface-context";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { useChatReaderStore } from "@/store/chat-reader-store";
-import { Loader, SquareArrowOutUpRight } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { useAnnotationSearch } from "./hooks/use-annotation-search";
 
 const annotationPopoverMaxHeight = "max-h-[min(24rem,var(--radix-popover-content-available-height))]";
@@ -57,9 +57,7 @@ export function AnnotationPopover({ chunkId, children }: { chunkId: string; chil
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <span className="cursor-pointer text-primary hover:underline">
-          {children}
-        </span>
+        <span className="cursor-pointer text-primary hover:underline">{children}</span>
       </PopoverTrigger>
       <PopoverContent
         side="bottom"
@@ -94,13 +92,9 @@ export function AnnotationPopover({ chunkId, children }: { chunkId: string; chil
                     title="查看原文"
                   >
                     {searching ? (
-                      <>
-                        <Loader className="h-3 w-3 animate-spin" />
-                      </>
+                      <Loader className="h-3 w-3 animate-spin" />
                     ) : (
-                      <>
-                        <SquareArrowOutUpRight className="h-3 w-3" />
-                      </>
+                      <SquareArrowOutUpRight className="h-3 w-3" />
                     )}
                   </Button>
                 )}

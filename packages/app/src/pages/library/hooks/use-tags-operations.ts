@@ -1,9 +1,9 @@
-import { deleteTag, getTagByName } from "@/services/tag-service";
-import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import { Menu } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { useCallback, useState } from "react";
+import { deleteTag, getTagByName } from "@/services/tag-service";
+import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import type { BookTag } from "./use-tags-management";
 
 interface UseTagsOperationsProps {

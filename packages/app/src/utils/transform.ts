@@ -1,5 +1,13 @@
-import { Book, BookConfig, BookFormat, BookNote, BookNoteType, HighlightColor, HighlightStyle } from "@/types/book";
-import { DBBookConfig, DBBook, DBBookNote } from "@/types/records";
+import type {
+  Book,
+  BookConfig,
+  BookFormat,
+  BookNote,
+  BookNoteType,
+  HighlightColor,
+  HighlightStyle,
+} from "@/types/book";
+import type { DBBook, DBBookConfig, DBBookNote } from "@/types/records";
 
 export const transformBookConfigToDB = (bookConfig: unknown, userId: string): DBBookConfig => {
   const { bookHash, progress, location, searchConfig, viewSettings, updatedAt } = bookConfig as BookConfig;

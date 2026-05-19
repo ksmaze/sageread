@@ -1,3 +1,9 @@
+import type { UIMessage, UIMessagePart } from "ai";
+import dayjs from "dayjs";
+import { Brain, Check, Copy, Loader2, Pause, Quote, RefreshCw, Volume2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { useStickToBottomContext } from "use-stick-to-bottom";
 import { ChatContainerContent, ChatContainerScrollAnchor } from "@/components/prompt-kit/chat-container";
 import { Message, MessageAction, MessageActions, MessageContent } from "@/components/prompt-kit/message";
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/prompt-kit/reasoning";
@@ -9,14 +15,8 @@ import { cn } from "@/lib/utils";
 import { audioPlayerManager, synthesizeSpeechChunked } from "@/services/tts-service";
 import { useTTSStore } from "@/store/tts-store";
 import { getReasoningTimes } from "@/types/message";
-import type { UIMessage, UIMessagePart } from "ai";
-import dayjs from "dayjs";
-import { Brain, Check, Copy, Loader2, Pause, Quote, RefreshCw, Volume2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { useStickToBottomContext } from "use-stick-to-bottom";
-import { useIsStandaloneChatSurface } from "./chat-surface-context";
 import { ChatSelectionPopup } from "./chat-selection-popup";
+import { useIsStandaloneChatSurface } from "./chat-surface-context";
 
 export const TOOL_NAME_MAP: Record<string, string> = {
   ragSearch: "智能搜索",
@@ -106,7 +106,9 @@ export function ChatMessages({
     const lastTextDiv = textDivs[textDivs.length - 1];
     const cloned = lastTextDiv.cloneNode(true) as HTMLElement;
     const pageNumElements = cloned.querySelectorAll("span.rounded-full.bg-muted");
-    pageNumElements.forEach((el) => el.remove());
+    pageNumElements.forEach((el) => {
+      el.remove();
+    });
 
     return cloned.textContent?.trim() || "";
   };

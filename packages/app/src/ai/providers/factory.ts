@@ -1,10 +1,10 @@
-import { useProviderStore } from "@/store/provider-store";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { fetch as fetchTauri } from "@tauri-apps/plugin-http";
+import { useProviderStore } from "@/store/provider-store";
 
 export interface ProviderConfig {
   providerId: string;
@@ -88,7 +88,7 @@ export function createModelInstance(providerId: string, modelId: string) {
   }
 
   const model = provider.models.find((m) => m.id === modelId);
-  if (!model || !model.active) {
+  if (!model?.active) {
     throw new Error(`Model not found or not active: ${modelId}`);
   }
 

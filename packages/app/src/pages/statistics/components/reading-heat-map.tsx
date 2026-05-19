@@ -1,8 +1,8 @@
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { ReadingSessionStats } from "@/services/reading-session-service";
 import HeatMap from "@uiw/react-heat-map";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { ReadingSessionStats } from "@/services/reading-session-service";
 
 interface ReadingHeatMapProps {
   data: ReadingSessionStats[];

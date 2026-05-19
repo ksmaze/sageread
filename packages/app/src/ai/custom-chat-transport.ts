@@ -1,17 +1,17 @@
-import { buildReadingPrompt } from "@/constants/prompt";
-import type { ChatContext } from "@/hooks/use-chat-state";
-import { useVectorModelStore } from "@/store/vector-model-store";
 import type { UIMessage } from "@ai-sdk/react";
 import {
   type ChatRequestOptions,
   type ChatTransport,
+  convertToModelMessages,
   type LanguageModel,
   type PrepareSendMessagesRequest,
-  type UIMessageChunk,
-  convertToModelMessages,
   stepCountIs,
   streamText,
+  type UIMessageChunk,
 } from "ai";
+import { buildReadingPrompt } from "@/constants/prompt";
+import type { ChatContext } from "@/hooks/use-chat-state";
+import { useVectorModelStore } from "@/store/vector-model-store";
 import { shouldAttachBookWideRagTools } from "./chat-context";
 import {
   createRagContextTool,

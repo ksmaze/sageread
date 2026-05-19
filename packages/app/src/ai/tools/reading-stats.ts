@@ -1,7 +1,7 @@
-import type { ReadingSession } from "@/types/reading-session";
 import { invoke } from "@tauri-apps/api/core";
 import { tool } from "ai";
 import { z } from "zod";
+import type { ReadingSession } from "@/types/reading-session";
 
 async function loadSessions(bookId: string, limit: number): Promise<ReadingSession[]> {
   if (limit <= 0) {

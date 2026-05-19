@@ -1,6 +1,6 @@
+import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppSettingsStore } from "@/store/app-settings-store";
-import { Settings } from "lucide-react";
 
 export function MobileSettingsEntry() {
   const { toggleSettingsDialog } = useAppSettingsStore();

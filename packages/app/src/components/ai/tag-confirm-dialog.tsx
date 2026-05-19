@@ -1,10 +1,10 @@
+import { Sparkles } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { AITagSuggestion } from "@/services/ai-tag-service";
-import { Sparkles } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 
 interface AITagConfirmDialogProps {
   isOpen: boolean;

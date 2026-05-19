@@ -1,3 +1,5 @@
+import { Brain, History, Lightbulb, MessageCirclePlus, Search, Settings, Sparkles, UserSearch } from "lucide-react";
+import { useState } from "react";
 import { ChatContainerRoot } from "@/components/prompt-kit/chat-container";
 import { ScrollButton } from "@/components/prompt-kit/scroll-button";
 import { ChatInputArea } from "@/components/side-chat/chat-input-area";
@@ -15,8 +17,6 @@ import { useChatReaderStore } from "@/store/chat-reader-store";
 import { useLibraryStore } from "@/store/library-store";
 import { useThemeStore } from "@/store/theme-store";
 import type { Thread } from "@/types/thread";
-import { Brain, History, Lightbulb, MessageCirclePlus, Search, Settings, Sparkles, UserSearch } from "lucide-react";
-import { useState } from "react";
 
 interface MobileAiChatProps {
   bookId?: string;
@@ -108,7 +108,7 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
   const activeBookId = readerScoped ? bookId : globalActiveBookId;
   const activeBookFormat = readerScoped
     ? readerBookFormat
-    : globalBookFormat ?? libraryBooks.find((book) => book.id === globalActiveBookId)?.format;
+    : (globalBookFormat ?? libraryBooks.find((book) => book.id === globalActiveBookId)?.format);
   const activeContext = readerScoped ? (readerActiveContext ?? undefined) : globalActiveContext;
   const currentThread = readerScoped ? (readerCurrentThread ?? null) : globalCurrentThread;
   const setActiveContext: (context: string | undefined) => void =
@@ -247,7 +247,7 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
               onAskSelection={handleAskSelection}
               onViewToolDetail={handleViewToolDetail}
             />
-            <div className="-translate-x-1/2 pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl justify-end px-5">
+            <div className="pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl -translate-x-1/2 justify-end px-5">
               <div className="pointer-events-auto">
                 <ScrollButton />
               </div>

@@ -22,7 +22,10 @@ export interface FoliateView extends HTMLElement {
   goRight: () => Promise<void>;
   getCFI: (index: number, range: Range) => string;
   resolveCFI: (cfi: string) => { index: number; anchor: (doc: Document) => Range };
-  addAnnotation: (note: BookNote | ReaderNoteMarker, remove?: boolean) => Promise<{ index: number; label: string } | void>;
+  addAnnotation: (
+    note: BookNote | ReaderNoteMarker,
+    remove?: boolean,
+  ) => Promise<{ index: number; label: string } | undefined>;
   search: (config: BookSearchConfig) => AsyncGenerator<BookSearchResult | string, void, void>;
   clearSearch: () => void;
   setSearchIndicator: (type: string, options: any) => void;

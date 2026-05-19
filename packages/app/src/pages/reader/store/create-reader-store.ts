@@ -1,5 +1,7 @@
-import { DocumentLoader } from "@/lib/document";
+import { appDataDir } from "@tauri-apps/api/path";
+import { createStore } from "zustand";
 import type { BookDoc } from "@/lib/document";
+import { DocumentLoader } from "@/lib/document";
 import { loadBookConfig, saveBookConfig } from "@/services/app-service";
 import { getBookFileName, getBookMimeType } from "@/services/book-format";
 import { getBookWithStatusById } from "@/services/book-service";
@@ -16,9 +18,7 @@ import {
   readerNavigationInfo,
 } from "@/utils/reader-navigation-debug";
 import { updateToc } from "@/utils/toc";
-import { appDataDir } from "@tauri-apps/api/path";
-import { createStore } from "zustand";
-import { type ReaderNavigationTarget, clearReaderNavigationTarget } from "./reader-navigation";
+import { clearReaderNavigationTarget, type ReaderNavigationTarget } from "./reader-navigation";
 
 export type { ReaderNavigationTarget } from "./reader-navigation";
 

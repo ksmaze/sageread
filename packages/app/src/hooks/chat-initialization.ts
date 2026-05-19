@@ -1,5 +1,5 @@
-import type { Thread } from "@/types/thread";
 import type { UIMessage } from "ai";
+import type { Thread } from "@/types/thread";
 
 interface CompleteThreadInitializationOptions {
   latestThread: Thread | null;

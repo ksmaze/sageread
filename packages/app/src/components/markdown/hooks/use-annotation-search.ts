@@ -1,3 +1,5 @@
+import { invoke } from "@tauri-apps/api/core";
+import { useCallback, useState } from "react";
 import { useIsStandaloneChatSurface } from "@/components/side-chat/chat-surface-context";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { useChatReaderStore } from "@/store/chat-reader-store";
@@ -5,8 +7,6 @@ import type { BookSearchConfig, BookSearchResult } from "@/types/book";
 import type { DocumentChunk } from "@/types/document";
 import { createRejecttFilter } from "@/utils/node";
 import { resolveMarkdownImagePaths } from "@/utils/path";
-import { invoke } from "@tauri-apps/api/core";
-import { useCallback, useState } from "react";
 import { getBestSearchSentence } from "../text-utils";
 
 export function useAnnotationSearch() {
@@ -42,7 +42,7 @@ export function useAnnotationSearch() {
       try {
         const res = (await invoke("plugin:epub|get_chunk_with_context", {
           bookId: activeBookId,
-          chunkId: Number.parseInt(chunkId),
+          chunkId: Number.parseInt(chunkId, 10),
           prevCount: 0,
           nextCount: 0,
         })) as DocumentChunk[];
@@ -93,7 +93,7 @@ export function useAnnotationSearch() {
 
       try {
         view.clearSearch();
-      } catch (e) {}
+      } catch (_e) {}
 
       const searchConfig = config.searchConfig as BookSearchConfig;
       const primaryLang = bookData.book?.primaryLanguage || "en";

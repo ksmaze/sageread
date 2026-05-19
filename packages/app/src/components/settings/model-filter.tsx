@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export interface ModelFilterOptions {
   searchTerm: string;
@@ -23,7 +23,7 @@ export default function ModelFilter({ filters, onFiltersChange, totalCount, filt
   return (
     <div className="space-y-3">
       <div className="relative">
-        <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-gray-400 dark:text-neutral-500" />
+        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-neutral-500" />
         <Input
           placeholder="搜索模型..."
           value={filters.searchTerm}

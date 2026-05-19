@@ -1,9 +1,9 @@
-import type { EnhancedSearchItem } from "@/types/document";
-import { getCurrentVectorModelConfig } from "@/utils/model";
-import { resolveMarkdownImagePaths } from "@/utils/path";
 import { invoke } from "@tauri-apps/api/core";
 import { tool } from "ai";
 import { z } from "zod";
+import type { EnhancedSearchItem } from "@/types/document";
+import { getCurrentVectorModelConfig } from "@/utils/model";
+import { resolveMarkdownImagePaths } from "@/utils/path";
 
 // 智能RAG搜索工具：混合检索系统（BM25 + 向量检索）+ 精确定位 + 智能权重
 export const createRagSearchTool = (activeBookId: string | undefined) =>

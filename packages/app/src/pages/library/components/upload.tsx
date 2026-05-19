@@ -35,7 +35,7 @@ export default function Upload() {
         />
 
         <div className="pointer-events-none flex w-full items-center justify-center gap-2 p-4">
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl p-8 py-12 shadow-1 ">
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl p-8 py-12 shadow-1">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-200 dark:bg-neutral-700">
               {isUploading ? (
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-400 border-t-blue-500" />

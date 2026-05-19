@@ -1,9 +1,4 @@
-export type SettingsKey =
-  | "general"
-  | "vector-models"
-  | "tts"
-  | "model-providers"
-  | `provider-${string}`;
+export type SettingsKey = "general" | "vector-models" | "tts" | "model-providers" | `provider-${string}`;
 
 export interface SettingsNavigationItem {
   key: SettingsKey;

@@ -42,7 +42,7 @@ export const updateToc = async (bookDoc: BookDoc, sortedTOC: boolean): Promise<v
   const sections = bookDoc?.sections || [];
   if (!items.length || !sections.length) return;
 
-  const sizes = sections.map((s) => (s.linear != "no" && s.size > 0 ? s.size : 0));
+  const sizes = sections.map((s) => (s.linear !== "no" && s.size > 0 ? s.size : 0));
   let cumulativeSize = 0;
   const cumulativeSizes = sizes.reduce((acc: number[], size) => {
     acc.push(cumulativeSize);

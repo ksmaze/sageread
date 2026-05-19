@@ -1,9 +1,9 @@
-import { HIGHLIGHT_COLOR_HEX } from "@/services/constants";
-import { useAppSettingsStore } from "@/store/app-settings-store";
-import type { HighlightColor, HighlightStyle } from "@/types/book";
 import clsx from "clsx";
 import React from "react";
 import { FaCheckCircle } from "react-icons/fa";
+import { HIGHLIGHT_COLOR_HEX } from "@/services/constants";
+import { useAppSettingsStore } from "@/store/app-settings-store";
+import type { HighlightColor, HighlightStyle } from "@/types/book";
 
 const styles = ["highlight", "underline", "squiggly"] as HighlightStyle[];
 const colors = ["red", "violet", "blue", "green", "yellow"] as HighlightColor[];

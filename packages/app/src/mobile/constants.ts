@@ -1,4 +1,4 @@
-import { BarChart3, Bot, Library, NotebookTabs, type LucideIcon } from "lucide-react";
+import { BarChart3, Bot, Library, type LucideIcon, NotebookTabs } from "lucide-react";
 import type { MobileDestination, MobileDestinationDefinition } from "./types";
 
 export const MOBILE_TABLET_MIN_WIDTH = 720;

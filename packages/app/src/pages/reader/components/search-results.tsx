@@ -1,5 +1,5 @@
-import type { BookSearchMatch, BookSearchResult, SearchExcerpt } from "@/types/book";
 import type React from "react";
+import type { BookSearchMatch, BookSearchResult, SearchExcerpt } from "@/types/book";
 import useScrollToItem from "../hooks/use-scroll-to-item";
 import { useReaderStoreApi } from "./reader-provider";
 

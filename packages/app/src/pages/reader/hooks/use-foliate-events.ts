@@ -1,5 +1,5 @@
-import type { FoliateView } from "@/types/view";
 import { useEffect, useRef } from "react";
+import type { FoliateView } from "@/types/view";
 
 type FoliateEventHandler = {
   onLoad?: (event: Event) => void;

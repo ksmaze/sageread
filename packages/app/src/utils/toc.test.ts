@@ -8,7 +8,7 @@ describe("updateToc", () => {
     const bookDoc = {
       metadata: { title: "PDF", author: "Unknown", language: "en" },
       dir: "ltr",
-      toc: [{ id: 0, label: "Chapter 1", href: "[\"page-ref\"]" }],
+      toc: [{ id: 0, label: "Chapter 1", href: '["page-ref"]' }],
       sections: [{ id: 0, cfi: "epubcfi(/6/2)", size: 1000, linear: "yes" }],
       splitTOCHref: async () => [0, null],
       getCover: async () => null,

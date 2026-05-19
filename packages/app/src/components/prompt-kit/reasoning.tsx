@@ -1,9 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "lucide-react";
 import type React from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { Markdown } from "./markdown";
 
 type ReasoningContextType = {
@@ -145,4 +145,4 @@ function ReasoningContent({
   );
 }
 
-export { Reasoning, ReasoningTrigger, ReasoningContent };
+export { Reasoning, ReasoningContent, ReasoningTrigger };

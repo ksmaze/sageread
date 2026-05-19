@@ -1,5 +1,5 @@
-import { useTTSStore } from "@/store/tts-store";
 import { fetch as fetchTauri } from "@tauri-apps/plugin-http";
+import { useTTSStore } from "@/store/tts-store";
 
 interface TTSOptions {
   text: string;

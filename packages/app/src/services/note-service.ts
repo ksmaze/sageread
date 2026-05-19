@@ -1,6 +1,6 @@
+import { invoke } from "@tauri-apps/api/core";
 import type { BookMeta, CreateNoteData, Note, NoteQueryOptions, UpdateNoteData } from "@/types/note";
 import type { SimpleBook } from "@/types/simple-book";
-import { invoke } from "@tauri-apps/api/core";
 
 export function toNoteServiceErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;

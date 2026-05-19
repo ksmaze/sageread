@@ -1,5 +1,3 @@
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useLayoutStore } from "@/store/layout-store";
 import { TableOfContents } from "lucide-react";
 import { useRef } from "react";
 import {
@@ -8,6 +6,8 @@ import {
   TbLayoutSidebarRightCollapse,
   TbLayoutSidebarRightCollapseFilled,
 } from "react-icons/tb";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useLayoutStore } from "@/store/layout-store";
 import { useAutoHideControls } from "../hooks/use-auto-hide-controls";
 import { useReaderStore } from "./reader-provider";
 import SearchDropdown from "./search-dropdown";

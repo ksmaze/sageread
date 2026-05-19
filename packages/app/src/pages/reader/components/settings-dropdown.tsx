@@ -1,3 +1,7 @@
+import { Settings2 } from "lucide-react";
+import { useCallback, useEffect, useMemo } from "react";
+import { MdCheck, MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
+import { TbSunMoon } from "react-icons/tb";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DEFAULT_BOOK_FONT } from "@/services/constants";
@@ -6,10 +10,6 @@ import { useThemeStore } from "@/store/theme-store";
 import { getMaxInlineSize } from "@/utils/config";
 import { isCJKEnv } from "@/utils/misc";
 import { getStyles } from "@/utils/style";
-import { Settings2 } from "lucide-react";
-import { useCallback, useEffect, useMemo } from "react";
-import { MdCheck, MdOutlineDarkMode, MdOutlineLightMode } from "react-icons/md";
-import { TbSunMoon } from "react-icons/tb";
 import { FontSizeSlider } from "./font-size-slider";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
 import { getReaderStyleFontOptions } from "./reader-style-font-options";

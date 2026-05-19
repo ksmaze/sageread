@@ -1,5 +1,5 @@
-import { ViewSettings } from "@/types/book";
 import hljs from "highlight.js/lib/common";
+import type { ViewSettings } from "@/types/book";
 
 export const CODE_LANGUAGES = [
   "auto-detect",
@@ -57,7 +57,7 @@ export const manageSyntaxHighlighting = (doc: Document, viewSettings: ViewSettin
     const styleElement = doc.getElementById(styleId);
     if (styleElement) styleElement.remove();
     doc.querySelectorAll("pre").forEach((block) => {
-      if ((block as HTMLElement).dataset["highlighted"]) {
+      if ((block as HTMLElement).dataset.highlighted) {
         block.innerHTML = block.textContent || "";
       }
     });

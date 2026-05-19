@@ -1,6 +1,6 @@
-import { type ReadingSessionStats, getReadingSessionStats } from "@/services/reading-session-service";
 import { BookIcon, CalendarIcon, ClockIcon, TrendingUpIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { getReadingSessionStats, type ReadingSessionStats } from "@/services/reading-session-service";
 import ReadingHeatMap from "./components/reading-heat-map";
 import StatCard from "./components/stat-card";
 

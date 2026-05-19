@@ -1,8 +1,8 @@
-import type { TOCItem } from "@/lib/document";
-import { getContentMd5 } from "@/utils/misc";
 import clsx from "clsx";
 import React, { useCallback } from "react";
 import type { RowComponentProps } from "react-window";
+import type { TOCItem } from "@/lib/document";
+import { getContentMd5 } from "@/utils/misc";
 
 const createExpanderIcon = (isExpanded: boolean) => {
   return (
@@ -168,4 +168,4 @@ export function VirtualListRow({
       />
     </div>
   );
-};
+}

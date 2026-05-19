@@ -1,9 +1,9 @@
-import type { ChatContext } from "@/hooks/use-chat-state";
-import { canUseBookWideContext } from "@/ai/chat-context";
-import { getSkills } from "@/services/skill-service";
-import { useVectorModelStore } from "@/store/vector-model-store";
 import { appDataDir } from "@tauri-apps/api/path";
 import { exists, readTextFile } from "@tauri-apps/plugin-fs";
+import { canUseBookWideContext } from "@/ai/chat-context";
+import type { ChatContext } from "@/hooks/use-chat-state";
+import { getSkills } from "@/services/skill-service";
+import { useVectorModelStore } from "@/store/vector-model-store";
 
 export async function buildReadingPrompt(chatContext: ChatContext | undefined): Promise<string> {
   const activeBookId = chatContext?.activeBookId;

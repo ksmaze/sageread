@@ -1,3 +1,5 @@
+import { appDataDir } from "@tauri-apps/api/path";
+import { create } from "zustand";
 import type { BookDoc } from "@/lib/document";
 import { DocumentLoader } from "@/lib/document";
 import { loadBookConfig } from "@/services/app-service";
@@ -5,8 +7,6 @@ import { getBookFileName, getBookMimeType } from "@/services/book-format";
 import { getBookWithStatusById } from "@/services/book-service";
 import type { Book, BookConfig } from "@/types/book";
 import type { Thread } from "@/types/thread";
-import { appDataDir } from "@tauri-apps/api/path";
-import { create } from "zustand";
 import { useAppSettingsStore } from "./app-settings-store";
 
 export interface BookDataState {

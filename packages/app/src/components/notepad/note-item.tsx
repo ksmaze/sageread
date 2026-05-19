@@ -1,9 +1,9 @@
-import type { Note, UpdateNoteData } from "@/types/note";
 import { Menu } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
 import dayjs from "dayjs";
 import { useCallback, useState } from "react";
+import type { Note, UpdateNoteData } from "@/types/note";
 import { NoteEditorDialog } from "./note-editor-dialog";
 import { getNoteDisplayBody } from "./note-utils";
 

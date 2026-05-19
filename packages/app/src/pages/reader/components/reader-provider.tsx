@@ -4,13 +4,7 @@ import type { ReaderState, ReaderStore } from "../store/create-reader-store";
 
 const ReaderStoreContext = createContext<ReaderStore | null>(null);
 
-export function ReaderProvider({
-  store,
-  children,
-}: {
-  store: ReaderStore;
-  children: React.ReactNode;
-}) {
+export function ReaderProvider({ store, children }: { store: ReaderStore; children: React.ReactNode }) {
   return <ReaderStoreContext.Provider value={store}>{children}</ReaderStoreContext.Provider>;
 }
 
@@ -21,6 +15,7 @@ export function useReaderStore<T>(selector: (state: ReaderState) => T): T | null
     return null;
   }
 
+  // biome-ignore lint/correctness/useHookAtTopLevel: this hook supports optional reader context for standalone chat surfaces
   return useStore(store, selector);
 }
 

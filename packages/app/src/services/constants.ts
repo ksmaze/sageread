@@ -5,8 +5,8 @@ import type {
   BookStyle,
   HighlightColor,
   ScreenConfig,
-  TTSConfig,
   TranslatorConfig,
+  TTSConfig,
   ViewConfig,
   ViewSettings,
 } from "@/types/book";

@@ -1,5 +1,5 @@
-import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface SearchToggleProps {
   searchQuery: string;
@@ -10,7 +10,7 @@ export default function SearchToggle({ searchQuery, onSearchChange }: SearchTogg
   return (
     <div className="relative">
       <Search
-        className="-translate-y-1/2 absolute top-1/2 left-3 transform text-gray-500 dark:text-neutral-400"
+        className="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-500 dark:text-neutral-400"
         size={16}
       />
       <Input

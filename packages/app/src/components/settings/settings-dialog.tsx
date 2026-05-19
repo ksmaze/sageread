@@ -1,17 +1,17 @@
+import { ChevronRight, Server } from "lucide-react";
+import { useState } from "react";
 import { Anthropic, DeepSeek, Gemini, Grok, OpenAI, OpenRouter } from "@/components/icons";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useProviderStore } from "@/store/provider-store";
-import { ChevronRight, Server } from "lucide-react";
-import { useState } from "react";
 import GeneralSettings from "./general";
 import ProviderDetailSettings from "./provider-detail";
 import ProvidersSettings from "./providers";
 import { SETTINGS_DIALOG_CONTENT_CLASS_NAME } from "./settings-dialog-layout";
 import { SETTINGS_NAVIGATION_ITEMS, type SettingsKey, type SettingsNavigationItem } from "./settings-navigation";
-import VectorModelSettings from "./vector-model-manager";
 import TTSSettings from "./tts-settings";
+import VectorModelSettings from "./vector-model-manager";
 
 interface SettingsDialogProps {
   open: boolean;

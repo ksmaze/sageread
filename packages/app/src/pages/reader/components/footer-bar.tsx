@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { useAppSettingsStore } from "@/store/app-settings-store";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useAutoHideControls } from "../hooks/use-auto-hide-controls";
 import { viewPagination } from "../hooks/use-pagination";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";

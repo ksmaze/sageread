@@ -1,5 +1,7 @@
-import { useChat } from "@/ai/hooks/use-chat";
+import type { UIMessage } from "ai";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { canSubmitBookChatPrompt, canUseBookWideContext } from "@/ai/chat-context";
+import { useChat } from "@/ai/hooks/use-chat";
 import { completeThreadInitialization } from "@/hooks/chat-initialization";
 import { useForceUpdate } from "@/hooks/use-force-update";
 import { useModelSelector } from "@/hooks/use-model-selector";
@@ -19,8 +21,6 @@ import { useThreadStore } from "@/store/thread-store";
 import type { ChatReference, MessageMetadata } from "@/types/message";
 import type { BookFormat } from "@/types/simple-book";
 import type { Thread, ThreadSummary } from "@/types/thread";
-import type { UIMessage } from "ai";
-import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseChatStateReturn {
   // 基础状态
@@ -79,7 +79,7 @@ interface UseChatStateOptions {
 
 export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
   const { chatContext, setActiveBookId, setActiveContext } = options;
-  const { activeBookId, activeBookFormat } = chatContext;
+  const { activeBookId } = chatContext;
   const [input, setInput] = useState("");
   const [showThreads, setShowThreads] = useState(false);
   const [threadsKey, setThreadsKey] = useState(0);
@@ -241,7 +241,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
     }
   }, [status]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     const initializeThread = async () => {
       if (activeBookId && !currentThread && !isInit.current) {
@@ -272,7 +272,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
     initializeThread();
   }, [activeBookId, currentThread, setCurrentThread, setMessages]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     return () => {
       applyCurrentThread(null);
@@ -457,13 +457,13 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
       references,
       messages,
       activeBookId,
-      activeBookFormat,
       currentThread,
       buildMessageParts,
       sendMessage,
       setMessages,
       applyCurrentThread,
       generateSemanticContextAsync,
+      chatContext,
     ],
   );
 

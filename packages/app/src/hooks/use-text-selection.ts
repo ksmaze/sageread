@@ -31,7 +31,9 @@ export function useTextSelection({ onAskSelection }: UseTextSelectionOptions): U
     const container = range.cloneContents();
 
     const pageNumElements = container.querySelectorAll("span.rounded-full.bg-muted");
-    pageNumElements.forEach((el) => el.remove());
+    pageNumElements.forEach((el) => {
+      el.remove();
+    });
 
     return container.textContent?.trim() || "";
   };
@@ -46,7 +48,7 @@ export function useTextSelection({ onAskSelection }: UseTextSelectionOptions): U
     return { x: 0, y: 0, valid: false };
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const handleTextSelection = useCallback(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -87,7 +89,7 @@ export function useTextSelection({ onAskSelection }: UseTextSelectionOptions): U
     [onAskSelection],
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     const handleScroll = () => {
       if (rafIdRef.current !== null) {

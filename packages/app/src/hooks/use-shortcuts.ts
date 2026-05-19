@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { type ShortcutConfig, loadShortcuts } from "../helpers/shortcuts";
+import { loadShortcuts, type ShortcutConfig } from "../helpers/shortcuts";
 
 export type KeyActionHandlers = {
   [K in keyof ShortcutConfig]?: () => void;
@@ -156,7 +156,7 @@ const useShortcuts = (actions: KeyActionHandlers, dependencies: React.Dependency
     } catch {}
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     window.addEventListener("keydown", unifiedHandleKeyDown, { capture: true });
     window.addEventListener("message", unifiedHandleKeyDown);

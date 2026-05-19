@@ -193,7 +193,7 @@ export const getTextFromRange = (range: Range, rejectTags: string[] = []): strin
   let text = "";
   let node: Text | null;
 
-  // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+  // biome-ignore lint/suspicious/noAssignInExpressions: intentional existing hook behavior
   while ((node = walker.nextNode() as Text | null)) {
     text += node.nodeValue ?? "";
   }

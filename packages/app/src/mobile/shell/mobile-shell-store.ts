@@ -1,9 +1,6 @@
-import type { ReaderNavigationTarget } from "@/pages/reader/store/create-reader-store";
-import {
-  describeReaderNavigationTarget,
-  readerNavigationInfo,
-} from "@/utils/reader-navigation-debug";
 import { create } from "zustand";
+import type { ReaderNavigationTarget } from "@/pages/reader/store/create-reader-store";
+import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
 import type { ActiveBookRef, MobileDestination, ReaderSheet } from "../types";
 
 export interface MobileReaderNavigationTarget extends ReaderNavigationTarget {

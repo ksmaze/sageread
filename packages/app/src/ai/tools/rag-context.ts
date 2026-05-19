@@ -1,8 +1,8 @@
-import type { DocumentChunk } from "@/types/document";
-import { resolveMarkdownImagePaths } from "@/utils/path";
 import { invoke } from "@tauri-apps/api/core";
 import { tool } from "ai";
 import { z } from "zod";
+import type { DocumentChunk } from "@/types/document";
+import { resolveMarkdownImagePaths } from "@/utils/path";
 
 export const createRagContextTool = (activeBookId: string | undefined) =>
   tool({

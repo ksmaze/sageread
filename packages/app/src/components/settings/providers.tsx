@@ -1,8 +1,8 @@
+import { Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useProviderStore } from "@/store/provider-store";
-import { Plus, Settings } from "lucide-react";
 import { ProviderIcons } from "./settings-dialog";
 
 interface ProvidersSettingsProps {

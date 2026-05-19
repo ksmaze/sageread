@@ -1,7 +1,7 @@
+import { create } from "zustand";
 import { convertBookWithStatusUrls, getBooksWithStatus } from "@/services/book-service";
 import type { Book, BooksGroup } from "@/types/book";
 import type { BookWithStatusAndUrls } from "@/types/simple-book";
-import { create } from "zustand";
 
 interface LibraryState {
   library: Book[];

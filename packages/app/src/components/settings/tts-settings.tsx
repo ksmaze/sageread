@@ -1,10 +1,10 @@
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTTSStore } from "@/store/tts-store";
-import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
 
 export default function TTSSettings() {
   const { config, setApiKey, setVoice, setLanguageType } = useTTSStore();
@@ -36,7 +36,7 @@ export default function TTSSettings() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="-translate-y-1/2 absolute top-1/2 right-2 h-6 w-6"
+                className="absolute top-1/2 right-2 h-6 w-6 -translate-y-1/2"
                 onClick={() => setShowApiKey(!showApiKey)}
               >
                 {!showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

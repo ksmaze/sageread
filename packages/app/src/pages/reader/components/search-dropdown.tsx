@@ -1,8 +1,8 @@
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { BookSearchResult } from "@/types/book";
 import { Search } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import type { BookSearchResult } from "@/types/book";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
 import SearchBar from "./search-bar";
 import SearchResults from "./search-results";
@@ -141,12 +141,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
           <Search size={18} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-[min(20rem,calc(100vw-1rem))] p-0"
-        align="end"
-        side="bottom"
-        sideOffset={4}
-      >
+      <DropdownMenuContent className="w-[min(20rem,calc(100vw-1rem))] p-0" align="end" side="bottom" sideOffset={4}>
         <ReaderSearchPanel
           isVisible={isSearchDropdownOpen}
           onClose={handleCloseSearch}

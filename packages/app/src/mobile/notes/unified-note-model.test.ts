@@ -3,11 +3,11 @@ import { describe, it } from "node:test";
 import type { BookNote } from "@/types/book";
 import type { Note } from "@/types/note";
 import {
-  UNIFIED_NOTE_FILTERS,
   createUnifiedNoteFromBookNote,
   createUnifiedNoteFromStandaloneNote,
   filterUnifiedNotesByType,
   getUnifiedNoteReaderTarget,
+  UNIFIED_NOTE_FILTERS,
 } from "./unified-note-model";
 
 describe("unified note model", () => {

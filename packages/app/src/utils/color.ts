@@ -2,7 +2,7 @@ import tinycolor from "tinycolor2";
 
 function srgbToLinear(v: number): number {
   // Standard formula for gamma decoding of sRGB
-  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
 }
 
 export function hexToOklch(hexColor: string): string {

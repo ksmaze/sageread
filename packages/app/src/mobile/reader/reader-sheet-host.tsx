@@ -28,7 +28,7 @@ function ReaderSheetContent() {
       return bookDoc?.toc ? (
         <TOCView toc={bookDoc.toc} bookId={activeBook.id} autoExpand onItemSelect={closeReaderSheet} isVisible />
       ) : (
-        <p className="py-8 text-center text-sm text-[var(--mobile-ink-muted)]">没有可用的目录</p>
+        <p className="py-8 text-center text-[var(--mobile-ink-muted)] text-sm">没有可用的目录</p>
       );
     case "search":
       return <ReaderSearchPanel onClose={closeReaderSheet} onResultSelect={closeReaderSheet} />;

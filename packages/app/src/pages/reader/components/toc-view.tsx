@@ -1,7 +1,7 @@
 import { useOverlayScrollbars } from "overlayscrollbars-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { List as VirtualList, type ListImperativeAPI } from "react-window";
+import { type ListImperativeAPI, List as VirtualList } from "react-window";
 import "overlayscrollbars/overlayscrollbars.css";
 import type { TOCItem } from "@/lib/document";
 import { useAppSettingsStore } from "@/store/app-settings-store";
@@ -78,9 +78,9 @@ const TOCView: React.FC<{
         },
       });
     }
-  }, [initialize, toc.length, expandedItems]);
+  }, [initialize]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     const updateHeight = () => {
       if (containerRef.current) {

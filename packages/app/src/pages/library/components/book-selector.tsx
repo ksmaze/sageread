@@ -1,9 +1,9 @@
+import { Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { type Tag, getTags } from "@/services/tag-service";
+import { getTags, type Tag } from "@/services/tag-service";
 import type { BookWithStatusAndUrls } from "@/types/simple-book";
-import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 
 interface BookSelectorProps {
   books: BookWithStatusAndUrls[];
@@ -25,6 +25,41 @@ export default function BookSelector({
   const [searchQuery, setSearchQuery] = useState("");
   const [databaseTags, setDatabaseTags] = useState<Tag[]>([]);
 
+  // 清理书籍中无效的标签引用
+  const cleanupInvalidTagReferences = useCallback(
+    async (validTags: Tag[]) => {
+      if (!onBookUpdate) {
+        console.warn("Cannot cleanup invalid tags: onBookUpdate callback not provided");
+        return;
+      }
+
+      const validTagIds = new Set(validTags.map((t) => t.id));
+      let cleanupCount = 0;
+
+      for (const book of books) {
+        if (book.tags && book.tags.length > 0) {
+          const validBookTags = book.tags.filter((tagId) => validTagIds.has(tagId));
+          const invalidTags = book.tags.filter((tagId) => !validTagIds.has(tagId));
+
+          if (invalidTags.length > 0) {
+            console.log(`Cleaning up book "${book.title}": removing ${invalidTags.length} invalid tags`);
+            try {
+              await onBookUpdate(book.id, { tags: validBookTags });
+              cleanupCount++;
+            } catch (error) {
+              console.error(`Failed to cleanup tags for book "${book.title}":`, error);
+            }
+          }
+        }
+      }
+
+      if (cleanupCount > 0) {
+        console.log(`Successfully cleaned up invalid tags from ${cleanupCount} books`);
+      }
+    },
+    [books, onBookUpdate],
+  );
+
   // 获取数据库标签
   useEffect(() => {
     const fetchTags = async () => {
@@ -41,39 +76,7 @@ export default function BookSelector({
       }
     };
     fetchTags();
-  }, []);
-
-  // 清理书籍中无效的标签引用
-  const cleanupInvalidTagReferences = async (validTags: Tag[]) => {
-    if (!onBookUpdate) {
-      console.warn("Cannot cleanup invalid tags: onBookUpdate callback not provided");
-      return;
-    }
-
-    const validTagIds = new Set(validTags.map((t) => t.id));
-    let cleanupCount = 0;
-
-    for (const book of books) {
-      if (book.tags && book.tags.length > 0) {
-        const validTags = book.tags.filter((tagId) => validTagIds.has(tagId));
-        const invalidTags = book.tags.filter((tagId) => !validTagIds.has(tagId));
-
-        if (invalidTags.length > 0) {
-          console.log(`Cleaning up book "${book.title}": removing ${invalidTags.length} invalid tags`);
-          try {
-            await onBookUpdate(book.id, { tags: validTags });
-            cleanupCount++;
-          } catch (error) {
-            console.error(`Failed to cleanup tags for book "${book.title}":`, error);
-          }
-        }
-      }
-    }
-
-    if (cleanupCount > 0) {
-      console.log(`Successfully cleaned up invalid tags from ${cleanupCount} books`);
-    }
-  };
+  }, [cleanupInvalidTagReferences]);
 
   // 根据搜索词筛选书籍
   const filteredBooks = useMemo(() => {
@@ -122,7 +125,7 @@ export default function BookSelector({
       {/* 搜索框 */}
       <div className="relative">
         <Search
-          className="-translate-y-1/2 absolute top-1/2 left-3 transform text-gray-500 dark:text-neutral-400"
+          className="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-500 dark:text-neutral-400"
           size={16}
         />
         <Input

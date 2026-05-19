@@ -1,5 +1,5 @@
-import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import { useMemo } from "react";
+import type { BookWithStatusAndUrls } from "@/types/simple-book";
 
 export const useBooksFilter = (filteredBooksByTag: BookWithStatusAndUrls[], searchQuery: string) => {
   const filteredBooks = useMemo(() => {

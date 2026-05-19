@@ -1,9 +1,9 @@
+import { useEffect, useMemo } from "react";
 import ReaderViewer from "@/pages/reader";
 import { ReaderProvider } from "@/pages/reader/components/reader-provider";
-import { createReaderStore } from "@/pages/reader/store/create-reader-store";
 import type { ReaderNavigationTarget } from "@/pages/reader/store/create-reader-store";
+import { createReaderStore } from "@/pages/reader/store/create-reader-store";
 import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
-import { useEffect, useMemo } from "react";
 import { ReaderToolDock } from "../components/reader-tool-dock";
 import { useMobileShellStore } from "../shell/mobile-shell-store";
 import { handleMobileReaderBack } from "./reader-back-handlers";

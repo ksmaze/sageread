@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { type VectorModelConfig, useVectorModelStore } from "@/store/vector-model-store";
-import { normalizeEmbeddingsUrl } from "@/utils/model";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { Edit2, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { useVectorModelStore, type VectorModelConfig } from "@/store/vector-model-store";
+import { normalizeEmbeddingsUrl } from "@/utils/model";
 
 export default function VectorModelSettings() {
   const {

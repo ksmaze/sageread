@@ -1,6 +1,6 @@
+import { useEffect, useRef } from "react";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { traceReaderGoTo } from "@/utils/reader-navigation-debug";
-import { useEffect, useRef } from "react";
 import { AnnotationItem } from "./annotation-item";
 import { useAnnotations, useNotepad } from "./hooks";
 import { NoteItem } from "./note-item";

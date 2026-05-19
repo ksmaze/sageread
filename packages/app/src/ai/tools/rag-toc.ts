@@ -1,8 +1,8 @@
-import type { DocumentChunk } from "@/types/document";
-import { resolveMarkdownImagePaths } from "@/utils/path";
 import { invoke } from "@tauri-apps/api/core";
 import { tool } from "ai";
 import { z } from "zod";
+import type { DocumentChunk } from "@/types/document";
+import { resolveMarkdownImagePaths } from "@/utils/path";
 
 export const createRagTocTool = (activeBookId: string | undefined) =>
   tool({
@@ -32,13 +32,7 @@ export const createRagTocTool = (activeBookId: string | undefined) =>
       reasoning: z.string().min(1).describe("调用此工具的原因和目的，例如：'用户想了解整个章节的内容'"),
       chapter_title: z.string().min(1).describe("章节标题，如 '第一章 引言', '1.1 背景介绍' 等"),
     }),
-    execute: async ({
-      reasoning,
-      chapter_title,
-    }: {
-      reasoning: string;
-      chapter_title: string;
-    }) => {
+    execute: async ({ reasoning, chapter_title }: { reasoning: string; chapter_title: string }) => {
       if (!activeBookId) {
         throw new Error("未找到当前阅读图书，请先在阅读器中打开图书");
       }

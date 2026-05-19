@@ -13,7 +13,7 @@ export function MobileBottomNav({ activeDestination, onDestinationChange, hidden
   if (hidden) return null;
 
   return (
-    <nav className="px-safe pb-safe fixed inset-x-0 bottom-0 z-40 border-t bg-[var(--mobile-paper-high)] mobile-tonal-border">
+    <nav className="mobile-tonal-border fixed inset-x-0 bottom-0 z-40 border-t bg-[var(--mobile-paper-high)] px-safe pb-safe">
       <div className="grid h-16 grid-cols-4 px-2">
         {MOBILE_DESTINATIONS.map((destination) => {
           const Icon = destination.icon;
@@ -27,7 +27,7 @@ export function MobileBottomNav({ activeDestination, onDestinationChange, hidden
               aria-label={destination.ariaLabel}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "h-full min-h-[var(--mobile-touch-target)] min-w-[var(--mobile-touch-target)] flex-col gap-1 rounded-none text-xs text-[var(--mobile-ink-muted)]",
+                "h-full min-h-[var(--mobile-touch-target)] min-w-[var(--mobile-touch-target)] flex-col gap-1 rounded-none text-[var(--mobile-ink-muted)] text-xs",
                 isActive && "text-[var(--mobile-ink)]",
               )}
               onClick={() => onDestinationChange(destination.id)}

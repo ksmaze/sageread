@@ -1,10 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  PDF_SELECTED_TEXT_ONLY_MESSAGE,
-  canSubmitBookChatPrompt,
-  shouldAttachBookWideRagTools,
-} from "./chat-context";
+import { canSubmitBookChatPrompt, PDF_SELECTED_TEXT_ONLY_MESSAGE, shouldAttachBookWideRagTools } from "./chat-context";
 
 describe("chat context format rules", () => {
   it("attaches book-wide RAG tools only for EPUB books with vector capability", () => {

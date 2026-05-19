@@ -1,8 +1,8 @@
+import { useRef } from "react";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { ViewSettings } from "@/types/book";
 import type { FoliateView } from "@/types/view";
 import { eventDispatcher } from "@/utils/event";
-import { useRef } from "react";
 import { useReaderStoreApi } from "../components/reader-provider";
 
 export type ScrollSource = "touch" | "mouse";

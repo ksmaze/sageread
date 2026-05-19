@@ -31,15 +31,7 @@ export const mindmapTool = tool({
     markdown: z.string().min(1).describe("思维导图的 Markdown 内容，使用标准 Markdown 格式"),
   }),
 
-  execute: async ({
-    reasoning,
-    title,
-    markdown,
-  }: {
-    reasoning: string;
-    title: string;
-    markdown: string;
-  }) => {
+  execute: async ({ reasoning, title, markdown }: { reasoning: string; title: string; markdown: string }) => {
     try {
       const lines = markdown.trim().split("\n");
       const nodeCount = lines.filter((line) => line.trim().startsWith("#") || line.trim().startsWith("-")).length;

@@ -1,7 +1,7 @@
-import { tauriStorageKey } from "@/constants/tauri-storage";
-import { tauriStorage } from "@/lib/tauri-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { tauriStorageKey } from "@/constants/tauri-storage";
+import { tauriStorage } from "@/lib/tauri-storage";
 
 export interface VectorModelConfig {
   id: string;

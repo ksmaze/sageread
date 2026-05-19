@@ -1,8 +1,7 @@
-import type { Book } from "@/types/book";
-import type { BookWithStatus } from "@/types/simple-book";
-
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { appDataDir } from "@tauri-apps/api/path";
+import type { Book } from "@/types/book";
+import type { BookWithStatus } from "@/types/simple-book";
 
 export async function convertBookWithStatusToBook(bookWithStatus: BookWithStatus): Promise<Book> {
   const appDataDirPath = await appDataDir();

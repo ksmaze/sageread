@@ -1,59 +1,47 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
-import { AnimatePresence, motion, Transition, Variants } from "motion/react"
-import { useId, useMemo } from "react"
+import { AnimatePresence, motion, type Transition, type Variants } from "motion/react";
+import { useId, useMemo } from "react";
+import { cn } from "@/lib/utils";
 
 export type TextMorphProps = {
-  children: string
-  as?: React.ElementType
-  className?: string
-  style?: React.CSSProperties
-  variants?: Variants
-  transition?: Transition
-}
+  children: string;
+  as?: React.ElementType;
+  className?: string;
+  style?: React.CSSProperties;
+  variants?: Variants;
+  transition?: Transition;
+};
 
-export function TextMorph({
-  children,
-  as: Component = "p",
-  className,
-  style,
-  variants,
-  transition,
-}: TextMorphProps) {
-  const uniqueId = useId()
+export function TextMorph({ children, as: Component = "p", className, style, variants, transition }: TextMorphProps) {
+  const uniqueId = useId();
 
   const characters = useMemo(() => {
-    const charCounts: Record<string, number> = {}
+    const charCounts: Record<string, number> = {};
 
     return children.split("").map((char, index) => {
-      const lowerChar = char.toLowerCase()
-      charCounts[lowerChar] = (charCounts[lowerChar] || 0) + 1
+      const lowerChar = char.toLowerCase();
+      charCounts[lowerChar] = (charCounts[lowerChar] || 0) + 1;
 
       return {
         id: `${uniqueId}-${lowerChar}${charCounts[lowerChar]}`,
-        label:
-          char === " "
-            ? "\u00A0"
-            : index === 0
-              ? char.toUpperCase()
-              : lowerChar,
-      }
-    })
-  }, [children, uniqueId])
+        label: char === " " ? "\u00A0" : index === 0 ? char.toUpperCase() : lowerChar,
+      };
+    });
+  }, [children, uniqueId]);
 
   const defaultVariants: Variants = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
     exit: { opacity: 0 },
-  }
+  };
 
   const defaultTransition: Transition = {
     type: "spring",
     stiffness: 280,
     damping: 18,
     mass: 0.3,
-  }
+  };
 
   return (
     <Component className={cn(className)} aria-label={children} style={style}>
@@ -75,5 +63,5 @@ export function TextMorph({
         ))}
       </AnimatePresence>
     </Component>
-  )
+  );
 }

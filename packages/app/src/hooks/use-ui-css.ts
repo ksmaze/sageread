@@ -1,5 +1,5 @@
-import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useEffect, useState } from "react";
+import { useAppSettingsStore } from "@/store/app-settings-store";
 
 // This hook allows you to inject custom CSS into the reader UI.
 // Note that the book content is rendered in an iframe, so UI CSS won't affect book rendering.
@@ -8,7 +8,7 @@ export const useUICSS = (bookId?: string) => {
   const globalViewSettings = settings.globalViewSettings;
   const [styleElement, setStyleElement] = useState<HTMLStyleElement | null>(null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     if (styleElement) {
       styleElement.remove();

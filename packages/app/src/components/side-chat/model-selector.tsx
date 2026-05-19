@@ -1,3 +1,6 @@
+import { Check, ChevronDown, Search } from "lucide-react";
+import type { SVGProps } from "react";
+import { useMemo, useState } from "react";
 import { Anthropic, DeepSeek, Gemini, Grok, OpenAI, OpenRouter } from "@/components/icons";
 import {
   DropdownMenu,
@@ -9,9 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { type SelectedModel, useProviderStore } from "@/store/provider-store";
-import { Check, ChevronDown, Search } from "lucide-react";
-import { useMemo, useState } from "react";
-import type { SVGProps } from "react";
 
 const providerIcons: Record<string, React.ComponentType<SVGProps<SVGSVGElement>>> = {
   openai: OpenAI,

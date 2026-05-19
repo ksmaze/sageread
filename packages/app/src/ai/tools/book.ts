@@ -1,7 +1,7 @@
-import type { BookQueryOptions, BookStatus, BookWithStatus, SimpleBook } from "@/types/simple-book";
 import { invoke } from "@tauri-apps/api/core";
 import { tool } from "ai";
 import { z } from "zod";
+import type { BookQueryOptions, BookStatus, BookWithStatus, SimpleBook } from "@/types/simple-book";
 
 type BookStatusState = BookStatus["status"];
 

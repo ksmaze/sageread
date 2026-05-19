@@ -1,6 +1,6 @@
+import * as CFI from "foliate-js/epubcfi.js";
 import type { BookProgress } from "@/types/book";
 import type { FoliateView } from "@/types/view";
-import * as CFI from "foliate-js/epubcfi.js";
 
 type ProgressForVisibility = Pick<BookProgress, "location"> & {
   range?: Range | null;

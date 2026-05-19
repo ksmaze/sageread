@@ -1,4 +1,4 @@
-import { type CustomTheme, type Palette, generateDarkPalette, generateLightPalette, themes } from "@/styles/themes";
+import { type CustomTheme, generateDarkPalette, generateLightPalette, type Palette, themes } from "@/styles/themes";
 import type { ViewSettings } from "@/types/book";
 import { getOSPlatform } from "./misc";
 

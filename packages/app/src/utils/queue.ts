@@ -1,6 +1,6 @@
 export class AsyncQueue<T> {
   private queue: T[] = [];
-  private resolves: ((value: void) => void)[] = [];
+  private resolves: ((value: undefined) => void)[] = [];
   private done = false;
 
   enqueue(item: T) {

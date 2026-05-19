@@ -1,8 +1,8 @@
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { predefinedProviders } from "@/constants/predefined-providers";
 import { tauriStorageKey } from "@/constants/tauri-storage";
 import { tauriStorage } from "@/lib/tauri-storage";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface SelectedModel {
   modelId: string;

@@ -60,8 +60,7 @@ export class TxtToEpubConverter {
 
     const fileHeader = txtContent.slice(0, 1024);
     const authorMatch =
-      fileHeader.match(/[【\[]?作者[】\]]?[:：\s]\s*(.+)\r?\n/) ||
-      fileHeader.match(/[【\[]?\s*(.+)\s+著\s*[】\]]?\r?\n/);
+      fileHeader.match(/[【[]?作者[】\]]?[:：\s]\s*(.+)\r?\n/) || fileHeader.match(/[【[]?\s*(.+)\s+著\s*[】\]]?\r?\n/);
     const author = authorMatch ? authorMatch[1]!.trim() : providedAuthor || "";
     const language = providedLanguage || this.detectLanguage(fileHeader);
     const identifier = await partialMD5(txtFile);
@@ -179,7 +178,7 @@ export class TxtToEpubConverter {
         });
       }
 
-      if (matches[0] && matches[0].trim()) {
+      if (matches[0]?.trim()) {
         const initialContent = matches[0].trim();
         const firstLine = initialContent.split("\n")[0]!.trim();
         const segmentTitle =

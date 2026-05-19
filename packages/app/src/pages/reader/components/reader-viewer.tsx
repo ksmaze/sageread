@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from "react";
 import { useReadingSession } from "@/hooks/use-reading-session";
 import { useSafeAreaInsets } from "@/hooks/use-safe-areaInsets";
 import type { BookDoc } from "@/lib/document";
@@ -6,15 +7,14 @@ import { useLayoutStore } from "@/store/layout-store";
 import { useLibraryStore } from "@/store/library-store";
 import type { BookConfig } from "@/types/book";
 import type { Insets } from "@/types/misc";
+import { getInsetEdges } from "@/utils/grid";
+import { getViewInsets } from "@/utils/insets";
 import {
   describeReaderNavigationError,
   describeReaderNavigationTarget,
   readerNavigationError,
   readerNavigationInfo,
 } from "@/utils/reader-navigation-debug";
-import { getInsetEdges } from "@/utils/grid";
-import { getViewInsets } from "@/utils/insets";
-import { useEffect, useMemo } from "react";
 import useBookShortcuts from "../hooks/use-book-shortcuts";
 import { useFoliateViewer } from "../hooks/use-foliate-viewer";
 import { consumeReaderNavigationTarget, getInitialReaderLocation } from "../store/reader-navigation";
@@ -129,7 +129,9 @@ const ReaderViewerContent: React.FC = () => {
     return null;
   }
 
-  return <ReaderViewerSurface bookId={bookId} bookDoc={bookData.bookDoc} config={config} contentInsets={contentInsets} />;
+  return (
+    <ReaderViewerSurface bookId={bookId} bookDoc={bookData.bookDoc} config={config} contentInsets={contentInsets} />
+  );
 };
 
 interface ReaderViewerProps {
@@ -159,7 +161,7 @@ export default function ReaderViewer({ mobileChrome = false }: ReaderViewerProps
     isVisible: isTabVisible,
   });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     const currentBookData = store.getState().bookData;
     if (!currentBookData) {

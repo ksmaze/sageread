@@ -1,5 +1,5 @@
-import type { BookNote } from "@/types/book";
 import { invoke } from "@tauri-apps/api/core";
+import type { BookNote } from "@/types/book";
 
 // BookNote 创建数据类型
 export interface BookNoteCreateData {

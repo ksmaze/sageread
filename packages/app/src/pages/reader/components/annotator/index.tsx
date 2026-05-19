@@ -1,3 +1,10 @@
+import { Overlayer } from "foliate-js/overlayer.js";
+import { NotebookPen } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef } from "react";
+import { FiCopy, FiHelpCircle, FiMessageCircle } from "react-icons/fi";
+import { PiHighlighterFill } from "react-icons/pi";
+import { RiDeleteBinLine } from "react-icons/ri";
 import { NoteEditorDialog } from "@/components/notepad/note-editor-dialog";
 import { HIGHLIGHT_COLOR_HEX } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
@@ -6,16 +13,9 @@ import type { ReaderNoteMarker } from "@/types/view";
 import { eventDispatcher } from "@/utils/event";
 import { getOSPlatform } from "@/utils/misc";
 import { traceReaderGoTo } from "@/utils/reader-navigation-debug";
-import { Overlayer } from "foliate-js/overlayer.js";
-import { NotebookPen } from "lucide-react";
-import type React from "react";
-import { useEffect, useRef } from "react";
-import { FiCopy, FiHelpCircle, FiMessageCircle } from "react-icons/fi";
-import { PiHighlighterFill } from "react-icons/pi";
-import { RiDeleteBinLine } from "react-icons/ri";
 import { useAnnotator } from "../../hooks/use-annotator";
 import { useFoliateEvents } from "../../hooks/use-foliate-events";
-import { type NativeTouchEventType, listenToNativeTouchEvents, useTextSelector } from "../../hooks/use-text-selector";
+import { listenToNativeTouchEvents, type NativeTouchEventType, useTextSelector } from "../../hooks/use-text-selector";
 import { useReaderStore, useReaderStoreApi } from "../reader-provider";
 import AnnotationPopup from "./annotation-popup";
 import AskAIPopup from "./ask-ai-popup";
@@ -119,11 +119,10 @@ const Annotator: React.FC = () => {
       const node = range.startContainer;
       const el = node.nodeType === 1 ? node : node.parentElement;
       const { writingMode, lineHeight, fontSize } = defaultView.getComputedStyle(el);
-      const lineHeightValue =
-        Number.parseFloat(lineHeight) || globalViewSettings?.lineHeight! * globalViewSettings?.defaultFontSize!;
-      const fontSizeValue = Number.parseFloat(fontSize) || globalViewSettings?.defaultFontSize;
+      const fontSizeValue = Number.parseFloat(fontSize) || globalViewSettings?.defaultFontSize || 16;
+      const lineHeightValue = Number.parseFloat(lineHeight) || (globalViewSettings?.lineHeight ?? 1.5) * fontSizeValue;
       const strokeWidth = 2;
-      const padding = globalViewSettings?.vertical ? (lineHeightValue - fontSizeValue! - strokeWidth) / 2 : strokeWidth;
+      const padding = globalViewSettings?.vertical ? (lineHeightValue - fontSizeValue - strokeWidth) / 2 : strokeWidth;
       draw(Overlayer[style as keyof typeof Overlayer], { writingMode, color: hexColor, padding });
     }
   };
@@ -187,7 +186,7 @@ const Annotator: React.FC = () => {
   }, [handlePointerUp, handleTouchEnd, handleTouchStart, osPlatform]);
 
   // 同步 popup 显示状态到 text selector
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     handleShowPopup(showAnnotPopup || showAskAIPopup);
   }, [showAnnotPopup, showAskAIPopup]);

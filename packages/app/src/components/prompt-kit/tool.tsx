@@ -1,8 +1,8 @@
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
 import { CheckCircle, ChevronDown, Eye, Loader2, Settings, XCircle } from "lucide-react";
 import { useState } from "react";
 import { useStickToBottomContext } from "use-stick-to-bottom";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 import { TOOL_NAME_MAP } from "../side-chat/chat-messages";
 
 export type ToolPart = {

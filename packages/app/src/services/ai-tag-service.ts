@@ -1,7 +1,7 @@
+import { generateText } from "ai";
 import { createModelInstance } from "@/ai/providers/factory";
 import { useProviderStore } from "@/store/provider-store";
 import type { SimpleBook } from "@/types/simple-book";
-import { generateText } from "ai";
 import type { Tag } from "./tag-service";
 
 export interface AITagSuggestion {

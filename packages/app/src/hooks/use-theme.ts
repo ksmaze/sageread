@@ -1,8 +1,8 @@
+import { useCallback, useEffect } from "react";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useThemeStore } from "@/store/theme-store";
-import { type CustomTheme, type Palette, applyCustomTheme } from "@/styles/themes";
+import { applyCustomTheme, type CustomTheme, type Palette } from "@/styles/themes";
 import { getOSPlatform } from "@/utils/misc";
-import { useCallback, useEffect } from "react";
 
 type UseThemeProps = {
   systemUIVisible?: boolean;
@@ -11,23 +11,16 @@ type UseThemeProps = {
 
 export const useTheme = ({ systemUIVisible = true, appThemeColor = "base-100" }: UseThemeProps = {}) => {
   const { settings } = useAppSettingsStore();
-  const {
-    themeColor,
-    isDarkMode,
-    showSystemUI,
-    dismissSystemUI,
-    updateAppTheme,
-    systemUIAlwaysHidden,
-    setSystemUIAlwaysHidden,
-  } = useThemeStore();
+  const { isDarkMode, showSystemUI, dismissSystemUI, updateAppTheme, systemUIAlwaysHidden, setSystemUIAlwaysHidden } =
+    useThemeStore();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     updateAppTheme(appThemeColor);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const handleSystemUIVisibility = useCallback(() => {
     const visible = systemUIVisible && !systemUIAlwaysHidden;
     if (visible) {
@@ -43,7 +36,7 @@ export const useTheme = ({ systemUIVisible = true, appThemeColor = "base-100" }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleSystemUIVisibility]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     handleSystemUIVisibility();
     const handleVisibilityChange = () => {

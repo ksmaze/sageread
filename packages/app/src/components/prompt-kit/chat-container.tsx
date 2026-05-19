@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 import { StickToBottom, type StickToBottomContext, useStickToBottomContext } from "use-stick-to-bottom";
+import { cn } from "@/lib/utils";
 
 export type ChatContainerRootProps = {
   children: React.ReactNode;
@@ -69,4 +69,4 @@ function ChatContainerScrollAnchor({ className, ...props }: ChatContainerScrollA
   return <div className={cn("h-px w-full shrink-0 scroll-mt-4", className)} aria-hidden="true" {...props} />;
 }
 
-export { ChatContainerRoot, ChatContainerContent, ChatContainerScrollAnchor };
+export { ChatContainerContent, ChatContainerRoot, ChatContainerScrollAnchor };

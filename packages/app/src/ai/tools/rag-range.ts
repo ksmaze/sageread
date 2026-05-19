@@ -1,7 +1,7 @@
-import type { DocumentChunk } from "@/types/document";
 import { invoke } from "@tauri-apps/api/core";
 import { tool } from "ai";
 import { z } from "zod";
+import type { DocumentChunk } from "@/types/document";
 
 export const createRagRangeTool = (activeBookId: string | undefined) =>
   tool({

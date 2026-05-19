@@ -1,8 +1,8 @@
-import { createNote, deleteNote, getNotesPaginated, updateNote } from "@/services/note-service";
-import type { CreateNoteData, Note, UpdateNoteData } from "@/types/note";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { createNote, deleteNote, getNotesPaginated, updateNote } from "@/services/note-service";
+import type { CreateNoteData, Note, UpdateNoteData } from "@/types/note";
 
 const getToastErrorMessage = (fallback: string, error: unknown) => (error instanceof Error ? error.message : fallback);
 

@@ -23,33 +23,6 @@ export function useBookUpload() {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    handleDropedFiles(files);
-  }, []);
-
-  const handleDropedFiles = useCallback(async (files: File[]) => {
-    if (files.length === 0) return;
-
-    const supportedFiles = files.filter((file) => {
-      const fileExt = file.name.split(".").pop()?.toLowerCase();
-      return FILE_ACCEPT_FORMATS.includes(`.${fileExt}`);
-    });
-
-    if (supportedFiles.length === 0) {
-      eventDispatcher.dispatch("toast", {
-        message: `未找到支持的文件。支持的格式：${FILE_ACCEPT_FORMATS}`,
-        type: "error",
-      });
-      return;
-    }
-
-    await importBooks(supportedFiles);
-  }, []);
-
   const importBooks = useCallback(
     async (files: File[]) => {
       setIsUploading(true);
@@ -60,7 +33,7 @@ export function useBookUpload() {
         try {
           const newBook = await uploadBook(file);
           successBooks.push(newBook);
-        } catch (error) {
+        } catch (_error) {
           const baseFilename = getFilename(file.name);
           failedFiles.push(baseFilename);
         }
@@ -81,6 +54,39 @@ export function useBookUpload() {
       }
     },
     [refreshBooks],
+  );
+
+  const handleDropedFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return;
+
+      const supportedFiles = files.filter((file) => {
+        const fileExt = file.name.split(".").pop()?.toLowerCase();
+        return FILE_ACCEPT_FORMATS.includes(`.${fileExt}`);
+      });
+
+      if (supportedFiles.length === 0) {
+        eventDispatcher.dispatch("toast", {
+          message: `未找到支持的文件。支持的格式：${FILE_ACCEPT_FORMATS}`,
+          type: "error",
+        });
+        return;
+      }
+
+      await importBooks(supportedFiles);
+    },
+    [importBooks],
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      handleDropedFiles(files);
+    },
+    [handleDropedFiles],
   );
 
   const selectFiles = useCallback((): Promise<FileList | null> => {

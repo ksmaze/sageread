@@ -1,6 +1,7 @@
 import { appConfigDir, appDataDir } from "@tauri-apps/api/path";
 import { exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import type { StateStorage } from "zustand/middleware";
+
 interface StoragePath {
   dirPath: string;
   filePath: string;
@@ -96,7 +97,7 @@ export const tauriStorage: StateStorage = {
     }
   },
 
-  removeItem: async (name: string): Promise<void> => {},
+  removeItem: async (_name: string): Promise<void> => {},
 };
 
 const ensureDirectory = async (dirPath: string) => {

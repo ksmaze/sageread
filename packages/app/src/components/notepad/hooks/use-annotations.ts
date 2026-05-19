@@ -1,7 +1,7 @@
-import { deleteBookNote, getBookNotes } from "@/services/book-note-service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { deleteBookNote, getBookNotes } from "@/services/book-note-service";
 
 interface UseAnnotationsProps {
   bookId?: string;

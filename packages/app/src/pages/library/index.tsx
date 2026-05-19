@@ -1,3 +1,7 @@
+import clsx from "clsx";
+import { Plus, Upload as UploadIcon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import SettingsDialog from "@/components/settings/settings-dialog";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
@@ -7,10 +11,6 @@ import { useTheme } from "@/hooks/use-theme";
 import { useUICSS } from "@/hooks/use-ui-css";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useLibraryStore } from "@/store/library-store";
-import clsx from "clsx";
-import { Plus, Upload as UploadIcon } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
 import BookItem from "./components/book-item";
 import CreateTagDialog from "./components/create-tag-dialog";
 import EditTagDialog from "./components/edit-tag-dialog";
@@ -118,7 +118,7 @@ export default function NewLibraryPage({ renderSettingsDialog = true }: LibraryP
         </div>
       )}
 
-      <div className="flex min-w-0 h-[calc(100vh-60px)] flex-1 flex-col">
+      <div className="flex h-[calc(100vh-60px)] min-w-0 flex-1 flex-col">
         <div className="flex min-w-0 shrink-0 items-center justify-between gap-2 px-2 pt-2 sm:px-3 sm:pt-3">
           <h3 className="min-w-0 truncate font-bold text-xl sm:text-2xl md:text-3xl dark:border-neutral-700">
             {selectedTagFromUrl === "all"
@@ -156,7 +156,7 @@ export default function NewLibraryPage({ renderSettingsDialog = true }: LibraryP
               )}
 
               {viewMode === "grid" ? (
-                <div className="grid grid-cols-2 gap-2 xs:grid-cols-3 sm:grid-cols-4 sm:gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 3xl:grid-cols-8">
+                <div className="grid 3xl:grid-cols-8 grid-cols-2 xs:grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                   {visibleBooks.map((book) => (
                     <BookItem
                       key={book.id}

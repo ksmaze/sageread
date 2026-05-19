@@ -1,10 +1,10 @@
+import dayjs from "dayjs";
+import { Bell, BellDot, CheckCheck, Info, Trash2, X } from "lucide-react";
+import { useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useNotificationStore } from "@/store/notification-store";
-import dayjs from "dayjs";
-import { Bell, BellDot, CheckCheck, Info, Trash2, X } from "lucide-react";
-import { useState } from "react";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +18,7 @@ export default function NotificationDropdown() {
           {unreadCount > 0 ? (
             <>
               <BellDot size={18} />
-              <span className="-right-1 -top-1 absolute flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 font-bold text-[10px] text-white">
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 font-bold text-[10px] text-white">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             </>

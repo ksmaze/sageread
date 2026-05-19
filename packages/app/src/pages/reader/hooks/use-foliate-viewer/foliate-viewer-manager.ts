@@ -1,7 +1,6 @@
 import { type BookDoc, getDirection } from "@/lib/document";
 import { transformContent } from "@/services/transform-service";
-import type { BookConfig } from "@/types/book";
-import type { ViewSettings } from "@/types/book";
+import type { BookConfig, ViewSettings } from "@/types/book";
 import { type FoliateView, wrappedFoliateView } from "@/types/view";
 import { getBookDirFromLanguage, getBookDirFromWritingMode } from "@/utils/book";
 import { mountAdditionalFonts } from "@/utils/font";
@@ -20,8 +19,8 @@ import { applyFixedlayoutStyles, applyImageStyle, applyTranslationStyle, transfo
 import {
   handleClick,
   handleKeydown,
-  handleMouseMove,
   handleMousedown,
+  handleMouseMove,
   handleMouseup,
   handleTouchEnd,
   handleTouchMove,

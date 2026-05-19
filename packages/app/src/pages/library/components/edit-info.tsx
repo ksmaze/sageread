@@ -1,14 +1,14 @@
+import { Menu } from "@tauri-apps/api/menu";
+import { LogicalPosition } from "@tauri-apps/api/window";
+import { open } from "@tauri-apps/plugin-dialog";
+import { Upload, X } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDownloadImage } from "@/hooks/use-download-image";
 import type { BookWithStatusAndUrls } from "@/types/simple-book";
-import { Menu } from "@tauri-apps/api/menu";
-import { LogicalPosition } from "@tauri-apps/api/window";
-import { open } from "@tauri-apps/plugin-dialog";
-import { Upload, X } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
 
 interface EditInfoProps {
   book: BookWithStatusAndUrls;
@@ -185,7 +185,7 @@ export default function EditInfo({ book, isOpen, onClose, onSave }: EditInfoProp
                         {coverPreview && (
                           <button
                             onClick={handleRemoveCover}
-                            className="-right-2 -top-2 absolute rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                            className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
                           >
                             <X className="h-3 w-3" />
                           </button>

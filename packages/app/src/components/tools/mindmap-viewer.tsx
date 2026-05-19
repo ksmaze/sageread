@@ -1,10 +1,10 @@
 import { Transformer } from "markmap-lib";
 import { Toolbar } from "markmap-toolbar";
 import "markmap-toolbar/dist/style.css";
-import { iframeService } from "@/services/iframe-service";
 import { Menu, MenuItem } from "@tauri-apps/api/menu";
 import { Markmap } from "markmap-view";
 import { memo, useEffect, useRef } from "react";
+import { iframeService } from "@/services/iframe-service";
 
 interface MindmapViewerProps {
   markdown: string;
@@ -43,7 +43,7 @@ const MindmapViewerComponent = ({ markdown }: MindmapViewerProps) => {
         nodeElement = nodeElement.parentElement as unknown as SVGElement;
       }
 
-      if (!nodeElement || !nodeElement.classList.contains("markmap-node")) {
+      if (!nodeElement?.classList.contains("markmap-node")) {
         return;
       }
 

@@ -1,7 +1,7 @@
+import { X } from "lucide-react";
 import { TOOL_NAME_MAP } from "@/components/side-chat/chat-messages";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { X } from "lucide-react";
 import { MindmapViewer } from "./mindmap-viewer";
 
 interface MindmapDialogProps {

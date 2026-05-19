@@ -1,9 +1,9 @@
+import clsx from "clsx";
+import React, { useEffect, useMemo, useState } from "react";
 import Popup from "@/components/popup";
 import { Separator } from "@/components/ui/separator";
 import type { HighlightColor, HighlightStyle } from "@/types/book";
 import type { Position } from "@/utils/sel";
-import clsx from "clsx";
-import React, { useEffect, useMemo, useState } from "react";
 import HighlightOptions from "./highlight-options";
 import PopupButton from "./popup-button";
 

@@ -1,5 +1,5 @@
-import type { ExplainTextEventDetail } from "@/services/iframe-service";
 import { useCallback, useEffect } from "react";
+import type { ExplainTextEventDetail } from "@/services/iframe-service";
 
 interface UseTextEventHandlerOptions {
   sendMessage: any;

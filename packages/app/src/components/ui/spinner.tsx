@@ -9,7 +9,7 @@ const Spinner: React.FC<{
   return (
     <div
       className={clsx(
-        "-translate-x-1/2 absolute left-1/2 transform text-center",
+        "absolute left-1/2 -translate-x-1/2 transform text-center",
         "top-4 pt-[calc(env(safe-area-inset-top)+64px)]",
       )}
       role="status"

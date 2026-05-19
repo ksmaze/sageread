@@ -1,9 +1,9 @@
+import { useEffect, useRef } from "react";
 import { transformContent } from "@/services/transform-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { eventDispatcher } from "@/utils/event";
 import { getOSPlatform } from "@/utils/misc";
-import { type TextSelection, getTextFromRange } from "@/utils/sel";
-import { useEffect, useRef } from "react";
+import { getTextFromRange, type TextSelection } from "@/utils/sel";
 import { useReaderStore } from "../components/reader-provider";
 
 export interface NativeTouchEventType {
@@ -135,7 +135,7 @@ export const useTextSelector = (
     }
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     const handleSingleClick = (): boolean => {
       if (isPopupVisible.current) {

@@ -1,7 +1,7 @@
+import { create } from "zustand";
 import type { CustomTheme, Palette, ThemeMode } from "@/styles/themes";
 import type { SystemSettings } from "@/types/settings";
-import { type ThemeCode, getThemeCode } from "@/utils/style";
-import { create } from "zustand";
+import { getThemeCode, type ThemeCode } from "@/utils/style";
 
 interface ThemeState {
   themeMode: ThemeMode;

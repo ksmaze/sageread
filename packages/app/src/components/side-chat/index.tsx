@@ -1,9 +1,3 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useChatState } from "@/hooks/use-chat-state";
-import { useReaderStore } from "@/pages/reader/components/reader-provider";
-import { useAppSettingsStore } from "@/store/app-settings-store";
-import { useThemeStore } from "@/store/theme-store";
 import {
   CircleQuestionMark,
   History,
@@ -16,6 +10,12 @@ import {
   UserSearch,
 } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useChatState } from "@/hooks/use-chat-state";
+import { useReaderStore } from "@/pages/reader/components/reader-provider";
+import { useAppSettingsStore } from "@/store/app-settings-store";
+import { useThemeStore } from "@/store/theme-store";
 import { ChatContainerRoot } from "../prompt-kit/chat-container";
 import { ScrollButton } from "../prompt-kit/scroll-button";
 import { MindmapDialog } from "../tools/mindmap-dialog";
@@ -140,7 +140,7 @@ function ChatContent({ bookId }: ChatContentProps) {
 
   return (
     <ChatSurfaceProvider surface="reader">
-      <main id="chat-sidebar" className="flex h-full flex-col overflow-hidden ">
+      <main id="chat-sidebar" className="flex h-full flex-col overflow-hidden">
         <div className="ml-1 flex-shrink-0 border-neutral-300 dark:border-neutral-700">
           <div className="flex h-8 items-center justify-between">
             <div className="min-w-0 flex-1 pl-0.5">
@@ -201,7 +201,7 @@ function ChatContent({ bookId }: ChatContentProps) {
               onAskSelection={handleAskSelection}
               onViewToolDetail={handleViewToolDetail}
             />
-            <div className="-translate-x-1/2 pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl justify-end px-5">
+            <div className="pointer-events-none absolute bottom-4 left-1/2 flex w-full max-w-3xl -translate-x-1/2 justify-end px-5">
               <div className="pointer-events-auto">
                 <ScrollButton />
               </div>

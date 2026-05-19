@@ -239,7 +239,7 @@ export const validateAndNormalizeDate = (dateInput: string): ValidationResult<st
     }
 
     // Check if date is valid
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return {
         isValid: false,
         value: null,
@@ -260,7 +260,7 @@ export const validateAndNormalizeDate = (dateInput: string): ValidationResult<st
 
     // Validate month and day if provided
     if (cleaned.length >= 7) {
-      const month = parseInt(cleaned.substring(5, 7));
+      const month = parseInt(cleaned.substring(5, 7), 10);
       if (month < 1 || month > 12) {
         return {
           isValid: false,
@@ -271,7 +271,7 @@ export const validateAndNormalizeDate = (dateInput: string): ValidationResult<st
     }
 
     if (cleaned.length === 10) {
-      const day = parseInt(cleaned.substring(8, 10));
+      const day = parseInt(cleaned.substring(8, 10), 10);
       if (day < 1 || day > 31) {
         return {
           isValid: false,
@@ -370,14 +370,14 @@ export const validateISBN = (isbn: string): ValidationResult<string> => {
 const validateISBN10 = (isbn: string): boolean => {
   let sum = 0;
   for (let i = 0; i < 9; i++) {
-    const digit = parseInt(isbn[i]!);
-    if (isNaN(digit)) return false;
+    const digit = parseInt(isbn[i]!, 10);
+    if (Number.isNaN(digit)) return false;
     sum += digit * (10 - i);
   }
 
   const lastChar = isbn[9]!;
-  const checkDigit = lastChar === "X" ? 10 : parseInt(lastChar);
-  if (isNaN(checkDigit)) return false;
+  const checkDigit = lastChar === "X" ? 10 : parseInt(lastChar, 10);
+  if (Number.isNaN(checkDigit)) return false;
 
   sum += checkDigit;
   return sum % 11 === 0;
@@ -386,13 +386,13 @@ const validateISBN10 = (isbn: string): boolean => {
 const validateISBN13 = (isbn: string): boolean => {
   let sum = 0;
   for (let i = 0; i < 12; i++) {
-    const digit = parseInt(isbn[i]!);
-    if (isNaN(digit)) return false;
+    const digit = parseInt(isbn[i]!, 10);
+    if (Number.isNaN(digit)) return false;
     sum += digit * (i % 2 === 0 ? 1 : 3);
   }
 
-  const checkDigit = parseInt(isbn[12]!);
-  if (isNaN(checkDigit)) return false;
+  const checkDigit = parseInt(isbn[12]!, 10);
+  if (Number.isNaN(checkDigit)) return false;
 
   const calculatedCheck = (10 - (sum % 10)) % 10;
   return checkDigit === calculatedCheck;

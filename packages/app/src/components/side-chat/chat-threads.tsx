@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { useThreads } from "@/hooks/use-threads";
-import type { ThreadSummary } from "@/types/thread";
 import { Menu } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
 import dayjs from "dayjs";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import { useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { useThreads } from "@/hooks/use-threads";
+import type { ThreadSummary } from "@/types/thread";
 
 interface ChatThreadsProps {
   bookId: string | undefined;

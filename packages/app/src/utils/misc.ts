@@ -1,5 +1,5 @@
-import type { OsPlatform } from "@/types/system";
 import { md5 } from "js-md5";
+import type { OsPlatform } from "@/types/system";
 
 export const uniqueId = () => Math.random().toString(36).substring(2, 9);
 
@@ -9,12 +9,14 @@ export const getContentMd5 = (content: unknown) => md5(JSON.stringify(content));
 
 export const makeSafeFilename = (filename: string, replacement = "_") => {
   // Windows restricted characters + control characters and reserved names
-  const unsafeCharacters = /[<>:"\/\\|?*\x00-\x1F]/g;
+  const restrictedCharacters = '<>:"/\\|?*';
   const reservedFilenames = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
   // Unsafe to use filename including file extensions over 255 bytes on Android
   const maxFilenameBytes = 250;
 
-  let safeName = filename.replace(unsafeCharacters, replacement);
+  let safeName = Array.from(filename, (char) =>
+    char.charCodeAt(0) < 32 || restrictedCharacters.includes(char) ? replacement : char,
+  ).join("");
 
   if (reservedFilenames.test(safeName)) {
     safeName = `${safeName}${replacement}`;

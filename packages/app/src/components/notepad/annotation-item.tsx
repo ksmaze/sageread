@@ -1,12 +1,12 @@
-import { useReaderStore } from "@/pages/reader/components/reader-provider";
-import { HIGHLIGHT_COLOR_HEX, HIGHLIGHT_COLOR_RGBA } from "@/services/constants";
-import type { BookNote } from "@/types/book";
-import { traceReaderGoTo } from "@/utils/reader-navigation-debug";
 import { Menu } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
 import dayjs from "dayjs";
 import { useCallback } from "react";
+import { useReaderStore } from "@/pages/reader/components/reader-provider";
+import { HIGHLIGHT_COLOR_HEX, HIGHLIGHT_COLOR_RGBA } from "@/services/constants";
+import type { BookNote } from "@/types/book";
+import { traceReaderGoTo } from "@/utils/reader-navigation-debug";
 
 interface AnnotationItemProps {
   annotation: BookNote;

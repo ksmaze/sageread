@@ -1,5 +1,5 @@
-import { debounce } from "@/utils/debounce";
 import { useEffect } from "react";
+import { debounce } from "@/utils/debounce";
 import type { ScrollSource } from "./use-pagination";
 
 export const useMouseEvent = (
@@ -29,7 +29,7 @@ export const useMouseEvent = (
     }
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     window.addEventListener("message", handleMouseEvent);
     return () => {

@@ -1,3 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useNotepad } from "@/components/notepad/hooks";
 import { createBookNote, deleteBookNote, updateBookNote } from "@/services/book-note-service";
 import { iframeService } from "@/services/iframe-service";
@@ -6,13 +9,10 @@ import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { HighlightColor, HighlightStyle } from "@/types/book";
 import type { BookMeta, Note, UpdateNoteData } from "@/types/note";
 import type { ReaderNoteMarker } from "@/types/view";
-import { type Position, type TextSelection, getPopupPosition, getPosition } from "@/utils/sel";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { getPopupPosition, getPosition, type Position, type TextSelection } from "@/utils/sel";
 import { useReaderStore, useReaderStoreApi } from "../components/reader-provider";
-import { findSourceBoundNote, mergeUpdatedActiveNote } from "./reader-note-state";
 import { isAnnotationVisibleAtProgress } from "./reader-annotation-visibility";
+import { findSourceBoundNote, mergeUpdatedActiveNote } from "./reader-note-state";
 
 function getContextByRange(range: Range, win = 30) {
   const container = range.commonAncestorContainer;
@@ -102,7 +102,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
 
   // 业务逻辑函数
   const handleCopy = useCallback(() => {
-    if (!selection || !selection.text) return;
+    if (!selection?.text) return;
     if (selection) navigator.clipboard?.writeText(selection.text);
     toast.success("Copy success!");
     handleDismissPopupAndSelection();
@@ -110,7 +110,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
 
   const handleHighlight = useCallback(
     async (update = false) => {
-      if (!selection || !selection.text) return;
+      if (!selection?.text) return;
       setHighlightOptionsVisible(true);
       const { booknotes: annotations = [] } = config;
       const cfi = view?.getCFI(selection.index, selection.range);
@@ -220,7 +220,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   );
 
   const addNote = useCallback(async () => {
-    if (!selection || !selection.text) return;
+    if (!selection?.text) return;
 
     try {
       if (!bookData?.book) {
@@ -272,20 +272,20 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
         });
       }
       handleDismissPopupAndSelection();
-    } catch (error) {
+    } catch (_error) {
       toast.error("创建笔记失败");
     }
   }, [selection, bookData, view, bookId, handleCreateNote, handleDismissPopupAndSelection]);
 
   const handleExplain = useCallback(() => {
-    if (!selection || !selection.text) return;
+    if (!selection?.text) return;
     setShowAnnotPopup(false);
     iframeService.sendExplainTextRequest(selection.text, "explain", bookId);
   }, [selection, bookId]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const handleAskAI = useCallback(() => {
-    if (!selection || !selection.text) return;
+    if (!selection?.text) return;
 
     setShowAnnotPopup(false);
     setShowAskAIPopup(false);
@@ -355,7 +355,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   );
 
   // Popup 位置计算
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     setHighlightOptionsVisible(!!selection?.annotated);
     if (selection && selection.text.trim().length > 0 && !showAskAIPopup) {
@@ -387,7 +387,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   }, [selection, bookId, showAskAIPopup]);
 
   // 加载当前页面的标注
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     if (!progress || !view) return;
     const { booknotes = [] } = config;

@@ -65,7 +65,7 @@ const cssValidate = (css: string) => {
       }
 
       // Validate full property format
-      if (!propertyPattern.test(prop.endsWith(";") ? prop : prop + ";")) {
+      if (!propertyPattern.test(prop.endsWith(";") ? prop : `${prop};`)) {
         return { isValid: false, error: `Invalid property: ${prop}` };
       }
     }

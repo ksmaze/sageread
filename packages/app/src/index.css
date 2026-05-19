@@ -1,10 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./themes/default.css";
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:is(.dark *));
-
-/* Import theme file */
-@import "./themes/default.css";
 
 ::-webkit-scrollbar {
   width: 6px;
@@ -39,14 +37,14 @@
   --font-serif: Merriweather, serif;
   --font-mono: Source Code Pro, monospace;
   --radius: 0.5rem;
-  --shadow-2xs: 0 1px 3px 0px oklch(0.00 0 0 / 0.05);
-  --shadow-xs: 0 1px 3px 0px oklch(0.00 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 1px 2px -1px oklch(0.00 0 0 / 0.10);
-  --shadow: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 1px 2px -1px oklch(0.00 0 0 / 0.10);
-  --shadow-md: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 2px 4px -1px oklch(0.00 0 0 / 0.10);
-  --shadow-lg: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 4px 6px -1px oklch(0.00 0 0 / 0.10);
-  --shadow-xl: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 8px 10px -1px oklch(0.00 0 0 / 0.10);
-  --shadow-2xl: 0 1px 3px 0px oklch(0.00 0 0 / 0.25);
+  --shadow-2xs: 0 1px 3px 0px oklch(0 0 0 / 0.05);
+  --shadow-xs: 0 1px 3px 0px oklch(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 1px 2px -1px oklch(0 0 0 / 0.1);
+  --shadow: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 1px 2px -1px oklch(0 0 0 / 0.1);
+  --shadow-md: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 2px 4px -1px oklch(0 0 0 / 0.1);
+  --shadow-lg: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 4px 6px -1px oklch(0 0 0 / 0.1);
+  --shadow-xl: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 8px 10px -1px oklch(0 0 0 / 0.1);
+  --shadow-2xl: 0 1px 3px 0px oklch(0 0 0 / 0.25);
 }
 
 @theme {
@@ -124,7 +122,8 @@ foliate-view {
     -webkit-text-size-adjust: 100%;
     font-feature-settings: normal;
     -webkit-tap-highlight-color: transparent;
-    font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    font-family:
+      system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     font-variation-settings: normal;
   }
 
@@ -178,7 +177,7 @@ foliate-view {
   }
 
   .mm-toolbar a {
-    display: inline-flex !important;
+    display: inline-flex;
   }
 }
 
@@ -199,7 +198,7 @@ foliate-view {
     --tw-prose-th-borders: var(--color-border);
     --tw-prose-td-borders: var(--color-border);
 
-    max-width: 100% !important;
+    max-width: 100%;
   }
 
   .prose p {
@@ -232,13 +231,13 @@ foliate-view {
     margin-top: 0.375em;
     margin-bottom: 0.375em;
     margin-left: 1.25em;
-    padding-left: 0 !important;
+    padding-left: 0;
   }
 
   .prose li {
     margin-top: 0.0625em;
     margin-bottom: 0.0625em;
-    padding-left: 0 !important;
+    padding-left: 0;
     list-style-type: decimal;
   }
 
@@ -260,7 +259,7 @@ foliate-view {
   .prose hr {
     margin-top: 1em;
     margin-bottom: 1em;
-    background-color: var(--color-neutral-500) !important;
+    background-color: var(--color-neutral-500);
   }
 
   /* prose-sm 的更紧凑间距 */
@@ -294,13 +293,13 @@ foliate-view {
     margin-top: 0.25em;
     margin-bottom: 0.25em;
     margin-left: 1.25em;
-    padding-left: 0 !important;
+    padding-left: 0;
   }
 
   .prose-sm li {
     margin-top: 0.03125em;
     margin-bottom: 0.03125em;
-    padding-left: 0 !important;
+    padding-left: 0;
     list-style-type: decimal;
   }
 
@@ -328,16 +327,16 @@ foliate-view {
 /* Custom shadow effects */
 @layer components {
   .shadow-around {
-    box-shadow: 
+    box-shadow:
       0 0 2px 0 rgba(0, 0, 0, 0.01),
       0 0 1px 0 rgba(0, 0, 0, 0.02),
       1px 1px 2px 0 rgba(0, 0, 0, 0.03);
   }
 
   .dark .shadow-around {
-    box-shadow: 
+    box-shadow:
       0 0 6px 0 rgba(0, 0, 0, 0.12),
-      0 0 3px 0 rgba(0, 0, 0, 0.10),
+      0 0 3px 0 rgba(0, 0, 0, 0.1),
       1px 1px 3px 0 rgba(0, 0, 0, 0.15);
   }
 }

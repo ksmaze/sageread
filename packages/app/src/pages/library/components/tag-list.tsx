@@ -1,8 +1,9 @@
-import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import clsx from "clsx";
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import type { BookTag } from "../hooks/use-tags-management";
+
 // import DataCleanupButton from "./DataCleanupButton";
 
 interface TagListProps {
@@ -130,7 +131,7 @@ export default function TagList({
 
           <div
             className={clsx(
-              "-mb-6 pointer-events-none sticky bottom-0 z-10 h-6 transition-opacity duration-200",
+              "pointer-events-none sticky bottom-0 z-10 -mb-6 h-6 transition-opacity duration-200",
               "bg-gradient-to-t from-neutral-50/95 via-neutral-50/70 to-transparent dark:from-neutral-800/90 dark:via-neutral-800/60 dark:to-transparent",
               showBottomShadow ? "opacity-0" : "opacity-0",
             )}

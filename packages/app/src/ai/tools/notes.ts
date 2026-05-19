@@ -1,7 +1,7 @@
-import { getNotes } from "@/services/note-service";
-import type { Note } from "@/types/note";
 import { tool } from "ai";
 import { z } from "zod";
+import { getNotes } from "@/services/note-service";
+import type { Note } from "@/types/note";
 
 interface FormattedNote {
   id: string;

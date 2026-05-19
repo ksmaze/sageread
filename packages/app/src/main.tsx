@@ -1,8 +1,8 @@
-import { Toaster } from "@/components/ui/sonner";
-import { invoke } from "@tauri-apps/api/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router";
+import { Toaster } from "@/components/ui/sonner";
 import { flushAllWrites } from "./lib/tauri-storage.ts";
 import AndroidAppShell from "./mobile/app-shell.tsx";
 import { mountFontsToMainApp } from "./utils/font.ts";

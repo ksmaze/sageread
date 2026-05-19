@@ -1,7 +1,7 @@
-import { getTags } from "@/services/tag-service";
-import type { Tag } from "@/services/tag-service";
-import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import { useEffect, useMemo, useState } from "react";
+import type { Tag } from "@/services/tag-service";
+import { getTags } from "@/services/tag-service";
+import type { BookWithStatusAndUrls } from "@/types/simple-book";
 
 export interface BookTag {
   id: string;

@@ -1,8 +1,8 @@
+import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { ReaderNavigationTarget } from "@/pages/reader/store/create-reader-store";
 import { useLayoutStore } from "@/store/layout-store";
 import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
-import { useCallback, useState } from "react";
 import { useMobileShellStore } from "../shell/mobile-shell-store";
 import type { UnifiedNoteReaderTarget, UnifiedNoteType } from "./unified-note-model";
 import { UnifiedNotesList, type UnifiedNotesListVariant } from "./unified-notes-list";

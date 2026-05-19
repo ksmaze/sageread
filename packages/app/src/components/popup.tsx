@@ -1,7 +1,7 @@
-import { useResponsiveSize } from "@/hooks/use-responsive-size";
-import type { Position } from "@/utils/sel";
 import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
+import { useResponsiveSize } from "@/hooks/use-responsive-size";
+import type { Position } from "@/utils/sel";
 
 const Popup = ({
   width,
@@ -42,7 +42,7 @@ const Popup = ({
     minHeight = Math.min(minHeight, availableHeight);
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     if (!containerRef.current) return;
     const resizeObserver = new ResizeObserver((entries) => {

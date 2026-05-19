@@ -16,7 +16,7 @@ export const walkTextNodes = (root: HTMLElement): HTMLElement[] => {
       if (child.tagName === "IFRAME") {
         const iframe = child as HTMLIFrameElement;
         const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (iframeDoc && iframeDoc.body) {
+        if (iframeDoc?.body) {
           walk(iframeDoc.body, depth + 1);
         }
       }

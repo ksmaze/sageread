@@ -1,10 +1,10 @@
+import { Search } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import type { BookSearchConfig, BookSearchResult } from "@/types/book";
 import { isCJKStr } from "@/utils/lang";
 import { createRejecttFilter } from "@/utils/node";
-import { Search } from "lucide-react";
-import type React from "react";
-import { useCallback, useEffect, useRef } from "react";
 import { useReaderStoreApi } from "./reader-provider";
 
 const MINIMUM_SEARCH_TERM_LENGTH_DEFAULT = 2;
@@ -35,7 +35,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const inputFocusedRef = useRef(false);
 
   const primaryLang = bookData?.book?.primaryLanguage || "en";
-  const searchConfig = config?.searchConfig! as BookSearchConfig;
+  const searchConfig = config?.searchConfig as BookSearchConfig | undefined;
 
   useEffect(() => {
     if (isVisible && inputRef.current) {
@@ -90,12 +90,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
     return searchTerm.length >= minLength;
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const handleSearch = useCallback(
     async (term: string) => {
+      if (!progress || !searchConfig || !view) {
+        return;
+      }
+
       const { pageinfo } = progress!;
       const index = searchConfig.scope === "section" ? pageinfo.current : undefined;
-      const generator = await view?.search({
+      const generator = await view.search({
         ...searchConfig,
         index,
         query: term,
@@ -107,7 +111,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       let lastProgressLogTime = 0;
 
       const processResults = async () => {
-        for await (const result of generator!) {
+        for await (const result of generator) {
           if (typeof result === "string") {
             if (result === "done") {
               onSearchResultChange([...results]);
@@ -137,7 +141,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     [progress, searchConfig],
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const resetSearch = useCallback(() => {
     onSearchResultChange([]);
     view?.clearSearch();
@@ -146,7 +150,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <div className="relative p-2">
       <div className="relative">
-        <Search size={16} className="-translate-y-1/2 absolute top-1/2 left-3 z-10 text-gray-500" />
+        <Search size={16} className="absolute top-1/2 left-3 z-10 -translate-y-1/2 text-gray-500" />
         <Input
           ref={inputRef}
           type="text"

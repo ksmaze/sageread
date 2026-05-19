@@ -1,6 +1,6 @@
-import type { Thread } from "@/types/thread";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { Thread } from "@/types/thread";
 
 interface ThreadState {
   currentThread: Thread | null;

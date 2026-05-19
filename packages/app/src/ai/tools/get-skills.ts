@@ -37,7 +37,8 @@ export const getSkillsTool = tool({
       // 查找匹配的技能（通过任务名称）
       const matched = activeSkills.find(
         (skill) =>
-          skill.name.toLowerCase().includes(task.toLowerCase()) || task.toLowerCase().includes(skill.name.toLowerCase()),
+          skill.name.toLowerCase().includes(task.toLowerCase()) ||
+          task.toLowerCase().includes(skill.name.toLowerCase()),
       );
 
       if (!matched) {

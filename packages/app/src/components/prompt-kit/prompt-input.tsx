@@ -1,7 +1,7 @@
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 
 type PromptInputContextType = {
   isLoading: boolean;
@@ -91,7 +91,7 @@ export type PromptInputTextareaProps = {
 function PromptInputTextarea({ className, onKeyDown, disableAutosize = false, ...props }: PromptInputTextareaProps) {
   const { value, setValue, maxHeight, onSubmit, disabled, textareaRef } = usePromptInput();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     if (disableAutosize) return;
 
@@ -173,4 +173,4 @@ function PromptInputAction({ tooltip, children, className, side = "top", ...prop
   );
 }
 
-export { PromptInput, PromptInputTextarea, PromptInputActions, PromptInputAction };
+export { PromptInput, PromptInputAction, PromptInputActions, PromptInputTextarea };

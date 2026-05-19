@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { type ReaderNavigationTarget, clearReaderNavigationTarget } from "./reader-navigation";
+import { clearReaderNavigationTarget, type ReaderNavigationTarget } from "./reader-navigation";
 
 describe("reader navigation targets", () => {
   it("clears the pending target only when the completed target still matches", () => {

@@ -1,5 +1,5 @@
-import { Markdown } from "@/components/prompt-kit/markdown";
 import { memo } from "react";
+import { Markdown } from "@/components/prompt-kit/markdown";
 
 interface RagResultItem {
   related_chapter_titles: string;

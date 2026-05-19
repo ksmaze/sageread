@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { ArrowUp } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface AskAIPopupProps {
   style: React.CSSProperties;

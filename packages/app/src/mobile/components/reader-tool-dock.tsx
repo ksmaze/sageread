@@ -1,7 +1,7 @@
+import { BookOpenText, Bot, ChevronLeft, ChevronRight, NotebookPen, Search, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatReaderPageProgress } from "@/mobile/reader/reader-chrome-progress";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
-import { BookOpenText, Bot, ChevronLeft, ChevronRight, NotebookPen, Search, Type } from "lucide-react";
 import type { ReaderSheet } from "../types";
 
 interface ReaderToolDockProps {

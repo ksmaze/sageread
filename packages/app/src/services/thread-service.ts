@@ -1,6 +1,6 @@
-import type { RawThread, Thread, ThreadSummary } from "@/types/thread";
 import { invoke } from "@tauri-apps/api/core";
 import type { UIMessage } from "ai";
+import type { RawThread, Thread, ThreadSummary } from "@/types/thread";
 
 export interface ThreadMetadata {
   semanticContext?: string;

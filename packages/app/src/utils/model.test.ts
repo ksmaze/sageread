@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "node:test";
-import { getCurrentVectorModelConfig } from "./model";
 import { useVectorModelStore, type VectorModelConfig } from "../store/vector-model-store";
+import { getCurrentVectorModelConfig } from "./model";
 
 const externalModel: VectorModelConfig = {
   id: "external-embedding",

@@ -1,3 +1,4 @@
+import { BookOpen, BrainCircuit, Download, Edit, Tags, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -10,7 +11,6 @@ import {
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { BookWithStatusAndUrls } from "@/types/simple-book";
-import { BookOpen, BrainCircuit, Download, Edit, Tags, Trash2 } from "lucide-react";
 
 interface BookActionDrawerProps {
   book: BookWithStatusAndUrls;
@@ -51,9 +51,7 @@ export default function BookActionDrawer({
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle className="line-clamp-1">{book.title}</DrawerTitle>
-          <DrawerDescription>
-            {book.author || "Unknown Author"}
-          </DrawerDescription>
+          <DrawerDescription>{book.author || "Unknown Author"}</DrawerDescription>
         </DrawerHeader>
 
         <ScrollArea className="p-4 pt-0">
@@ -121,9 +119,7 @@ export default function BookActionDrawer({
 
             <div className="my-2 border-t" />
 
-            <div className="text-sm font-medium text-muted-foreground mb-2">
-              标签与AI
-            </div>
+            <div className="mb-2 font-medium text-muted-foreground text-sm">标签与AI</div>
 
             <Button
               variant="outline"
@@ -151,15 +147,15 @@ export default function BookActionDrawer({
 
             <div className="my-2 border-t" />
 
-            <div className="text-sm font-medium text-muted-foreground mb-2">向量化 {isVectorized && "✓"}</div>
+            <div className="mb-2 font-medium text-muted-foreground text-sm">向量化 {isVectorized && "✓"}</div>
 
             {canVectorize ? (
               <>
                 {isVectorized && (
-                  <div className="grid grid-cols-2 gap-2 mb-2 text-xs text-muted-foreground">
-                    <div className="bg-muted/50 p-2 rounded">模型: {vectorMeta?.model || "未知"}</div>
-                    <div className="bg-muted/50 p-2 rounded">维度: {vectorMeta?.dimension || 0}</div>
-                    <div className="bg-muted/50 p-2 rounded">分块: {vectorMeta?.chunkCount || 0}</div>
+                  <div className="mb-2 grid grid-cols-2 gap-2 text-muted-foreground text-xs">
+                    <div className="rounded bg-muted/50 p-2">模型: {vectorMeta?.model || "未知"}</div>
+                    <div className="rounded bg-muted/50 p-2">维度: {vectorMeta?.dimension || 0}</div>
+                    <div className="rounded bg-muted/50 p-2">分块: {vectorMeta?.chunkCount || 0}</div>
                   </div>
                 )}
 

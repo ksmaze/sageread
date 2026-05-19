@@ -1,12 +1,12 @@
-import type { BookProgress } from "@/types/book";
 import * as CFI from "foliate-js/epubcfi.js";
 import { useEffect, useRef, useState } from "react";
+import type { BookProgress } from "@/types/book";
 
 const useScrollToItem = (cfi: string, progress: BookProgress | null) => {
   const viewRef = useRef<HTMLLIElement | null>(null);
   const [isCurrent, setIsCurrent] = useState(false);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
     if (!viewRef.current || !progress) return;
 

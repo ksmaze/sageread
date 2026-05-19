@@ -1,5 +1,8 @@
-import { useNotepad } from "@/components/notepad/hooks";
+import dayjs from "dayjs";
+import { BookOpen } from "lucide-react";
+import { useState } from "react";
 import { runAfterDialogClose } from "@/components/notepad/dialog-navigation";
+import { useNotepad } from "@/components/notepad/hooks";
 import { NoteEditorDialog } from "@/components/notepad/note-editor-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,10 +22,7 @@ import {
   readerNavigationInfo,
   readerNavigationWarn,
 } from "@/utils/reader-navigation-debug";
-import dayjs from "dayjs";
-import { BookOpen } from "lucide-react";
-import { useState } from "react";
-import { UNIFIED_NOTE_FILTERS, type UnifiedNoteReaderTarget, getUnifiedNoteReaderTarget } from "./unified-note-model";
+import { getUnifiedNoteReaderTarget, UNIFIED_NOTE_FILTERS, type UnifiedNoteReaderTarget } from "./unified-note-model";
 import type { UnifiedNoteItem, UnifiedNoteType } from "./use-unified-notes";
 import { useUnifiedNotes } from "./use-unified-notes";
 

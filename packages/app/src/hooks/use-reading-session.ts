@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   calculateSessionDuration,
   completeReadingSession,
@@ -6,7 +7,6 @@ import {
   updateReadingSession,
 } from "@/services/reading-session-service";
 import { type ActivityConfig, type ReadingSession, SessionState, type SessionStats } from "@/types/reading-session";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_CONFIG: ActivityConfig = {
   pauseThreshold: 20 * 1000,
@@ -78,7 +78,7 @@ export const useReadingSession = (bookId: string, config: UseReadingSessionConfi
   }, [bookId]);
 
   // 保存会话数据
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const saveSessionData = useCallback(async () => {
     if (!currentSessionRef.current || !sessionStats) return;
 
@@ -98,7 +98,7 @@ export const useReadingSession = (bookId: string, config: UseReadingSessionConfi
   }, [currentSessionRef, sessionStats]);
 
   // 结束会话
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   const endSession = useCallback(async () => {
     if (!currentSessionRef.current || !sessionStats) return;
 
