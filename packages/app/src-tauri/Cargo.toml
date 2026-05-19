@@ -32,7 +32,6 @@ sqlx = "0.8.6"
 uuid = { version = "1", features = ["v4"] }
 log = "0.4"
 tauri-plugin-epub = { path = "plugins/tauri-plugin-epub" }
-jan-utils = { path = "utils" }
 tauri-plugin-log = "2"
 reqwest = { version = "0.13.1", default-features = false, features = ["stream", "rustls"] }
 rustls-platform-verifier = "0.7"
