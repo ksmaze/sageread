@@ -38,6 +38,46 @@
 
 ---
 
+## Bug Analysis: Android PDF Iframe URL ANR
+
+### 1. Root Cause Category
+
+- **Category**: B - Cross-Layer Contract, D - Test Coverage Gap, E - Implicit Assumption.
+- **Specific Cause**: Generated PDF page HTML was converted to `blob:` URLs and assigned to fixed-layout iframes. On Android/Tauri, those iframe URL navigations can pass through Wry's `shouldOverrideUrlLoading` path on the UI thread. The captured ANR showed the main thread blocked in `RustWebViewClient.shouldOverrideUrlLoading -> wry::android::binding::shouldOverride -> tauri_runtime_wry::create_webview -> WebviewManager::prepare_webview`, while logcat also showed PDF iframe sandbox/blob warnings.
+
+### 2. Why Fixes Failed
+
+1. Earlier PDF annotation fixes focused on replay visibility, stale renderer state, and dialog sequencing. They did not remove the Android WebView URL-navigation boundary used by generated PDF pages.
+2. The sandbox warning looked like a security warning, but the blocking stack was actually Tauri/Wry URL override handling. Treating the warning as the cause would leave the `blob:` iframe navigation path intact.
+3. Existing tests covered stale loads and PDF cleanup, but did not assert that generated PDF page frames avoid `iframe.src` URL assignments.
+
+### 3. Prevention Mechanisms
+
+| Priority | Mechanism | Specific Action | Status |
+|----------|-----------|-----------------|--------|
+| P0 | Architecture | Represent generated PDF page HTML as inline frame content (`srcdoc`) instead of cached `blob:` page URLs. | DONE |
+| P0 | Runtime Cleanup | Clear PDF `srcdoc` frames without assigning `about:blank` to `iframe.src`, while still cancelling PDF render work. | DONE |
+| P0 | Test Coverage | Add fixed-layout tests proving generated inline frames do not assign `iframe.src` on load or clear. | DONE |
+| P0 | Test Coverage | Update PDF lifecycle tests to assert page sections expose `srcdoc` and do not allocate/revoke page blob URLs. | DONE |
+| P1 | Runtime Observability | Serialize `[SageRead:ReaderNav]` details as one JSON string so logcat no longer collapses them to `[object Object]`. | DONE |
+| P1 | Documentation | Record the Android/Tauri generated PDF page URL contract in foliate and cross-layer specs. | DONE |
+
+### 4. Systematic Expansion
+
+- **Similar Issues**: Comic-book and fixed-layout EPUB generated documents still use object URLs in places; only the generated PDF page path is changed here because the ANR was tied to repeated PDF page iframe navigations.
+- **Design Improvement**: Treat generated renderer documents as inline state when they do not need independent resource URL identity.
+- **Process Improvement**: For Android WebView ANRs, inspect native main-thread stacks before chasing adjacent console warnings.
+
+### 5. Knowledge Capture
+
+- [x] Updated `.trellis/spec/foliate-js/frontend/component-guidelines.md`
+- [x] Updated `.trellis/spec/foliate-js/frontend/state-management.md`
+- [x] Updated `.trellis/spec/app/frontend/state-management.md`
+- [x] Updated `.trellis/spec/guides/cross-layer-thinking-guide.md`
+- [x] Verified no `src/templates/markdown/spec/` tree exists in this repo to sync.
+
+---
+
 ## Bug Analysis: Note Jump Debuggability Gap
 
 ### 1. Root Cause Category

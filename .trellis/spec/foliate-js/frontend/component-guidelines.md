@@ -98,6 +98,7 @@ renderer.lastSection()
 - `prevSection()`, `nextSection()`, `firstSection()`, and `lastSection()` must navigate between linear book sections for fixed-layout renderers. App chrome may call these methods without knowing whether the active renderer is paginated or fixed-layout.
 - Navigating to another page in the same spread must update the active side and emit `relocate`; otherwise progress, TOC highlighting, and annotation loading can remain on the old page.
 - Overlay geometry must be redrawn after fixed-layout zoom/fit changes because PDF render frames can change iframe dimensions without remounting the document.
+- Generated PDF page documents must not be loaded by assigning a `blob:` page URL to `iframe.src` on Android/Tauri. Wry handles iframe URL navigations through Android `shouldOverrideUrlLoading`, and repeated PDF page loads can block the UI thread there. Keep generated PDF page HTML inline via `srcdoc` or an equivalent same-document write, and clear inline frames without assigning `about:blank` to `iframe.src`.
 
 ### 4. Validation & Error Matrix
 
@@ -108,6 +109,8 @@ renderer.lastSection()
 | App reader chrome calls `nextSection()` on a PDF | Move to the next linear page/section or no-op at the boundary. |
 | Target page is in the currently loaded spread | Update `#side`, redraw, and emit `relocate`. |
 | Frame is blank filler for a spread | Exclude it from `getContents()` and do not create an overlayer. |
+| A generated PDF page frame loads | Use inline HTML (`srcdoc`) so the frame load does not create a `blob:` URL navigation through Android WebView. |
+| A generated PDF page frame is destroyed | Cancel PDF rendering and clear the inline document without assigning a replacement URL to `iframe.src`. |
 
 ### 5. Good/Base/Bad Cases
 
@@ -120,6 +123,7 @@ renderer.lastSection()
 ### 6. Tests Required
 
 - Run `node --test packages/foliate-js/tests/fixed-layout-tests.js` after changing `fixed-layout.js` renderer contracts.
+- Run `node --test packages/foliate-js/tests/pdf-lifecycle-tests.js` after changing generated PDF page HTML, cached page resources, or `book.destroy()` cleanup.
 - Run `pnpm --filter foliate-js build` after changing `fixed-layout.js`, `view.js`, or renderer event shapes.
 - Run `pnpm --filter app build` after changing app-facing renderer methods, emitted event details, or ambient declarations.
 - Manual reader checks for PDF must cover creating a highlight, reloading/navigating back to the page, tapping previous/next reader controls, and selecting a TOC item that targets a loaded spread side.

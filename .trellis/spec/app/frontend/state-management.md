@@ -131,6 +131,7 @@ createReaderStore(bookId: string, initialNavigationTarget?: ReaderNavigationTarg
 - Treat `view.goTo(cfi)` resolving to `undefined`/`null` as a navigation failure. Foliate can catch renderer errors internally, so "the promise resolved" is not enough proof that navigation succeeded.
 - Restoring an initial saved location must not be allowed to abort reader initialization. If initial restore fails, log it and fall back to the book start so the reader remains mounted.
 - Reader jumps from notes, annotations, unified notes, layout/mobile shell stores, reader stores, `ReaderViewer`, and foliate initialization must log with the `[SageRead:ReaderNav]` prefix. Include the full CFI, CFI length, source, `requestedAt`, book id/title where available, and whether foliate returned a resolved destination.
+- Reader navigation logs must serialize details into one logcat-readable string. Do not pass detail objects as separate `console.*` arguments because Android/Tauri logcat can collapse them to `[object Object]`, hiding the CFI and boundary metadata needed for debugging.
 - Direct `view.goTo(cfi)` calls from mounted reader surfaces must use the shared reader navigation tracing helper instead of ignoring the returned value. A missing view, missing CFI, thrown error, or unresolved result must be visible in logcat.
 - When note-to-original navigation is reported as intermittent or cannot be reproduced locally, add or preserve boundary logs before attempting another behavioral fix. The first debugging artifact should show whether the request reached the UI click handler, shell/layout store, reader store, `ReaderViewer`, and foliate manager.
 
@@ -157,6 +158,7 @@ createReaderStore(bookId: string, initialNavigationTarget?: ReaderNavigationTarg
 
 - `reader-navigation-consume.test.ts` must cover stale-target clearing, await-before-clear, unresolved navigation, and pending-target initial-location precedence.
 - Reader navigation debug helpers must keep stable target/result summaries so logcat output stays searchable and comparable across layers.
+- Reader navigation debug helper tests must assert the emitted console call is a single string containing serialized JSON details.
 - Unified note model tests must cover whether a display item can produce a reader target.
 - Run `pnpm --filter app build` after signature changes to stores or reader hooks.
 

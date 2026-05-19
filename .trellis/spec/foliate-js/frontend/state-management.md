@@ -85,6 +85,13 @@ mutate `#left`/`#right`/`#center`, update the visible side, redraw overlays, or 
 with the frames actually displayed; do not mark a target index current before the
 new spread is ready.
 
+Generated PDF page HTML is renderer-local state, not a navigable resource. On
+Android/Tauri, assigning generated `blob:` page URLs to `iframe.src` can route the
+load through WebView `shouldOverrideUrlLoading` and deadlock the UI thread during
+repeated page or note jumps. Represent generated PDF pages as inline frame content
+(`srcdoc` or equivalent) and clear inline frames without writing `about:blank` to
+`iframe.src`.
+
 ## When to Use Global State
 
 Do not add global state to `foliate-js`. If a value is user preference or application workflow state, it belongs in the consumer.

@@ -36,3 +36,4 @@ This follows the previous PDF lifecycle fixes, so the goal is to handle the rema
 - Reader annotation replay currently filters annotations by comparing saved range CFIs to `CFI.collapse(progress.location)` and `CFI.collapse(progress.location, true)`.
 - For a PDF page base CFI such as `epubcfi(/6/2)`, both collapsed start and end are the same value. A page-internal annotation like `epubcfi(/6/2!...range...)` compares greater than both, so it is never replayed.
 - `ReaderViewer` pending navigation currently calls `view.goTo()` without awaiting it and tries to clear the target through an out-of-scope store reference.
+- Android ANR evidence from logcat/dropbox showed the main thread blocked under Tauri/Wry `RustWebViewClient.shouldOverrideUrlLoading` while generated PDF page iframes were loading `blob:` HTML. Generated PDF pages should be inline frame content (`srcdoc`) instead of navigable page blob URLs.

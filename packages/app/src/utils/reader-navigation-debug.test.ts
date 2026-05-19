@@ -3,6 +3,7 @@ import { describe, it, mock } from "node:test";
 import {
   describeReaderNavigationResult,
   describeReaderNavigationTarget,
+  readerNavigationInfo,
   traceReaderGoTo,
 } from "./reader-navigation-debug";
 
@@ -44,6 +45,28 @@ describe("reader navigation debug helpers", () => {
       resolved: false,
       valueType: "undefined",
     });
+  });
+
+  it("writes logcat-readable JSON details as one string", () => {
+    const info = mock.method(console, "info", () => undefined);
+
+    try {
+      readerNavigationInfo("test.event", {
+        target: describeReaderNavigationTarget({
+          bookId: "book-1",
+          cfi: "epubcfi(/6/2)",
+          requestedAt: 123,
+          source: "unified-notes",
+        }),
+      });
+
+      assert.equal(info.mock.calls.length, 1);
+      assert.equal(info.mock.calls[0]?.arguments.length, 1);
+      assert.match(String(info.mock.calls[0]?.arguments[0]), /^\[SageRead:ReaderNav\] test\.event \{/);
+      assert.match(String(info.mock.calls[0]?.arguments[0]), /"cfi":"epubcfi\(\/6\/2\)"/);
+    } finally {
+      mock.restoreAll();
+    }
   });
 
   it("reports direct goTo success and unresolved results", async () => {

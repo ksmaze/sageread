@@ -47,6 +47,7 @@ For each arrow, ask:
 | Fixed-Layout/PDF Async Renderer ↔ Annotation Replay | app replay treats `relocate` as page-ready, so stale section/iframe/render completions must not mutate current frames or emit readiness events |
 | Note Dialog Portal ↔ Reader Navigation | modal focus cleanup must finish before PDF/fixed-layout navigation replaces iframes |
 | Reader Navigation Request ↔ Logcat Observability | when note jumps stay intermittent, every layer must log the same request metadata so the failing boundary can be identified from Android logcat without guessing |
+| Generated PDF Page HTML ↔ Android Tauri WebView | assigning generated PDF pages as `blob:` iframe URLs can be intercepted by Wry `shouldOverrideUrlLoading` and block the UI thread |
 
 ### Step 3: Define Contracts
 
@@ -119,6 +120,12 @@ For each boundary:
 
 **Good**: Add a shared log prefix and emit the target/request metadata at each boundary: click handler, dialog dismissal, shell/store handoff, reader-store request, `ReaderViewer` consume, foliate initialization, and `relocate`. Once the logs show the first failing boundary, change behavior there.
 
+### Mistake 11: Treating Generated PDF Pages As Navigable URLs
+
+**Bad**: Build a generated PDF page document, wrap it in `URL.createObjectURL(new Blob([html]))`, and assign that `blob:` URL to a fixed-layout iframe on Android/Tauri.
+
+**Good**: Treat generated PDF page HTML as inline renderer state. Use `iframe.srcdoc` or an equivalent same-document write, keep PDF rendering cancellation tokened, and clear inline frames without assigning a replacement URL to `iframe.src`.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -148,6 +155,7 @@ After implementation:
 - [ ] For fixed-layout/PDF navigation races, tested stale section loads, stale iframe loads, and stale PDF render completions resolving after a newer page navigation
 - [ ] For note-dialog "open original", verified the dialog closes before reader navigation is scheduled
 - [ ] For intermittent note jumps, verified the same request metadata appears in logcat across the UI, shell/store, reader, and foliate layers
+- [ ] For Android PDF note/page jumps, verified generated page loads do not produce `blob:` iframe navigation warnings or `shouldOverrideUrlLoading` ANRs
 
 ---
 

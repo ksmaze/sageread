@@ -99,16 +99,43 @@ export function describeReaderNavigationError(error: unknown) {
   };
 }
 
+function serializeReaderNavigationDetails(details: Record<string, unknown> | undefined): string {
+  const seen = new WeakSet<object>();
+
+  try {
+    return JSON.stringify(details ?? {}, (_key, value) => {
+      if (typeof value === "bigint") return value.toString();
+      if (value instanceof Error) {
+        return describeReaderNavigationError(value);
+      }
+      if (value && typeof value === "object") {
+        if (seen.has(value)) return "[Circular]";
+        seen.add(value);
+      }
+      return value;
+    });
+  } catch (error) {
+    return JSON.stringify({
+      error: describeReaderNavigationError(error),
+      serializationFailed: true,
+    });
+  }
+}
+
+function formatReaderNavigationLogMessage(event: string, details?: Record<string, unknown>): string {
+  return `${READER_NAVIGATION_LOG_PREFIX} ${event} ${serializeReaderNavigationDetails(details)}`;
+}
+
 export function readerNavigationInfo(event: string, details?: Record<string, unknown>): void {
-  console.info(`${READER_NAVIGATION_LOG_PREFIX} ${event}`, details ?? {});
+  console.info(formatReaderNavigationLogMessage(event, details));
 }
 
 export function readerNavigationWarn(event: string, details?: Record<string, unknown>): void {
-  console.warn(`${READER_NAVIGATION_LOG_PREFIX} ${event}`, details ?? {});
+  console.warn(formatReaderNavigationLogMessage(event, details));
 }
 
 export function readerNavigationError(event: string, details?: Record<string, unknown>): void {
-  console.error(`${READER_NAVIGATION_LOG_PREFIX} ${event}`, details ?? {});
+  console.error(formatReaderNavigationLogMessage(event, details));
 }
 
 export async function traceReaderGoTo({ event, target, view, details }: TraceReaderGoToOptions): Promise<boolean> {
