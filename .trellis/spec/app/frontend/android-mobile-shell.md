@@ -61,6 +61,69 @@ createRoot(document.getElementById("root")!).render(
 - `ReaderSheetHost` renders real reader tool content in `MobileSheet`.
 - Android/browser back should close the active reader sheet, then hide reader chrome, then close the reader.
 
+## Scenario: Android Process Text Reader Action
+
+### 1. Scope / Trigger
+
+Use this when adding or changing Android native text-processing actions from the reader selection popup. The current reader selection translation action is Android-only and launches Android's system process-text flow instead of building an in-app translation surface.
+
+### 2. Signatures
+
+- Frontend service: `processSelectedTextWithAndroid(selectedText: string, options?)`.
+- Tauri command: `process_text(text: String) -> Result<(), String>`.
+- Android plugin command: `AndroidSystemPlugin.processText`, payload `{ "text": string }`, response `{ "started": true }`.
+- Android intent: `Intent.ACTION_PROCESS_TEXT` with `Intent.EXTRA_PROCESS_TEXT` and `Intent.EXTRA_PROCESS_TEXT_READONLY=true`.
+
+### 3. Contracts
+
+- The reader selection popup shows `翻译` only when `getOSPlatform()` returns `"android"`.
+- The visible text-action order is `复制`, `翻译`, `解释`, `询问AI`; highlight/delete and note actions remain after a separator.
+- The frontend trims selected text before invoking `process_text`.
+- Native code must treat selected reader text as read-only. Do not replace book content with returned process-text output.
+- Use a Tauri command plus Android plugin for native intent launches. Do not expose a broad `addJavascriptInterface` bridge to WebView content because book iframes may contain untrusted document HTML.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Selected text trims to empty | Return `empty-selection`; do not call native code. |
+| Platform is not Android | Hide the button in the popup; service returns `unsupported-platform` if called defensively. |
+| Android has no process-text handler | Reject with a clear message and show a toast; keep the app running. |
+| Native intent starts successfully | Resolve the Tauri command, then dismiss the selection popup and deselect reader text. |
+| Native launch throws | Preserve the native error message when possible and show it to the user. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: On Android, selecting reader text shows `复制`, `翻译`, `解释`, `询问AI`; tapping `翻译` opens the Android process-text chooser with read-only selected text.
+- Base: On non-Android builds, the existing selection popup omits `翻译` and keeps the previous `复制`, `解释`, `询问AI` order.
+- Bad: Registering SageRead as a global cross-app process-text target for this reader-only action, replacing book text with processed output, or exposing a generic JavaScript interface to book iframe content.
+
+### 6. Tests Required
+
+- Unit-test the frontend service: trims text, blocks blank selections, blocks non-Android platforms, preserves native failure messages, and invokes `process_text` with `{ text }`.
+- Unit-test selection action ordering for Android and non-Android platforms.
+- Run `pnpm --filter app build` for TypeScript/Vite.
+- Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml` for the Rust command path.
+- Run an Android Gradle Kotlin compile task such as `:app:compileUniversalDebugKotlin` after adding or editing Kotlin plugin code.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```tsx
+window.SageReadAndroid.processText(selectedText);
+```
+
+This exposes a broad native bridge to every WebView frame, including book content.
+
+#### Correct
+
+```ts
+await invoke("process_text", { text: selectedText.trim() });
+```
+
+The frontend calls a typed Tauri command; Rust delegates to the Android plugin, and the Kotlin plugin launches `Intent.ACTION_PROCESS_TEXT` with read-only text extras.
+
 ## Unified Notes Contracts
 
 - `mobile/notes/unified-note-model.ts` is the source of truth for mapping standalone `Note` records and `BookNote` records into display items.

@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNotepad } from "@/components/notepad/hooks";
+import { processSelectedTextWithAndroid } from "@/services/android-process-text-service";
 import { createBookNote, deleteBookNote, updateBookNote } from "@/services/book-note-service";
 import { iframeService } from "@/services/iframe-service";
 import { getNoteByBookLocation, getNoteById } from "@/services/note-service";
@@ -81,7 +82,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   );
 
   const popupPadding = 10;
-  const annotPopupWidth = Math.min(globalViewSettings?.vertical ? 320 : 280, window.innerWidth - 2 * popupPadding);
+  const annotPopupWidth = Math.min(globalViewSettings?.vertical ? 360 : 336, window.innerWidth - 2 * popupPadding);
   const annotPopupHeight = 36;
   const sourceBoundNotes = useMemo(
     () => notesData?.pages.flatMap((page) => page.data).filter((note) => Boolean(note.cfi)) ?? [],
@@ -106,6 +107,28 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     if (selection) navigator.clipboard?.writeText(selection.text);
     toast.success("Copy success!");
     handleDismissPopupAndSelection();
+  }, [selection, handleDismissPopupAndSelection]);
+
+  const handleTranslate = useCallback(async () => {
+    if (!selection?.text) return;
+
+    const result = await processSelectedTextWithAndroid(selection.text);
+    if (result.ok) {
+      handleDismissPopupAndSelection();
+      return;
+    }
+
+    if (result.reason === "unsupported-platform") {
+      toast.error("当前平台不支持系统翻译");
+      return;
+    }
+
+    if (result.reason === "empty-selection") {
+      toast.error("请选择要翻译的文本");
+      return;
+    }
+
+    toast.error(result.message);
   }, [selection, handleDismissPopupAndSelection]);
 
   const handleHighlight = useCallback(
@@ -465,6 +488,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     handleDismissPopup,
     handleDismissPopupAndSelection,
     handleCopy,
+    handleTranslate,
     handleHighlight,
     handleDeleteNote,
     handleUpdateNote,

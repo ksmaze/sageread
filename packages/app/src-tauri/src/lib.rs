@@ -2,6 +2,7 @@
 
 mod core;
 use crate::core::{
+    android_system::process_text,
     backup::{create_backup_archive, import_backup_archive},
     books::commands::{
         create_book_note,
@@ -70,6 +71,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(crate::core::android_system::init())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .level(log::LevelFilter::Info)
@@ -148,6 +150,7 @@ pub fn run() {
             delete_skill,
             toggle_skill_active,
             app_ready,
+            process_text,
             create_backup_archive,
             import_backup_archive,
         ])

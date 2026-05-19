@@ -10,7 +10,7 @@ import PopupButton from "./popup-button";
 interface AnnotationPopupProps {
   dir: "ltr" | "rtl";
   isVertical: boolean;
-  buttons: Array<{ label: string | undefined; Icon: React.ElementType; onClick: () => void }>;
+  buttons: Array<{ label: string | undefined; Icon: React.ElementType; onClick: () => void; separatorAfter?: boolean }>;
   position: Position;
   trianglePosition: Position;
   highlightOptionsVisible: boolean;
@@ -167,7 +167,7 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
           {buttons.map((button, index) => (
             <React.Fragment key={index}>
               <PopupButton label={button.label} Icon={button.Icon} onClick={button.onClick} isVertical={isVertical} />
-              {index === 2 && (
+              {button.separatorAfter && index < buttons.length - 1 && (
                 <Separator
                   orientation={isVertical ? "horizontal" : "vertical"}
                   className={isVertical ? "my-1" : "mx-1"}

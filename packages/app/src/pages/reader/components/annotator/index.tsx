@@ -1,10 +1,6 @@
 import { Overlayer } from "foliate-js/overlayer.js";
-import { NotebookPen } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef } from "react";
-import { FiCopy, FiHelpCircle, FiMessageCircle } from "react-icons/fi";
-import { PiHighlighterFill } from "react-icons/pi";
-import { RiDeleteBinLine } from "react-icons/ri";
 import { NoteEditorDialog } from "@/components/notepad/note-editor-dialog";
 import { HIGHLIGHT_COLOR_HEX } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
@@ -19,6 +15,7 @@ import { listenToNativeTouchEvents, type NativeTouchEventType, useTextSelector }
 import { useReaderStore, useReaderStoreApi } from "../reader-provider";
 import AnnotationPopup from "./annotation-popup";
 import AskAIPopup from "./ask-ai-popup";
+import { getSelectionPopupButtons } from "./selection-actions";
 
 const Annotator: React.FC = () => {
   const { settings } = useAppSettingsStore();
@@ -48,6 +45,7 @@ const Annotator: React.FC = () => {
     annotPopupHeight,
     handleDismissPopup,
     handleCopy,
+    handleTranslate,
     handleHighlight,
     addNote,
     handleExplain,
@@ -192,17 +190,16 @@ const Annotator: React.FC = () => {
   }, [showAnnotPopup, showAskAIPopup]);
 
   const selectionAnnotated = selection?.annotated;
-  const buttons = [
-    { label: "复制", Icon: FiCopy, onClick: handleCopy },
-    { label: "解释", Icon: FiHelpCircle, onClick: handleExplain },
-    { label: "询问AI", Icon: FiMessageCircle, onClick: handleAskAI },
-    {
-      label: undefined,
-      Icon: selectionAnnotated ? RiDeleteBinLine : PiHighlighterFill,
-      onClick: handleHighlight,
-    },
-    { label: undefined, Icon: NotebookPen, onClick: addNote },
-  ];
+  const buttons = getSelectionPopupButtons({
+    osPlatform,
+    onCopy: handleCopy,
+    onTranslate: handleTranslate,
+    onExplain: handleExplain,
+    onAskAi: handleAskAI,
+    onHighlight: handleHighlight,
+    onAddNote: addNote,
+    selectionAnnotated: !!selectionAnnotated,
+  });
 
   return (
     <div>
