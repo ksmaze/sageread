@@ -2,7 +2,7 @@
 
 mod core;
 use crate::core::{
-    android_system::process_text,
+    android_system::{process_text, take_opened_book_urls},
     backup::{create_backup_archive, import_backup_archive},
     books::commands::{
         create_book_note,
@@ -40,7 +40,49 @@ use crate::core::{
         get_thread_by_id, get_threads_by_book_id,
     },
 };
+use std::sync::Mutex;
+#[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
+use tauri::Emitter;
 use tauri::Manager;
+
+#[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
+const OPEN_FILE_EVENT: &str = "open-file";
+
+#[derive(Default)]
+struct OpenedUrls(Mutex<Vec<String>>);
+
+impl OpenedUrls {
+    #[cfg(any(test, target_os = "macos", target_os = "ios", target_os = "android"))]
+    fn push(&self, urls: Vec<String>) {
+        let mut guard = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        guard.extend(urls);
+    }
+
+    fn take(&self) -> Vec<String> {
+        let mut guard = self.0.lock().unwrap_or_else(|error| error.into_inner());
+        std::mem::take(&mut *guard)
+    }
+}
+
+#[tauri::command]
+async fn opened_urls<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    opened_urls: tauri::State<'_, OpenedUrls>,
+) -> Result<Vec<String>, String> {
+    Ok(merge_opened_urls(
+        opened_urls.take(),
+        take_opened_book_urls(app).await?,
+    ))
+}
+
+fn merge_opened_urls(mut queued_urls: Vec<String>, native_urls: Vec<String>) -> Vec<String> {
+    for url in native_urls {
+        if !queued_urls.contains(&url) {
+            queued_urls.push(url);
+        }
+    }
+    queued_urls
+}
 
 #[cfg(target_os = "android")]
 use jni::{
@@ -66,6 +108,7 @@ pub fn run() {
 
     builder
         .manage(AppState::default())
+        .manage(OpenedUrls::default())
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_fs::init())
@@ -151,11 +194,32 @@ pub fn run() {
             toggle_skill_active,
             app_ready,
             process_text,
+            opened_urls,
             create_backup_archive,
             import_backup_archive,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "android")))]
+            {
+                let _ = (app_handle, event);
+            }
+
+            #[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
+            if let tauri::RunEvent::Opened { urls } = event {
+                let url_strings = urls
+                    .into_iter()
+                    .map(|url| url.to_string())
+                    .collect::<Vec<_>>();
+
+                app_handle.state::<OpenedUrls>().push(url_strings.clone());
+
+                if let Err(error) = app_handle.emit(OPEN_FILE_EVENT, url_strings) {
+                    log::warn!("failed to emit opened file URLs: {}", error);
+                }
+            }
+        });
 }
 
 #[cfg(target_os = "android")]
@@ -167,4 +231,49 @@ pub extern "C" fn Java_com_xincmm_sageread_MainActivity_java_1init(
 ) {
     env.with_env(|env| rustls_platform_verifier::android::init_with_env(env, context))
         .resolve::<ThrowRuntimeExAndDefault>();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{merge_opened_urls, OpenedUrls};
+
+    #[test]
+    fn opened_urls_drains_queued_urls_once() {
+        let opened_urls = OpenedUrls::default();
+
+        opened_urls.push(vec![
+            "file:///books/example.epub".to_string(),
+            "content://downloads/document/example.pdf".to_string(),
+        ]);
+
+        assert_eq!(
+            opened_urls.take(),
+            vec![
+                "file:///books/example.epub".to_string(),
+                "content://downloads/document/example.pdf".to_string(),
+            ]
+        );
+        assert!(opened_urls.take().is_empty());
+    }
+
+    #[test]
+    fn opened_urls_merges_native_urls_without_duplicates() {
+        assert_eq!(
+            merge_opened_urls(
+                vec![
+                    "content://downloads/document/example.epub".to_string(),
+                    "file:///books/example.pdf".to_string(),
+                ],
+                vec![
+                    "content://downloads/document/example.epub".to_string(),
+                    "content://downloads/document/other.epub".to_string(),
+                ],
+            ),
+            vec![
+                "content://downloads/document/example.epub".to_string(),
+                "file:///books/example.pdf".to_string(),
+                "content://downloads/document/other.epub".to_string(),
+            ]
+        );
+    }
 }

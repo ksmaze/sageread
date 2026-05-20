@@ -15,6 +15,7 @@ Quality in this package means preserving the Android phone/tablet reader workflo
 - Keep service calls behind `src/services/*`.
 - Keep persistent cross-surface state in Zustand stores.
 - Keep feature-only state and hooks inside the feature folder.
+- Use the mounted Sonner `toast` API directly for current Android root user-facing notifications. Do not rely on `eventDispatcher.dispatch("toast", ...)` unless the same task verifies an active listener exists.
 - Use `min-w-0` in flex panes with long or dynamic content.
 - Clean up global event listeners, iframe listeners, Tauri listeners, observers, and timers.
 - Copy runtime asset trees explicitly in `vite.config.ts` when a bundled library fetches files by computed URL at runtime.

@@ -1,4 +1,5 @@
 import SettingsDialog from "@/components/settings/settings-dialog";
+import { useOpenedBookImport } from "@/hooks/use-opened-book-import";
 import { useSafeAreaInsets } from "@/hooks/use-safe-areaInsets";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { shouldShowShellSettingsEntry } from "./app-shell-settings";
@@ -33,6 +34,7 @@ export default function AndroidAppShell() {
   const setDestination = useMobileShellStore((state) => state.setDestination);
   const showShellSettingsEntry = shouldShowShellSettingsEntry(activeDestination);
   const { isSettingsDialogOpen, toggleSettingsDialog } = useAppSettingsStore();
+  useOpenedBookImport();
 
   if (!insets) return null;
 

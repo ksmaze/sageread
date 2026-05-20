@@ -2,6 +2,7 @@ package com.xincmm.sageread
 
 import android.os.Build
 import android.os.Bundle
+import android.content.Intent
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -101,6 +102,11 @@ class MainActivity : TauriActivity() {
                 }
             }
         })
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
     }
 
     private fun handleBackNavigation() {

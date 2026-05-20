@@ -62,6 +62,22 @@
     "targets": "all",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "resources": ["resources/fonts/*"],
+    "fileAssociations": [
+      {
+        "name": "EPUB Book",
+        "ext": ["epub"],
+        "mimeType": "application/epub+zip",
+        "role": "Viewer",
+        "androidIntentActionFilters": ["view"]
+      },
+      {
+        "name": "PDF Document",
+        "ext": ["pdf"],
+        "mimeType": "application/pdf",
+        "role": "Viewer",
+        "androidIntentActionFilters": ["view"]
+      }
+    ],
     "macOS": {
       "signingIdentity": "Developer ID Application: jing wen (9T3JWFM3KT)"
     }

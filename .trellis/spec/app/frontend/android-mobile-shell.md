@@ -50,6 +50,126 @@ createRoot(document.getElementById("root")!).render(
 - Shared destination frames use `MobileSurface`, which applies `mobile-paper`, safe-area horizontal padding, and mobile scroll containment.
 - A floating `MobileSettingsEntry` opens global settings outside the reader overlay on non-AI destinations.
 
+## Scenario: OS Open-With Book Import
+
+### 1. Scope / Trigger
+
+Use this when adding or changing OS file associations, Android open-with behavior, or frontend handling for files opened into SageRead from outside the in-app library picker. The current contract covers EPUB and PDF imports only.
+
+### 2. Signatures
+
+- Tauri config: `bundle.fileAssociations[]` entries for EPUB and PDF.
+- Tauri runtime event: `RunEvent::Opened { urls }`, available on macOS, iOS, and Android targets.
+- Frontend event: `"open-file"` with payload `string[]`.
+- Android plugin command: `AndroidSystemPlugin.takeOpenedBookUrls`, response `{ "urls": string[] }`.
+- Tauri command: `opened_urls() -> Result<Vec<String>, String>`.
+- Frontend hook: `useOpenedBookImport()`.
+- Frontend service: `importOpenedBookUrls(urls, deps) -> { importedCount, skippedUrls, failedUrls }`.
+
+### 3. Contracts
+
+- Register EPUB with `mimeType: "application/epub+zip"` and PDF with `mimeType: "application/pdf"`.
+- Android intent filters must use lowercase `androidIntentActionFilters: ["view"]`. Uppercase values fail Tauri config validation.
+- Android cold-start opens must be captured from the visible `MainActivity` path. Do not rely only on `RunEvent::Opened`: Wry/Tao forwards `onNewIntent`, but the initial launch intent must be read from `activity.intent` through the Android system plugin.
+- `MainActivity.onNewIntent` must call `setIntent(intent)` after delegating to Tauri so the current Android activity intent matches the latest open-with request.
+- Native code stores opened URLs in a one-shot queue so cold-start and warm file opens can be imported after the web UI mounts.
+- Native code also emits `"open-file"` for warm opens while the app is already running; the frontend should drain `opened_urls` as the source of truth and use the event payload only as fallback.
+- Frontend code reads opened URLs with `@tauri-apps/plugin-fs`, converts them into `File` objects, and delegates to the existing library import path.
+- Pass Android `content://` URIs to `@tauri-apps/plugin-fs` as strings. The JS fs wrapper rejects non-`file:` `URL` objects before they reach the Android fs plugin.
+- Treat raw Android app-private `file://` paths under `/data/user/0/` or `/data/data/` as inaccessible open-with inputs. Do not attempt to read them; report an unable-access toast and ask the user to move the file to the Downloads directory.
+- Open-with import errors must call the mounted Sonner toast API directly. Do not dispatch `"toast"` through `eventDispatcher` unless the current app root has an active listener for that event.
+- Reuse `useBookUpload().handleDropedFiles` for opened-file imports so library insertion, parsing, and progress behavior stay consistent with picker/drop imports.
+- Opening a file from the OS imports it into the library. Do not automatically open the reader unless product requirements explicitly change.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| No queued opened URLs | Return an empty list and do no frontend work. |
+| Android cold-start `ACTION_VIEW` open | Read `activity.intent` through the Android plugin and return those URLs from `opened_urls`. |
+| Android warm `ACTION_VIEW` open | Call `setIntent(intent)`, queue URLs in the Android plugin, and dedupe them with any `RunEvent::Opened` URLs. |
+| Unsupported extension | Skip the URL and report it through the existing toast path. |
+| URL read fails | Keep importing other readable files, then report the failed URL. |
+| URL is `content://...` | Keep it as a string when calling `readFile`; do not wrap it in `new URL(...)`. |
+| URL is a raw app-private `file:///data/user/0/...` or `file:///data/data/...` path | Do not call `readFile`; show an unable-access toast and leave the library unchanged for that file. |
+| App receives a warm open | Emit `"open-file"` and import through the same frontend service as cold-start URLs. |
+| Building on non-macOS desktop hosts | Do not reference `RunEvent::Opened` outside a matching `cfg`; the enum variant is target-gated. |
+| Tauri config uses invalid action casing | Build/config validation must fail; fix the value to lowercase `"view"`. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: On Android, choosing an EPUB or PDF from another app's open-with/share flow launches SageRead and imports the file into the library using the existing importer.
+- Base: Opening SageRead normally drains no queued URLs and leaves the library unchanged.
+- Bad: Editing generated Android manifest files manually, using uppercase `"View"` intent actions, relying only on `RunEvent::Opened` for Android cold starts, wrapping `content://` as a JavaScript `URL`, auto-opening the reader after import, or matching `RunEvent::Opened` on every Rust target.
+
+### 6. Tests Required
+
+- Unit-test `tauri.conf.json` for EPUB/PDF `fileAssociations`, MIME types, and lowercase Android intent filters.
+- Unit-test the native Android source contract for `MainActivity.onNewIntent`, `setIntent(intent)`, and `AndroidSystemPlugin.takeOpenedBookUrls`.
+- Unit-test `importOpenedBookUrls` for supported URL import, unsupported URL skipping, and read-failure reporting while other files continue.
+- Unit-test that `content://` imports are passed to `readFile` as strings, while `file://` imports may be passed as `URL` objects.
+- Unit-test that raw Android app-private file paths are reported as inaccessible without calling the fs plugin.
+- Unit-test the unable-access open-with toast message.
+- Unit-test that the open-with hook reports import issues through the mounted Sonner toaster rather than the unused toast event bus.
+- Unit-test the Rust opened-URL queue drains queued values once.
+- Unit-test that Rust merges Android plugin URLs with Tauri queued URLs without duplicates.
+- Run `pnpm --filter app build`.
+- Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml`.
+- Run `packages/app/src-tauri/gen/android/gradlew.bat :app:compileUniversalDebugKotlin` after editing Android Kotlin source.
+- When Android tooling or a device/emulator is available, manually verify opening an EPUB and a PDF from Android file manager or another app.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```json
+{ "androidIntentActionFilters": ["View"] }
+```
+
+Tauri expects lowercase schema values for Android intent action filters.
+
+#### Correct
+
+```json
+{ "androidIntentActionFilters": ["view"] }
+```
+
+#### Wrong
+
+```rust
+match event {
+    tauri::RunEvent::Opened { urls } => handle_opened_urls(urls),
+    _ => {}
+}
+```
+
+This does not compile on host targets where `RunEvent::Opened` is not defined.
+
+#### Correct
+
+```rust
+#[cfg(any(target_os = "macos", target_os = "ios", target_os = "android"))]
+if let tauri::RunEvent::Opened { urls } = event {
+    handle_opened_urls(urls);
+}
+```
+
+#### Wrong
+
+```ts
+await readFile(new URL("content://downloads/document/book.epub"));
+```
+
+The Tauri JS fs wrapper rejects non-`file:` URL objects.
+
+#### Correct
+
+```ts
+await readFile("content://downloads/document/book.epub");
+```
+
+Android content URIs must cross the JS fs boundary as strings so the Android fs plugin can open the content resolver descriptor.
+
 ## Reader Contracts
 
 - Android reader supports one active book at a time through `activeBook`.

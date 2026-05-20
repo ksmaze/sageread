@@ -48,6 +48,7 @@ For each arrow, ask:
 | Note Dialog Portal ↔ Reader Navigation | modal focus cleanup must finish before PDF/fixed-layout navigation replaces iframes |
 | Reader Navigation Request ↔ Logcat Observability | when note jumps stay intermittent, every layer must log the same request metadata so the failing boundary can be identified from Android logcat without guessing |
 | Generated PDF Page HTML ↔ Android Tauri WebView | assigning generated PDF pages as `blob:` iframe URLs can be intercepted by Wry `shouldOverrideUrlLoading` and block the UI thread |
+| Android Launch Intent ↔ Tauri RunEvent ↔ Frontend Import | Android cold-start file opens arrive as `MainActivity.intent`, while Tauri `RunEvent::Opened` is driven by `onNewIntent`; frontend imports must drain the visible activity/plugin queue and preserve `content://` URI shape across the JS fs boundary |
 
 ### Step 3: Define Contracts
 
@@ -126,6 +127,12 @@ For each boundary:
 
 **Good**: Treat generated PDF page HTML as inline renderer state. Use `iframe.srcdoc` or an equivalent same-document write, keep PDF rendering cancellation tokened, and clear inline frames without assigning a replacement URL to `iframe.src`.
 
+### Mistake 12: Treating Android Open-With As A Pure Rust Event
+
+**Bad**: Add file associations and wait only for `RunEvent::Opened` to import EPUB/PDF files. On Android, that event is emitted from `onNewIntent`, while a cold-start `ACTION_VIEW` file open is the activity's initial intent.
+
+**Good**: Map the Android activity lifecycle, Tauri runtime event, native plugin command, and frontend import service as one flow. Read `MainActivity.intent` through a native plugin for cold starts, call `setIntent(intent)` on warm starts, merge/dedupe native URLs with any Tauri queued URLs, and keep `content://` values as strings when crossing the JS fs API.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -156,6 +163,7 @@ After implementation:
 - [ ] For note-dialog "open original", verified the dialog closes before reader navigation is scheduled
 - [ ] For intermittent note jumps, verified the same request metadata appears in logcat across the UI, shell/store, reader, and foliate layers
 - [ ] For Android PDF note/page jumps, verified generated page loads do not produce `blob:` iframe navigation warnings or `shouldOverrideUrlLoading` ANRs
+- [ ] For Android open-with imports, verified both cold-start and warm-start intents reach the visible main activity/plugin queue and that `content://` URIs are passed to Tauri fs as strings
 
 ---
 
