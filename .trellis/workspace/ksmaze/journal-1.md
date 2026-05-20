@@ -871,3 +871,37 @@ Removed the unused local Rust jan-utils path dependency from the Tauri backend, 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 26: Import EPUB/PDF Open-With Support
+
+**Date**: 2026-05-19
+**Task**: Import EPUB/PDF Open-With Support
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Added EPUB/PDF OS open-with import support, Android launch-intent capture, inaccessible app-private path toast handling, regression tests, and Trellis spec notes.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9490029` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
