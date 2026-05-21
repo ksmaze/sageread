@@ -1,5 +1,6 @@
 import { ArrowUp, BookOpen, Brain, Notebook, NotebookPen, Paperclip, Quote, X } from "lucide-react";
 import { useRef } from "react";
+import { LEARNING_NOTE_QUICK_ACTION_PROMPT } from "@/ai/learning-note-prompts";
 import { PromptInput, PromptInputAction, PromptInputTextarea } from "@/components/prompt-kit/prompt-input";
 import { Button } from "@/components/ui/button";
 import type { ChatReference } from "@/types/message";
@@ -30,7 +31,7 @@ const quickActions = [
   {
     label: "生成学习笔记",
     icon: NotebookPen,
-    prompt: "请根据最近聊天记录和当前章节生成一条学习笔记，并保存到当前书籍笔记。",
+    prompt: LEARNING_NOTE_QUICK_ACTION_PROMPT,
   },
 ] as const;
 

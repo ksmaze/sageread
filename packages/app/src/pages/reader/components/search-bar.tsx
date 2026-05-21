@@ -2,7 +2,7 @@ import { Search } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import type { BookSearchConfig, BookSearchResult } from "@/types/book";
+import type { BookSearchConfig, BookSearchMatch, BookSearchResult } from "@/types/book";
 import { isCJKStr } from "@/utils/lang";
 import { createRejecttFilter } from "@/utils/node";
 import { useReaderStoreApi } from "./reader-provider";
@@ -13,7 +13,7 @@ const MINIMUM_SEARCH_TERM_LENGTH_CJK = 1;
 interface SearchBarProps {
   isVisible: boolean;
   searchTerm: string;
-  onSearchResultChange: (results: BookSearchResult[]) => void;
+  onSearchResultChange: (results: Array<BookSearchResult | BookSearchMatch>) => void;
   onSearchTermChange: (term: string) => void;
   onHideSearchBar: () => void;
 }
@@ -107,7 +107,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           tags: primaryLang.startsWith("ja") ? ["rt"] : [],
         }),
       });
-      const results: BookSearchResult[] = [];
+      const results: Array<BookSearchResult | BookSearchMatch> = [];
       let lastProgressLogTime = 0;
 
       const processResults = async () => {
@@ -117,7 +117,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onSearchResultChange([...results]);
             }
           } else {
-            if (result.progress) {
+            if ("progress" in result && result.progress) {
               const now = Date.now();
               if (now - lastProgressLogTime >= 1000) {
                 lastProgressLogTime = now;

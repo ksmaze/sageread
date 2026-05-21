@@ -398,7 +398,7 @@ streamText({ model, messages: convertedMessages, tools });
 
 ### 1. Scope / Trigger
 
-Use this contract when AI chat creates book-bound learning notes from chat/current-chapter context. This is a cross-layer contract because the AI tool writes existing `notes` rows and must resolve reader positions through Foliate before saving.
+Use this contract when AI chat creates book-bound learning notes from chat/current-chapter context or when a user asks AI to add a note/annotation for a discussed concept or quoted paragraph. This is a cross-layer contract because the AI tool writes existing `notes` rows and must resolve reader positions through Foliate before saving.
 
 ### 2. Signatures
 
@@ -442,11 +442,20 @@ interface CreateNoteToolInput {
 - AI note positioning must never treat RAG `chunk_id` as a reader location. A saved CFI must come from Foliate search, the current TOC/section start, or an existing reader selection.
 - `resolveNoteSource` searches the current Foliate section first using the actual relocate `progress.section` value exposed as `ChatContext.activeSectionIndex`.
 - AI provides short verbatim `sourceCandidates`; the resolver normalizes whitespace and tries shorter spans to tolerate EPUB line breaks/markup.
-- If a match is found, `createNote` must save `matches[0].cfi`, `sourceText`, `contextBefore`, and `contextAfter`.
+- Foliate search has two stream result shapes: section-scoped search can yield direct `{ cfi, excerpt }` matches, while book-wide search can yield grouped `{ label, subitems }` results. App search consumers and AI source resolution must handle both shapes explicitly.
+- AI note source resolution must continue across usable source candidates and query variants until `maxMatches` unique CFIs are collected or the bounded query list is exhausted. Do not return after the first query that finds one match.
+- Source query generation must include normalized whitespace, whitespace-compacted, and balanced start/middle/end window variants so EPUB/RAG spacing drift or a mismatch near the beginning does not force chapter-start fallback prematurely.
+- The "生成学习笔记" skill is the source of truth for learning-note behavior and must declare two modes:
+  - quick action mode: generate at most 3 notes from recent chat topic plus current chapter source text.
+  - targeted annotation mode: when the user asks to annotate a discussed concept or quoted paragraph, save notes only for that target.
+- Quick action prompts must not ask for "one learning note"; they must request the skill-driven up-to-3 automatic-save flow.
+- Before selecting passages, the model must obtain real source text. Use quoted/selected text directly when present; otherwise use RAG tools to retrieve source chunks. Do not create `sourceCandidates` from a model summary or chapter title alone.
+- For generated multi-note flows, call `resolveNoteSource` and `createNote` per selected passage. Do not pass multiple unrelated passages into one source-resolution call because returned matches are not mapped back to note bodies.
+- If a match is found, `createNote` must save `matches[0].cfi`, `sourceText`, `contextBefore`, and `contextAfter`. The note `content` should contain the concise AI annotation/summary and must not duplicate `sourceText`.
 - If matching fails, fallback to current chapter start in this order: TOC item `cfi` by `progress.sectionHref`, then `view.getCFI(progress.section, null)`, then no CFI.
-- Chapter-start fallback must not invent `sourceText`; save synthesized note content plus the fallback CFI only.
+- Chapter-start fallback must not invent `sourceText`; save synthesized note content plus the fallback CFI only, and final chat feedback must report fallback count separately from matched count.
 - Book-bound AI note creation must supply `bookMeta` from `ChatContext.activeBookMeta` or a local `getBookWithStatusById(activeBookId)` lookup.
-- Default DB-backed skills are additive. Startup may insert missing default skills by name, but must not overwrite user-edited existing skills.
+- Default DB-backed skills are additive. Startup may insert missing default skills by name and may refresh an old stock default skill by exact content match, but must not overwrite user-edited existing skills.
 
 ### 4. Validation & Error Matrix
 
@@ -455,20 +464,34 @@ interface CreateNoteToolInput {
 | No active book id | Do not attach/use `createNote` for book-bound learning notes. |
 | No reader view or no section index | Return `chapter-start` if fallback CFI is available; otherwise `unavailable`. |
 | Source candidate has newlines or repeated whitespace | Normalize whitespace and try shorter fallback queries. |
+| Source candidate has spaces inserted between CJK/markup-adjacent text | Try a whitespace-compacted query before falling back. |
+| Long source candidate differs near the beginning | Try middle/end window variants before falling back. |
+| Section-scoped Foliate search yields direct `{ cfi, excerpt }` match | Treat it as a valid match; do not require `subitems`. |
 | Foliate search returns multiple section-scoped matches | Return candidate CFI/excerpts so the AI can choose, usually the first plausible match. |
+| Multiple source candidates match different CFIs | Return unique matches up to `maxMatches` instead of stopping after the first candidate. |
 | Foliate search returns no match | Save at chapter-start fallback if available. |
 | `sourceText` is present without `cfi` | Reject the tool call; source text cannot be saved without a real location. |
-| Default skill already exists in DB | Leave the row unchanged; do not overwrite user edits. |
+| Quick action "生成学习笔记" is submitted | Retrieve/follow the skill, gather real source text, save up to 3 notes, and report matched/fallback counts. |
+| User asks "给这段加批注" with a quote/selection | Use the quoted text directly as the primary source candidate before RAG retrieval. |
+| User asks to annotate a concept without quoted text | Use recent chat topic plus RAG source chunks to find the target passages; do not generate unrelated chapter-summary notes. |
+| Existing default skill content exactly matches old bundled stock text | Refresh it to the current bundled text on startup. |
+| Existing default skill was edited by the user | Leave the row unchanged; do not overwrite user edits. |
 
 ### 5. Good/Base/Bad Cases
 
-- Good: Quick action asks for "生成学习笔记"; AI gets the skill, uses RAG/chat evidence, calls `resolveNoteSource`, then calls `createNote` with confirmed CFI fields.
+- Good: Quick action asks for "生成学习笔记"; AI gets the skill, uses quoted text or RAG source chunks, selects up to 3 key passages, then calls `resolveNoteSource` and `createNote` once per passage.
+- Good: User asks "给这段加批注" after sending selected text; AI treats the quote as the source candidate, resolves it, and saves one concise annotation note.
+- Good: Five `sourceCandidates` are searched as bounded variants; if candidates 2 and 4 match different CFIs, both are returned before `createNote` chooses the best one.
 - Base: Matching fails because of EPUB formatting; the note saves with current chapter-start CFI and no `sourceText`.
 - Bad: Passing `[118]` or any `chunk_id` into note `cfi`, or saving a paraphrased summary sentence as `sourceText`.
+- Bad: A quick action produces one broad full-chapter summary note, or a targeted annotation request creates unrelated chapter notes.
+- Bad: Assuming every `view.search()` result has `subitems`, returning after the first query match, or falling back before trying compacted/window variants.
 
 ### 6. Tests Required
 
-- Resolver tests must assert whitespace normalization, shorter fallback queries, nested TOC CFI lookup, and section-start fallback.
+- Resolver tests must assert whitespace normalization, compacted/window queries, direct section-search result handling, cross-candidate aggregation, nested TOC CFI lookup, and section-start fallback.
+- Learning-note contract tests must assert quick-action prompt wording, default skill two-mode behavior, and tool descriptions for per-passage note creation.
+- Default skill migration tests must assert stock legacy content refreshes while user-edited content is preserved.
 - Chat context tests must cover new active section/book metadata fields if their behavior changes.
 - Run `pnpm --filter app build` after AI tool, chat context, reader progress, or note tool signature changes.
 - Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml` after default skill initialization changes.

@@ -2,7 +2,7 @@ import { Search } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { BookSearchResult } from "@/types/book";
+import type { BookSearchMatch, BookSearchResult } from "@/types/book";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
 import SearchBar from "./search-bar";
 import SearchResults from "./search-results";
@@ -17,7 +17,7 @@ export function ReaderSearchPanel({ isVisible = true, onClose, onResultSelect }:
   const store = useReaderStoreApi();
   const view = store.getState().view;
   const bookData = store.getState().bookData;
-  const [searchResults, setSearchResults] = useState<BookSearchResult[] | null>(null);
+  const [searchResults, setSearchResults] = useState<Array<BookSearchResult | BookSearchMatch> | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -58,7 +58,7 @@ export function ReaderSearchPanel({ isVisible = true, onClose, onResultSelect }:
     [bookData?.id, onResultSelect, resetPanelState, view],
   );
 
-  const handleSearchResultChange = useCallback((results: BookSearchResult[]) => {
+  const handleSearchResultChange = useCallback((results: Array<BookSearchResult | BookSearchMatch>) => {
     setHasSearched(true);
     setSearchResults(results);
   }, []);

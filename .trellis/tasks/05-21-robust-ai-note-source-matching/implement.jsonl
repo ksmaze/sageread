@@ -1,0 +1,11 @@
+{"file": ".trellis/spec/app/frontend/index.md", "reason": "Package frontend spec index for app changes."}
+{"file": ".trellis/spec/app/frontend/state-management.md", "reason": "AI note source resolution and Foliate search result contracts."}
+{"file": ".trellis/spec/app/frontend/type-safety.md", "reason": "Search stream union typing and consumer narrowing."}
+{"file": ".trellis/spec/app/frontend/quality-guidelines.md", "reason": "Required app verification commands."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Foliate search stream boundary shape guidance."}
+{"file": ".trellis/tasks/05-21-robust-ai-note-source-matching/research/source-matching-inspection.md", "reason": "Code inspection findings for resolver and search flow."}
+{"file": ".trellis/tasks/05-21-robust-ai-note-source-matching/research/learning-note-current-flow.md", "reason": "Current quick action, skill, tool, and note schema flow for anchored learning notes."}
+{"file": "packages/app/src/ai/learning-note-prompts.ts", "reason": "Shared quick action prompt contract for learning notes."}
+{"file": "packages/app/src/ai/learning-note-contract.test.ts", "reason": "Regression coverage for learning note prompt, skill, and tool contracts."}
+{"file": "packages/app/src-tauri/src/core/default-skills.json", "reason": "Default skill content that drives two learning-note entry modes."}
+{"file": "packages/app/src-tauri/src/core/database.rs", "reason": "Safe refresh for stock legacy default learning-note skill content."}

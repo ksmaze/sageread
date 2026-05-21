@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { useIsStandaloneChatSurface } from "@/components/side-chat/chat-surface-context";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { useChatReaderStore } from "@/store/chat-reader-store";
-import type { BookSearchConfig, BookSearchResult } from "@/types/book";
+import type { BookSearchConfig, BookSearchMatch, BookSearchResult } from "@/types/book";
 import type { DocumentChunk } from "@/types/document";
 import { createRejecttFilter } from "@/utils/node";
 import { resolveMarkdownImagePaths } from "@/utils/path";
@@ -118,7 +118,7 @@ export function useAnnotationSearch() {
         }),
       });
 
-      const results: BookSearchResult[] = [];
+      const results: Array<BookSearchResult | BookSearchMatch> = [];
       let foundFirst = false;
 
       for await (const result of generator) {
@@ -131,7 +131,7 @@ export function useAnnotationSearch() {
             return true;
           }
         } else {
-          if (result.progress) {
+          if ("progress" in result && result.progress) {
           } else {
             results.push(result);
 
@@ -141,7 +141,7 @@ export function useAnnotationSearch() {
               if ("subitems" in result && result.subitems && result.subitems.length > 0) {
                 firstCfi = result.subitems[0].cfi;
               } else if ("cfi" in result) {
-                firstCfi = (result as any).cfi;
+                firstCfi = result.cfi;
               }
 
               if (firstCfi && view) {

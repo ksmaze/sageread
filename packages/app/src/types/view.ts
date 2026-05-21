@@ -1,5 +1,5 @@
 import type { BookDoc } from "@/lib/document";
-import type { BookNote, BookSearchConfig, BookSearchResult } from "@/types/book";
+import type { BookNote, BookSearchConfig, BookSearchStreamItem } from "@/types/book";
 
 export interface ReaderNoteMarker {
   id: string;
@@ -26,7 +26,7 @@ export interface FoliateView extends HTMLElement {
     note: BookNote | ReaderNoteMarker,
     remove?: boolean,
   ) => Promise<{ index: number; label: string } | undefined>;
-  search: (config: BookSearchConfig) => AsyncGenerator<BookSearchResult | string, void, void>;
+  search: (config: BookSearchConfig) => AsyncGenerator<BookSearchStreamItem, void, void>;
   clearSearch: () => void;
   setSearchIndicator: (type: string, options: any) => void;
   select: (target: string | number | { fraction: number }) => void;

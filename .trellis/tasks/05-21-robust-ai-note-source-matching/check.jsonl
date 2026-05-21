@@ -1,0 +1,9 @@
+{"file": ".trellis/spec/app/frontend/index.md", "reason": "Package frontend spec index for quality review."}
+{"file": ".trellis/spec/app/frontend/state-management.md", "reason": "Verify AI note source resolution contract compliance."}
+{"file": ".trellis/spec/app/frontend/type-safety.md", "reason": "Verify search stream union typing and consumer narrowing."}
+{"file": ".trellis/spec/app/frontend/quality-guidelines.md", "reason": "Verify app build and focused checks."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Verify Foliate search stream boundary lesson is captured."}
+{"file": ".trellis/tasks/05-21-robust-ai-note-source-matching/research/source-matching-inspection.md", "reason": "Review root cause and required regression coverage."}
+{"file": ".trellis/tasks/05-21-robust-ai-note-source-matching/research/learning-note-current-flow.md", "reason": "Verify revised behavior matches current quick action, skill, and tool flow."}
+{"file": "packages/app/src/ai/learning-note-contract.test.ts", "reason": "Verify two-mode learning note prompt/tool contract coverage."}
+{"file": "packages/app/src-tauri/src/core/database.rs", "reason": "Verify stock default skill migration preserves user edits."}

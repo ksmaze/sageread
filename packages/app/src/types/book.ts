@@ -210,6 +210,8 @@ export interface BookSearchResult {
   progress?: number;
 }
 
+export type BookSearchStreamItem = BookSearchResult | BookSearchMatch | string;
+
 export interface BookConfig {
   bookHash?: string;
   progress?: [number, number]; // [current pagenum, total pagenum], 1-based page number

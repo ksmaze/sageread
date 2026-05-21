@@ -1,5 +1,5 @@
 import type { TOCItem } from "@/lib/document";
-import type { BookSearchConfig, BookSearchMatch, SearchExcerpt } from "@/types/book";
+import type { BookSearchConfig, BookSearchMatch, BookSearchResult, SearchExcerpt } from "@/types/book";
 import type { FoliateView } from "@/types/view";
 
 export interface NoteSourceCandidateInput {
@@ -90,12 +90,17 @@ export type ResolvedNoteSource =
       };
     };
 
-const DEFAULT_MAX_QUERIES = 10;
+const DEFAULT_MAX_QUERIES = 25;
 const DEFAULT_MAX_QUERY_LENGTH = 120;
 const DEFAULT_MIN_QUERY_LENGTH = 10;
+const DEFAULT_WINDOW_QUERY_LENGTH = 80;
 
 export function normalizeSearchText(text: string): string {
   return text.replace(/\r\n?/g, "\n").replace(/\s+/g, " ").trim();
+}
+
+export function compactSearchText(text: string): string {
+  return normalizeSearchText(text).replace(/\s+/g, "");
 }
 
 function takeByWordsOrChars(text: string, maxLength: number): string {
@@ -139,6 +144,56 @@ function pushUnique(values: string[], value: string, minLength: number): void {
   }
 }
 
+function takeCharWindow(text: string, start: number, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  const boundedStart = Math.max(0, Math.min(start, text.length - maxLength));
+  return text.slice(boundedStart, boundedStart + maxLength).trim();
+}
+
+function pushBalancedWindows(values: string[], text: string, maxLength: number, minLength: number): void {
+  const windowLength = Math.min(maxLength, DEFAULT_WINDOW_QUERY_LENGTH);
+  if (text.length <= windowLength) {
+    return;
+  }
+
+  pushUnique(values, takeCharWindow(text, 0, windowLength), minLength);
+  pushUnique(values, takeCharWindow(text, Math.floor((text.length - windowLength) / 2), windowLength), minLength);
+  pushUnique(values, takeCharWindow(text, text.length - windowLength, windowLength), minLength);
+}
+
+function buildSingleCandidateQueries(
+  candidate: NoteSourceCandidateInput,
+  maxQueryLength: number,
+  minQueryLength: number,
+): string[] {
+  const normalized = normalizeSearchText(candidate.text);
+  if (!normalized) {
+    return [];
+  }
+
+  const queries: string[] = [];
+  const compacted = compactSearchText(normalized);
+
+  pushUnique(queries, takeByWordsOrChars(normalized, maxQueryLength), minQueryLength);
+  pushUnique(queries, takeByWordsOrChars(compacted, maxQueryLength), minQueryLength);
+
+  const sentences = splitSentences(normalized);
+  for (const sentence of sentences.slice(0, 3)) {
+    pushUnique(queries, takeByWordsOrChars(sentence, Math.min(maxQueryLength, 80)), minQueryLength);
+    pushUnique(queries, takeByWordsOrChars(compactSearchText(sentence), Math.min(maxQueryLength, 80)), minQueryLength);
+  }
+
+  pushUnique(queries, takeByWordsOrChars(normalized, Math.min(maxQueryLength, 80)), minQueryLength);
+  pushUnique(queries, takeByWordsOrChars(normalized, Math.min(maxQueryLength, 48)), minQueryLength);
+  pushBalancedWindows(queries, normalized, maxQueryLength, minQueryLength);
+  pushBalancedWindows(queries, compacted, maxQueryLength, minQueryLength);
+
+  return queries;
+}
+
 export function buildSourceSearchQueries(
   candidates: NoteSourceCandidateInput[],
   options: BuildSourceSearchQueriesOptions = {},
@@ -146,30 +201,32 @@ export function buildSourceSearchQueries(
   const maxQueries = options.maxQueries ?? DEFAULT_MAX_QUERIES;
   const maxQueryLength = options.maxQueryLength ?? DEFAULT_MAX_QUERY_LENGTH;
   const minQueryLength = options.minQueryLength ?? DEFAULT_MIN_QUERY_LENGTH;
+  const perCandidateQueries = candidates
+    .map((candidate) => buildSingleCandidateQueries(candidate, maxQueryLength, minQueryLength))
+    .filter((queries) => queries.length > 0);
   const queries: string[] = [];
 
-  for (const candidate of candidates) {
-    const normalized = normalizeSearchText(candidate.text);
-    if (!normalized) {
-      continue;
+  for (let queryIndex = 0; queries.length < maxQueries; queryIndex++) {
+    let added = false;
+
+    for (const candidateQueries of perCandidateQueries) {
+      const query = candidateQueries[queryIndex];
+      if (!query) {
+        continue;
+      }
+      pushUnique(queries, query, minQueryLength);
+      added = true;
+      if (queries.length >= maxQueries) {
+        break;
+      }
     }
 
-    pushUnique(queries, takeByWordsOrChars(normalized, maxQueryLength), minQueryLength);
-
-    const sentences = splitSentences(normalized);
-    for (const sentence of sentences.slice(0, 3)) {
-      pushUnique(queries, takeByWordsOrChars(sentence, Math.min(maxQueryLength, 80)), minQueryLength);
-    }
-
-    pushUnique(queries, takeByWordsOrChars(normalized, Math.min(maxQueryLength, 80)), minQueryLength);
-    pushUnique(queries, takeByWordsOrChars(normalized, Math.min(maxQueryLength, 48)), minQueryLength);
-
-    if (queries.length >= maxQueries) {
+    if (!added) {
       break;
     }
   }
 
-  return queries.slice(0, maxQueries);
+  return queries;
 }
 
 function stripFragment(href: string): string {
@@ -249,12 +306,43 @@ async function collectSearchMatches(
     if (typeof result === "string") {
       continue;
     }
+
+    if (isBookSearchMatch(result)) {
+      matches.push(result);
+      continue;
+    }
+
+    if (!isBookSearchResult(result)) {
+      continue;
+    }
+
     for (const match of result.subitems) {
       matches.push({ ...match, label: result.label });
     }
   }
 
   return matches;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isSearchExcerpt(value: unknown): value is SearchExcerpt {
+  return (
+    isRecord(value) &&
+    typeof value.pre === "string" &&
+    typeof value.match === "string" &&
+    typeof value.post === "string"
+  );
+}
+
+function isBookSearchMatch(value: unknown): value is BookSearchMatch {
+  return isRecord(value) && typeof value.cfi === "string" && isSearchExcerpt(value.excerpt);
+}
+
+function isBookSearchResult(value: unknown): value is BookSearchResult {
+  return isRecord(value) && Array.isArray(value.subitems);
 }
 
 function toResolvedMatch(match: BookSearchMatch & { label?: string }, query: string): ResolvedNoteSourceMatch {
@@ -331,20 +419,38 @@ export async function resolveNoteSourceFromView(
     index: runtime.sectionIndex,
   };
 
+  const resolvedMatches: ResolvedNoteSourceMatch[] = [];
+  const seenCfis = new Set<string>();
+
   for (const query of queries) {
     const matches = await collectSearchMatches(runtime.view, {
       ...baseConfig,
       query,
     });
 
-    if (matches.length > 0) {
-      return {
-        status: "matched",
-        matches: matches.slice(0, maxMatches).map((match) => toResolvedMatch(match, query)),
-        fallback,
-        meta,
-      };
+    for (const match of matches) {
+      if (seenCfis.has(match.cfi)) {
+        continue;
+      }
+      seenCfis.add(match.cfi);
+      resolvedMatches.push(toResolvedMatch(match, query));
+      if (resolvedMatches.length >= maxMatches) {
+        break;
+      }
     }
+
+    if (resolvedMatches.length >= maxMatches) {
+      break;
+    }
+  }
+
+  if (resolvedMatches.length > 0) {
+    return {
+      status: "matched",
+      matches: resolvedMatches,
+      fallback,
+      meta,
+    };
   }
 
   if (fallback) {

@@ -29,7 +29,7 @@ const SearchResultItem: React.FC<SearchResultItemProps> = ({ cfi, excerpt, onSel
   );
 };
 interface SearchResultsProps {
-  results: BookSearchResult[] | BookSearchMatch[];
+  results: Array<BookSearchResult | BookSearchMatch>;
   onSelectResult: (cfi: string) => void;
 }
 

@@ -50,6 +50,8 @@ For each arrow, ask:
 | Generated PDF Page HTML ↔ Android Tauri WebView | assigning generated PDF pages as `blob:` iframe URLs can be intercepted by Wry `shouldOverrideUrlLoading` and block the UI thread |
 | Android Launch Intent ↔ Tauri RunEvent ↔ Frontend Import | Android cold-start file opens arrive as `MainActivity.intent`, while Tauri `RunEvent::Opened` is driven by `onNewIntent`; frontend imports must drain the visible activity/plugin queue and preserve `content://` URI shape across the JS fs boundary |
 | AI SDK UI Messages ↔ Model Prompt Conversion | SDK conversion helpers can be async even when their output is an array shape; callers must await conversion before handing data to prompt standardization or streaming APIs |
+| Foliate Search Stream ↔ App Consumers | section-scoped search yields direct `{ cfi, excerpt }` matches while book-wide search can yield grouped `{ label, subitems }` results; consumers must type and handle both shapes |
+| Bundled Default Skills ↔ Existing User Database | changing `default-skills.json` only affects newly inserted rows unless startup safely refreshes stock legacy rows without overwriting user edits |
 
 ### Step 3: Define Contracts
 
@@ -140,6 +142,18 @@ For each boundary:
 
 **Good**: Treat UI-message to model-message conversion as an async boundary. Wrap it in a focused helper, await it before streaming, and regression-test the helper with a quick-action-style prompt so runtime prompt standardization receives an array, not a Promise.
 
+### Mistake 14: Assuming Foliate Search Always Returns Grouped Results
+
+**Bad**: Consume every `view.search()` item as `{ subitems }` and treat direct section matches as malformed or empty.
+
+**Good**: Check the selected search scope. Section-scoped search can yield `{ cfi, excerpt }` directly, while book-wide search can yield grouped section results. Type the stream as a union, narrow at the consumer boundary, and regression-test both shapes before adding fallback behavior.
+
+### Mistake 15: Assuming Bundled Default Skill Changes Reach Existing Databases
+
+**Bad**: Edit `default-skills.json` and assume existing users will receive the changed skill. Startup uses database rows, and `INSERT OR IGNORE` leaves same-name rows unchanged.
+
+**Good**: Treat bundled skill text and persisted skill rows as a cross-layer contract. Insert missing skills by name, and only refresh an existing row when its content exactly matches a known old stock default. Preserve user-edited skills.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -172,6 +186,8 @@ After implementation:
 - [ ] For Android PDF note/page jumps, verified generated page loads do not produce `blob:` iframe navigation warnings or `shouldOverrideUrlLoading` ANRs
 - [ ] For Android open-with imports, verified both cold-start and warm-start intents reach the visible main activity/plugin queue and that `content://` URIs are passed to Tauri fs as strings
 - [ ] For AI SDK prompt conversion, verified async conversion helpers are awaited before calling streaming APIs and the result has the array shape those APIs inspect
+- [ ] For Foliate search consumers, verified both direct section matches and grouped book-search results are handled before declaring "no results"
+- [ ] For bundled default skill changes, verified existing stock rows migrate and user-edited rows are preserved
 
 ---
 

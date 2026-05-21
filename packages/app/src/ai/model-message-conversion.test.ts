@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { UIMessage } from "@ai-sdk/react";
+import { LEARNING_NOTE_QUICK_ACTION_PROMPT } from "./learning-note-prompts";
 import { prepareModelMessagesForStream } from "./model-message-conversion";
 
 describe("prepareModelMessagesForStream", () => {
@@ -9,7 +10,7 @@ describe("prepareModelMessagesForStream", () => {
       {
         id: "quick-action-1",
         role: "user",
-        parts: [{ type: "text", text: "请根据最近聊天记录和当前章节生成一条学习笔记。" }],
+        parts: [{ type: "text", text: LEARNING_NOTE_QUICK_ACTION_PROMPT }],
       },
     ];
 
@@ -20,7 +21,7 @@ describe("prepareModelMessagesForStream", () => {
     assert.deepEqual(modelMessages[0]?.content, [
       {
         type: "text",
-        text: "请根据最近聊天记录和当前章节生成一条学习笔记。",
+        text: LEARNING_NOTE_QUICK_ACTION_PROMPT,
       },
     ]);
   });

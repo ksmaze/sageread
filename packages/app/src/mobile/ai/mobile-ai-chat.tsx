@@ -10,6 +10,7 @@ import {
   UserSearch,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { LEARNING_NOTE_QUICK_ACTION_PROMPT } from "@/ai/learning-note-prompts";
 import { createReaderNoteSourceResolver, getReaderChapterStartLocation } from "@/ai/reader-note-source-runtime";
 import { ChatContainerRoot } from "@/components/prompt-kit/chat-container";
 import { ScrollButton } from "@/components/prompt-kit/scroll-button";
@@ -39,7 +40,7 @@ const promptSuggestions = [
   { text: "分析作者观点", icon: UserSearch },
   { text: "找出关键信息", icon: Search },
   { text: "解释这个概念", icon: Lightbulb },
-  { text: "生成学习笔记", icon: NotebookPen },
+  { text: "生成学习笔记", prompt: LEARNING_NOTE_QUICK_ACTION_PROMPT, icon: NotebookPen },
 ] as const;
 
 function MobileChatLoadingState() {
@@ -76,17 +77,22 @@ function MobileChatEmptyState({
 
         {!selectedTextOnly && (
           <div className="grid gap-2">
-            {promptSuggestions.map(({ text, icon: Icon }) => (
-              <button
-                key={text}
-                type="button"
-                onClick={() => onPrompt(text)}
-                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-foreground text-sm transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
-              >
-                <Icon className="size-4 shrink-0 text-muted-foreground" />
-                <span>{text}</span>
-              </button>
-            ))}
+            {promptSuggestions.map((suggestion) => {
+              const { text, icon: Icon } = suggestion;
+              const prompt = "prompt" in suggestion ? suggestion.prompt : text;
+
+              return (
+                <button
+                  key={text}
+                  type="button"
+                  onClick={() => onPrompt(prompt)}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-foreground text-sm transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <Icon className="size-4 shrink-0 text-muted-foreground" />
+                  <span>{text}</span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

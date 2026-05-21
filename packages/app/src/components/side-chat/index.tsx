@@ -10,6 +10,7 @@ import {
   UserSearch,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { LEARNING_NOTE_QUICK_ACTION_PROMPT } from "@/ai/learning-note-prompts";
 import { createReaderNoteSourceResolver, getReaderChapterStartLocation } from "@/ai/reader-note-source-runtime";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -120,7 +121,7 @@ function ChatContent({ bookId }: ChatContentProps) {
     { text: "分析作者的观点", icon: UserSearch, isNew: false },
     { text: "找出关键信息", icon: Search, isNew: true },
     { text: "提出相关问题", icon: CircleQuestionMark, isNew: false },
-    { text: "生成学习笔记", icon: NotebookPen, isNew: true },
+    { text: "生成学习笔记", prompt: LEARNING_NOTE_QUICK_ACTION_PROMPT, icon: NotebookPen, isNew: true },
   ] as const;
 
   const EmptyState = () => (
@@ -141,29 +142,34 @@ function ChatContent({ bookId }: ChatContentProps) {
         </div>
         {bookFormat !== "PDF" && (
           <div className="space-y-1">
-            {promptSuggestions.map(({ text, icon: Icon, isNew }) => (
-              <div
-                key={text}
-                onClick={() => {
-                  setInput(text);
-                  void handleSubmit(text);
-                }}
-                className="flex w-full cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:hover:bg-neutral-800/80"
-              >
-                <span className="flex items-center gap-3 text-neutral-800 text-sm dark:text-neutral-200">
-                  <Icon className="size-4" />
-                  {text}
-                </span>
-                {isNew ? (
-                  <Badge
-                    variant="secondary"
-                    className="border-transparent bg-primary/10 font-medium text-[10px] text-primary uppercase tracking-wide"
-                  >
-                    New
-                  </Badge>
-                ) : null}
-              </div>
-            ))}
+            {promptSuggestions.map((suggestion) => {
+              const { text, icon: Icon, isNew } = suggestion;
+              const prompt = "prompt" in suggestion ? suggestion.prompt : text;
+
+              return (
+                <div
+                  key={text}
+                  onClick={() => {
+                    setInput(prompt);
+                    void handleSubmit(prompt);
+                  }}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:hover:bg-neutral-800/80"
+                >
+                  <span className="flex items-center gap-3 text-neutral-800 text-sm dark:text-neutral-200">
+                    <Icon className="size-4" />
+                    {text}
+                  </span>
+                  {isNew ? (
+                    <Badge
+                      variant="secondary"
+                      className="border-transparent bg-primary/10 font-medium text-[10px] text-primary uppercase tracking-wide"
+                    >
+                      New
+                    </Badge>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

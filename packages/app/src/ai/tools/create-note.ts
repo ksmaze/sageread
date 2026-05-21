@@ -26,21 +26,25 @@ function cleanOptional(value: string | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-export function createCreateNoteTool(chatContext?: ChatContext) {
-  return tool({
-    description: `保存一条学习笔记到现有 notes 数据库。
+export const CREATE_NOTE_TOOL_DESCRIPTION = `保存一条学习笔记或批注到现有 notes 数据库。
 
 使用规则：
-• 用户明确要求“生成学习笔记”或要求保存笔记时使用
+• 用户明确要求“生成学习笔记”“保存笔记”“加批注”时使用
+• 每次只保存一条关键段落笔记；多条学习笔记必须逐条调用 createNote
 • 默认保存到当前书籍；不要让模型编造书籍元信息
 • 如果 resolveNoteSource 返回 matched，必须带上 cfi、sourceText、contextBefore、contextAfter
-• 如果 resolveNoteSource 返回 chapter-start，只带 fallback.cfi，不要伪造 sourceText
-• title 要短，content 要精简但信息完整`,
+• 如果 resolveNoteSource 返回 chapter-start，只带 fallback.cfi，不要伪造 sourceText，并把这条笔记视为章首 fallback
+• sourceText 保存真实原文；content 写精简理解、总结或批注，不要在 content 中重复原文
+• title 要短，content 要精简但信息完整`;
+
+export function createCreateNoteTool(chatContext?: ChatContext) {
+  return tool({
+    description: CREATE_NOTE_TOOL_DESCRIPTION,
 
     inputSchema: z.object({
       reasoning: z.string().min(1).describe("调用此工具的原因，例如：'用户明确要求生成并保存学习笔记'"),
       title: z.string().min(1).max(120).describe("笔记标题，短句即可"),
-      content: z.string().min(1).describe("笔记正文，使用精简 Markdown，总结重要信息"),
+      content: z.string().min(1).describe("笔记正文，使用精简 Markdown 写理解、总结或批注，不重复 sourceText 原文"),
       bookId: z.string().min(1).optional().describe("目标书籍 ID；不传时使用当前阅读书籍"),
       cfi: z.string().min(1).optional().describe("真实 Foliate CFI，必须来自 resolveNoteSource 或 reader selection"),
       sourceText: z.string().min(1).optional().describe("真实原文摘录；只有匹配到原文时填写"),
