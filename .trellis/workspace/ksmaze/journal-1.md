@@ -939,3 +939,37 @@ Added AI learning-note quick action, source CFI resolution via Foliate search, n
 ### Next Steps
 
 - None - task complete
+
+
+## Session 28: Fix quick action AI message conversion
+
+**Date**: 2026-05-21
+**Task**: Fix quick action AI message conversion
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Fixed quick action chat crash by awaiting AI SDK model-message conversion before streamText, added regression coverage, and captured the async conversion boundary in Trellis specs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `304e36d` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
