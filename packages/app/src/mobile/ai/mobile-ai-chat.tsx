@@ -1,5 +1,16 @@
-import { Brain, History, Lightbulb, MessageCirclePlus, Search, Settings, Sparkles, UserSearch } from "lucide-react";
-import { useState } from "react";
+import {
+  Brain,
+  History,
+  Lightbulb,
+  MessageCirclePlus,
+  NotebookPen,
+  Search,
+  Settings,
+  Sparkles,
+  UserSearch,
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { createReaderNoteSourceResolver, getReaderChapterStartLocation } from "@/ai/reader-note-source-runtime";
 import { ChatContainerRoot } from "@/components/prompt-kit/chat-container";
 import { ScrollButton } from "@/components/prompt-kit/scroll-button";
 import { ChatInputArea } from "@/components/side-chat/chat-input-area";
@@ -28,6 +39,7 @@ const promptSuggestions = [
   { text: "分析作者观点", icon: UserSearch },
   { text: "找出关键信息", icon: Search },
   { text: "解释这个概念", icon: Lightbulb },
+  { text: "生成学习笔记", icon: NotebookPen },
 ] as const;
 
 function MobileChatLoadingState() {
@@ -92,6 +104,8 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
   const readerActiveContext = useReaderStore((state) => state.activeContext);
   const readerSetActiveContext = useReaderStore((state) => state.setActiveContext);
   const readerProgress = useReaderStore((state) => state.progress);
+  const readerView = useReaderStore((state) => state.view);
+  const readerBookData = useReaderStore((state) => state.bookData);
   const readerBookFormat = useReaderStore((state) => state.bookData?.book?.format);
   const readerCurrentThread = useReaderStore((state) => state.currentThread);
   const readerSetCurrentThread = useReaderStore((state) => state.setCurrentThread);
@@ -111,6 +125,36 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
     : (globalBookFormat ?? libraryBooks.find((book) => book.id === globalActiveBookId)?.format);
   const activeContext = readerScoped ? (readerActiveContext ?? undefined) : globalActiveContext;
   const currentThread = readerScoped ? (readerCurrentThread ?? null) : globalCurrentThread;
+  const globalActiveBook = libraryBooks.find((book) => book.id === globalActiveBookId);
+  const activeBookMeta = readerScoped
+    ? readerBookData?.book
+      ? { title: readerBookData.book.title, author: readerBookData.book.author }
+      : undefined
+    : globalActiveBook
+      ? { title: globalActiveBook.title, author: globalActiveBook.author }
+      : undefined;
+  const chapterStartLocation = useMemo(
+    () =>
+      readerScoped
+        ? getReaderChapterStartLocation({
+            view: readerView,
+            progress: readerProgress,
+            bookDoc: readerBookData?.bookDoc,
+          })
+        : undefined,
+    [readerBookData?.bookDoc, readerProgress, readerScoped, readerView],
+  );
+  const resolveNoteSource = useMemo(
+    () =>
+      readerScoped
+        ? createReaderNoteSourceResolver({
+            view: readerView,
+            progress: readerProgress,
+            bookDoc: readerBookData?.bookDoc,
+          })
+        : undefined,
+    [readerBookData?.bookDoc, readerProgress, readerScoped, readerView],
+  );
   const setActiveContext: (context: string | undefined) => void =
     readerScoped && readerSetActiveContext ? readerSetActiveContext : globalSetActiveContext;
   const setCurrentThread: (thread: Thread | null) => void =
@@ -147,9 +191,14 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
     chatContext: {
       activeBookId,
       activeBookFormat,
+      activeBookMeta,
       activeContext,
       activeSectionLabel: readerScoped ? readerProgress?.sectionLabel : undefined,
+      activeSectionHref: readerScoped ? readerProgress?.sectionHref : undefined,
+      activeSectionIndex: readerScoped ? readerProgress?.section : undefined,
+      activeChapterStartCfi: chapterStartLocation?.cfi,
     },
+    resolveNoteSource,
     setActiveBookId,
     setActiveContext,
     currentThread,

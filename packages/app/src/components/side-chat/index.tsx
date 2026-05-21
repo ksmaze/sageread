@@ -9,7 +9,8 @@ import {
   Settings,
   UserSearch,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { createReaderNoteSourceResolver, getReaderChapterStartLocation } from "@/ai/reader-note-source-runtime";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useChatState } from "@/hooks/use-chat-state";
@@ -37,9 +38,35 @@ function ChatContent({ bookId }: ChatContentProps) {
   const setActiveContext = useReaderStore((state) => state.setActiveContext)!;
   const progress = useReaderStore((state) => state.progress);
   const bookFormat = useReaderStore((state) => state.bookData?.book?.format);
+  const bookData = useReaderStore((state) => state.bookData);
+  const view = useReaderStore((state) => state.view);
   const activeContext = useReaderStore((state) => state.activeContext)!;
   const currentThread = useReaderStore((state) => state.currentThread);
   const setCurrentThread = useReaderStore((state) => state.setCurrentThread)!;
+  const bookMeta = bookData?.book
+    ? {
+        title: bookData.book.title,
+        author: bookData.book.author,
+      }
+    : undefined;
+  const chapterStartLocation = useMemo(
+    () =>
+      getReaderChapterStartLocation({
+        view,
+        progress,
+        bookDoc: bookData?.bookDoc,
+      }),
+    [bookData?.bookDoc, progress, view],
+  );
+  const resolveNoteSource = useMemo(
+    () =>
+      createReaderNoteSourceResolver({
+        view,
+        progress,
+        bookDoc: bookData?.bookDoc,
+      }),
+    [bookData?.bookDoc, progress, view],
+  );
 
   const {
     input,
@@ -68,9 +95,14 @@ function ChatContent({ bookId }: ChatContentProps) {
     chatContext: {
       activeBookId: bookId,
       activeBookFormat: bookFormat,
+      activeBookMeta: bookMeta,
       activeContext,
       activeSectionLabel: progress?.sectionLabel,
+      activeSectionHref: progress?.sectionHref,
+      activeSectionIndex: progress?.section,
+      activeChapterStartCfi: chapterStartLocation?.cfi,
     },
+    resolveNoteSource,
     setActiveBookId: () => {},
     setActiveContext: setActiveContext,
     currentThread: currentThread,

@@ -2,6 +2,7 @@ import type { UIMessage } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { canSubmitBookChatPrompt, canUseBookWideContext } from "@/ai/chat-context";
 import { useChat } from "@/ai/hooks/use-chat";
+import type { NoteSourceResolver } from "@/ai/tools";
 import { completeThreadInitialization } from "@/hooks/chat-initialization";
 import { useForceUpdate } from "@/hooks/use-force-update";
 import { useModelSelector } from "@/hooks/use-model-selector";
@@ -19,6 +20,7 @@ import {
 import { type SelectedModel, useProviderStore } from "@/store/provider-store";
 import { useThreadStore } from "@/store/thread-store";
 import type { ChatReference, MessageMetadata } from "@/types/message";
+import type { BookMeta } from "@/types/note";
 import type { BookFormat } from "@/types/simple-book";
 import type { Thread, ThreadSummary } from "@/types/thread";
 
@@ -65,12 +67,17 @@ export interface UseChatStateReturn {
 export interface ChatContext {
   activeBookId?: string;
   activeBookFormat?: BookFormat;
+  activeBookMeta?: BookMeta;
   activeContext?: string;
   activeSectionLabel?: string;
+  activeSectionHref?: string;
+  activeSectionIndex?: number;
+  activeChapterStartCfi?: string;
 }
 
 interface UseChatStateOptions {
   chatContext: ChatContext;
+  resolveNoteSource?: NoteSourceResolver;
   setActiveBookId: (bookId: string) => void;
   setActiveContext: (context: string | undefined) => void;
   currentThread?: Thread | null;
@@ -78,7 +85,7 @@ interface UseChatStateOptions {
 }
 
 export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
-  const { chatContext, setActiveBookId, setActiveContext } = options;
+  const { chatContext, resolveNoteSource, setActiveBookId, setActiveContext } = options;
   const { activeBookId } = chatContext;
   const [input, setInput] = useState("");
   const [showThreads, setShowThreads] = useState(false);
@@ -119,6 +126,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
       experimental_throttle: 50,
       messages: [],
       chatContext,
+      resolveNoteSource,
       onError: (error) => {
         console.error("Error:", error);
       },

@@ -1,4 +1,4 @@
-import { CheckCircle, ChevronDown, Eye, Loader2, Settings, XCircle } from "lucide-react";
+import { CheckCircle, ChevronDown, Eye, Loader2, MapPin, Settings, XCircle } from "lucide-react";
 import { useState } from "react";
 import { useStickToBottomContext } from "use-stick-to-bottom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -22,6 +22,13 @@ export type ToolProps = {
   isStandaloneChat?: boolean;
 };
 
+type SavedNoteOutput = {
+  title?: string | null;
+  bookTitle?: string | null;
+  cfi?: string | null;
+  sourceText?: string | null;
+};
+
 const Tool = ({ toolPart, defaultOpen = false, className, onViewDetail, isStandaloneChat = false }: ToolProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { state, input, output, type } = toolPart;
@@ -30,6 +37,10 @@ const Tool = ({ toolPart, defaultOpen = false, className, onViewDetail, isStanda
   const isRagTool =
     type === TOOL_NAME_MAP.ragSearch || type === TOOL_NAME_MAP.ragContext || type === TOOL_NAME_MAP.ragToc;
   const isGetSkillsTool = type === TOOL_NAME_MAP.getSkills;
+  const isCreateNoteTool = type === TOOL_NAME_MAP.createNote;
+  const isResolveNoteSourceTool = type === TOOL_NAME_MAP.resolveNoteSource;
+  const savedNote = isCreateNoteTool ? (output?.note as SavedNoteOutput | undefined) : undefined;
+  const sourceResolutionStatus = isResolveNoteSourceTool ? String(output?.status ?? "") : "";
 
   const handleOpenChange = (open: boolean) => {
     stopScroll();
@@ -125,6 +136,11 @@ const Tool = ({ toolPart, defaultOpen = false, className, onViewDetail, isStanda
                     {String((output?.results as any)?.title)}
                   </span>
                 )}
+                {isCreateNoteTool && savedNote?.title && (
+                  <span title={String(savedNote.title)} className="flex-1 overflow-hidden truncate font-medium text-sm">
+                    {String(savedNote.title)}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 {isMindmap && state === "output-available" && onViewDetail && (
@@ -149,11 +165,28 @@ const Tool = ({ toolPart, defaultOpen = false, className, onViewDetail, isStanda
                     <Eye className="h-4 w-4" />
                   </div>
                 )}
-                {!isMindmap && !isRagTool && !isGetSkillsTool && state === "output-available" && (
+                {isCreateNoteTool && state === "output-available" && (
+                  <span className="text-muted-foreground text-sm">已保存</span>
+                )}
+                {isResolveNoteSourceTool && state === "output-available" && (
                   <span className="text-muted-foreground text-sm">
-                    {String((output?.results as unknown[] | undefined)?.length || 0)} results
+                    {sourceResolutionStatus === "matched"
+                      ? `${String((output?.matches as unknown[] | undefined)?.length || 0)} 处`
+                      : sourceResolutionStatus === "chapter-start"
+                        ? "章节首"
+                        : "未定位"}
                   </span>
                 )}
+                {!isMindmap &&
+                  !isRagTool &&
+                  !isGetSkillsTool &&
+                  !isCreateNoteTool &&
+                  !isResolveNoteSourceTool &&
+                  state === "output-available" && (
+                    <span className="text-muted-foreground text-sm">
+                      {String((output?.results as unknown[] | undefined)?.length || 0)} results
+                    </span>
+                  )}
                 {isRagTool && state === "output-available" && (
                   <span className="text-muted-foreground text-sm">
                     {String((output?.results as unknown[] | undefined)?.length || 0)} results
@@ -189,6 +222,31 @@ const Tool = ({ toolPart, defaultOpen = false, className, onViewDetail, isStanda
               {output && (
                 <div>
                   <h4 className="mb-2 font-medium text-muted-foreground text-sm">Output</h4>
+                  {isCreateNoteTool && savedNote && (
+                    <div className="mb-3 rounded-md border bg-muted/40 p-3 text-sm">
+                      <div className="mb-2 flex items-center gap-2 font-medium">
+                        <CheckCircle className="size-4 text-green-600" />
+                        <span>已保存笔记</span>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="font-medium">{String(savedNote.title ?? "未命名笔记")}</div>
+                        {savedNote.bookTitle && (
+                          <div className="text-muted-foreground text-xs">{String(savedNote.bookTitle)}</div>
+                        )}
+                        {savedNote.cfi && (
+                          <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                            <MapPin className="size-3" />
+                            <span>{savedNote.sourceText ? "原文位置" : "章节首位置"}</span>
+                          </div>
+                        )}
+                        {savedNote.sourceText && (
+                          <div className="mt-2 line-clamp-3 border-l-2 pl-2 text-muted-foreground text-xs">
+                            {String(savedNote.sourceText)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div className="max-h-60 overflow-auto rounded border bg-background p-2 font-mono text-sm">
                     <pre className="whitespace-pre-wrap">{formatValue(output)}</pre>
                   </div>

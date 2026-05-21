@@ -174,6 +174,7 @@ export interface ViewSettings
 
 export interface BookProgress {
   location: string;
+  section: number;
   sectionId: number;
   sectionHref: string;
   sectionLabel: string;

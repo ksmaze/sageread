@@ -14,13 +14,16 @@ import type { ChatContext } from "@/hooks/use-chat-state";
 import { useVectorModelStore } from "@/store/vector-model-store";
 import { shouldAttachBookWideRagTools } from "./chat-context";
 import {
+  createCreateNoteTool,
   createRagContextTool,
   createRagSearchTool,
   createRagTocTool,
+  createResolveNoteSourceTool,
   getBooksTool,
   getReadingStatsTool,
   getSkillsTool,
   mindmapTool,
+  type NoteSourceResolver,
   notesTool,
 } from "./tools";
 import { processQuoteMessages, selectValidMessages } from "./utils";
@@ -28,15 +31,21 @@ import { processQuoteMessages, selectValidMessages } from "./utils";
 export class CustomChatTransport implements ChatTransport<UIMessage> {
   private model: LanguageModel;
   private prepareSendMessagesRequest?: PrepareSendMessagesRequest<UIMessage>;
+  private resolveNoteSource?: NoteSourceResolver;
+  private isNoteSourceResolverAvailable?: () => boolean;
 
   constructor(
     model: LanguageModel,
     options?: {
       prepareSendMessagesRequest?: PrepareSendMessagesRequest<UIMessage>;
+      resolveNoteSource?: NoteSourceResolver;
+      isNoteSourceResolverAvailable?: () => boolean;
     },
   ) {
     this.model = model;
     this.prepareSendMessagesRequest = options?.prepareSendMessagesRequest;
+    this.resolveNoteSource = options?.resolveNoteSource;
+    this.isNoteSourceResolverAvailable = options?.isNoteSourceResolverAvailable;
   }
 
   updateModel(model: LanguageModel) {
@@ -86,6 +95,14 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       getSkills: getSkillsTool,
       mindmap: mindmapTool,
     };
+
+    if (activeBookId) {
+      tools.createNote = createCreateNoteTool(chatContext);
+    }
+
+    if (this.resolveNoteSource && this.isNoteSourceResolverAvailable?.()) {
+      tools.resolveNoteSource = createResolveNoteSourceTool(this.resolveNoteSource, chatContext);
+    }
 
     if (shouldAttachBookWideRagTools(chatContext, hasVectorCapability)) {
       tools.ragSearch = createRagSearchTool(activeBookId);

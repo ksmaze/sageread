@@ -45,9 +45,7 @@ pub async fn initialize(app_handle: &AppHandle) -> Result<SqlitePool, Box<dyn st
     ensure_note_location_columns(&pool).await?;
     println!("Database schema initialized.");
 
-    if is_new_db {
-        initialize_default_skills(&pool).await?;
-    }
+    ensure_default_skills(&pool).await?;
 
     Ok(pool)
 }
@@ -84,11 +82,11 @@ async fn ensure_note_location_columns(pool: &SqlitePool) -> Result<(), sqlx::Err
     Ok(())
 }
 
-async fn initialize_default_skills(pool: &SqlitePool) -> Result<(), Box<dyn std::error::Error>> {
+async fn ensure_default_skills(pool: &SqlitePool) -> Result<(), Box<dyn std::error::Error>> {
     let default_skills_json = include_str!("./default-skills.json");
     let default_skills: Vec<DefaultSkill> = serde_json::from_str(default_skills_json)?;
 
-    println!("Initializing {} default skills...", default_skills.len());
+    println!("Ensuring {} default skills...", default_skills.len());
 
     for skill in default_skills {
         let skill_id = Uuid::new_v4().to_string();
@@ -96,7 +94,7 @@ async fn initialize_default_skills(pool: &SqlitePool) -> Result<(), Box<dyn std:
 
         sqlx::query(
             r#"
-            INSERT INTO skills (id, name, content, is_active, is_system, created_at, updated_at)
+            INSERT OR IGNORE INTO skills (id, name, content, is_active, is_system, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             "#,
         )
@@ -110,9 +108,9 @@ async fn initialize_default_skills(pool: &SqlitePool) -> Result<(), Box<dyn std:
         .execute(pool)
         .await?;
 
-        println!("✅ Default skill initialized: {}", skill.name);
+        println!("Default skill available: {}", skill.name);
     }
 
-    println!("Default skills initialization completed.");
+    println!("Default skills check completed.");
     Ok(())
 }

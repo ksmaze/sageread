@@ -332,6 +332,116 @@ separated
     .push_bind_unseparated(content_opt.clone());
 ```
 
+## AI Learning Note Source Resolution Contract
+
+### 1. Scope / Trigger
+
+Use this contract when AI chat creates book-bound learning notes from chat/current-chapter context. This is a cross-layer contract because the AI tool writes existing `notes` rows and must resolve reader positions through Foliate before saving.
+
+### 2. Signatures
+
+```ts
+interface ChatContext {
+  activeBookId?: string;
+  activeBookFormat?: BookFormat;
+  activeBookMeta?: { title: string; author: string };
+  activeContext?: string;
+  activeSectionLabel?: string;
+  activeSectionHref?: string;
+  activeSectionIndex?: number;
+  activeChapterStartCfi?: string;
+}
+
+interface ResolveNoteSourceInput {
+  reasoning: string;
+  sourceCandidates: Array<{ text: string; reason?: string }>;
+  maxMatches?: number;
+}
+
+type ResolvedNoteSource =
+  | { status: "matched"; matches: ResolvedNoteSourceMatch[]; fallback?: ChapterStartLocation }
+  | { status: "chapter-start"; matches: []; fallback: ChapterStartLocation }
+  | { status: "unavailable"; matches: []; error?: string };
+
+interface CreateNoteToolInput {
+  reasoning: string;
+  title: string;
+  content: string;
+  bookId?: string;
+  cfi?: string;
+  sourceText?: string;
+  contextBefore?: string;
+  contextAfter?: string;
+}
+```
+
+### 3. Contracts
+
+- AI note positioning must never treat RAG `chunk_id` as a reader location. A saved CFI must come from Foliate search, the current TOC/section start, or an existing reader selection.
+- `resolveNoteSource` searches the current Foliate section first using the actual relocate `progress.section` value exposed as `ChatContext.activeSectionIndex`.
+- AI provides short verbatim `sourceCandidates`; the resolver normalizes whitespace and tries shorter spans to tolerate EPUB line breaks/markup.
+- If a match is found, `createNote` must save `matches[0].cfi`, `sourceText`, `contextBefore`, and `contextAfter`.
+- If matching fails, fallback to current chapter start in this order: TOC item `cfi` by `progress.sectionHref`, then `view.getCFI(progress.section, null)`, then no CFI.
+- Chapter-start fallback must not invent `sourceText`; save synthesized note content plus the fallback CFI only.
+- Book-bound AI note creation must supply `bookMeta` from `ChatContext.activeBookMeta` or a local `getBookWithStatusById(activeBookId)` lookup.
+- Default DB-backed skills are additive. Startup may insert missing default skills by name, but must not overwrite user-edited existing skills.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| No active book id | Do not attach/use `createNote` for book-bound learning notes. |
+| No reader view or no section index | Return `chapter-start` if fallback CFI is available; otherwise `unavailable`. |
+| Source candidate has newlines or repeated whitespace | Normalize whitespace and try shorter fallback queries. |
+| Foliate search returns multiple section-scoped matches | Return candidate CFI/excerpts so the AI can choose, usually the first plausible match. |
+| Foliate search returns no match | Save at chapter-start fallback if available. |
+| `sourceText` is present without `cfi` | Reject the tool call; source text cannot be saved without a real location. |
+| Default skill already exists in DB | Leave the row unchanged; do not overwrite user edits. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: Quick action asks for "生成学习笔记"; AI gets the skill, uses RAG/chat evidence, calls `resolveNoteSource`, then calls `createNote` with confirmed CFI fields.
+- Base: Matching fails because of EPUB formatting; the note saves with current chapter-start CFI and no `sourceText`.
+- Bad: Passing `[118]` or any `chunk_id` into note `cfi`, or saving a paraphrased summary sentence as `sourceText`.
+
+### 6. Tests Required
+
+- Resolver tests must assert whitespace normalization, shorter fallback queries, nested TOC CFI lookup, and section-start fallback.
+- Chat context tests must cover new active section/book metadata fields if their behavior changes.
+- Run `pnpm --filter app build` after AI tool, chat context, reader progress, or note tool signature changes.
+- Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml` after default skill initialization changes.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+await createNote({
+  bookId,
+  bookMeta,
+  content,
+  cfi: String(chunkId),
+  sourceText: generatedSummary,
+});
+```
+
+#### Correct
+
+```ts
+const resolution = await resolveNoteSource({
+  reasoning: "确认学习笔记原文位置",
+  sourceCandidates: [{ text: verbatimSourceText }],
+});
+
+await createNote({
+  bookId,
+  bookMeta,
+  content: synthesizedNote,
+  cfi: resolution.status === "matched" ? resolution.matches[0]?.cfi : resolution.fallback?.cfi,
+  sourceText: resolution.status === "matched" ? resolution.matches[0]?.sourceText : undefined,
+});
+```
+
 ## Settings Contract
 
 `useAppSettingsStore.settings` contains `globalReadSettings` and `globalViewSettings`. When reader settings change, update both persisted settings and the live foliate renderer when available.
@@ -371,8 +481,12 @@ isSemanticIndexingSupported(format: BookFormat | null | undefined): boolean;
 interface ChatContext {
   activeBookId?: string;
   activeBookFormat?: BookFormat;
+  activeBookMeta?: { title: string; author: string };
   activeContext?: string;
   activeSectionLabel?: string;
+  activeSectionHref?: string;
+  activeSectionIndex?: number;
+  activeChapterStartCfi?: string;
 }
 ```
 

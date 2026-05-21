@@ -1,4 +1,4 @@
-import { ArrowUp, BookOpen, Brain, Notebook, Paperclip, Quote, X } from "lucide-react";
+import { ArrowUp, BookOpen, Brain, Notebook, NotebookPen, Paperclip, Quote, X } from "lucide-react";
 import { useRef } from "react";
 import { PromptInput, PromptInputAction, PromptInputTextarea } from "@/components/prompt-kit/prompt-input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,11 @@ const quickActions = [
   { label: "总结本章", icon: BookOpen, prompt: "请帮我总结本章的核心要点和结论。" },
   { label: "分析观点", icon: Brain, prompt: "请分析作者的观点，指出论据与可能的偏见。" },
   { label: "生成思维导图", icon: Notebook, prompt: "请基于当前内容生成思维导图。" },
+  {
+    label: "生成学习笔记",
+    icon: NotebookPen,
+    prompt: "请根据最近聊天记录和当前章节生成一条学习笔记，并保存到当前书籍笔记。",
+  },
 ] as const;
 
 export function ChatInputArea({

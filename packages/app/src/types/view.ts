@@ -20,7 +20,7 @@ export interface FoliateView extends HTMLElement {
   next: (distance?: number) => Promise<void>;
   goLeft: () => Promise<void>;
   goRight: () => Promise<void>;
-  getCFI: (index: number, range: Range) => string;
+  getCFI: (index: number, range?: Range | null) => string;
   resolveCFI: (cfi: string) => { index: number; anchor: (doc: Document) => Range };
   addAnnotation: (
     note: BookNote | ReaderNoteMarker,
