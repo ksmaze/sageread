@@ -973,3 +973,37 @@ Fixed quick action chat crash by awaiting AI SDK model-message conversion before
 ### Next Steps
 
 - None - task complete
+
+
+## Session 29: Anchor AI learning notes to source passages
+
+**Date**: 2026-05-21
+**Task**: Anchor AI learning notes to source passages
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Implemented robust Foliate-backed source matching for AI notes, added two-mode learning-note prompt/skill/tool contracts, safe default-skill refresh for existing stock skills, regression tests, and updated Trellis specs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9e2899a` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

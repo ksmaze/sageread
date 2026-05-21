@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 28
+- **Total Sessions**: 29
 - **Last Active**: 2026-05-21
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~975 | Active |
+| `journal-1.md` | ~1009 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 29 | 2026-05-21 | Anchor AI learning notes to source passages | `9e2899a` | `main` |
 | 28 | 2026-05-21 | Fix quick action AI message conversion | `304e36d` | `main` |
 | 27 | 2026-05-21 | AI learning note generation | `91896ab` | `main` |
 | 26 | 2026-05-19 | Import EPUB/PDF Open-With Support | `9490029` | `main` |
