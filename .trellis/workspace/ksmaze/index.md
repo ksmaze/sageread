@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 26
-- **Last Active**: 2026-05-19
+- **Total Sessions**: 27
+- **Last Active**: 2026-05-21
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~907 | Active |
+| `journal-1.md` | ~941 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 27 | 2026-05-21 | AI learning note generation | `91896ab` | `main` |
 | 26 | 2026-05-19 | Import EPUB/PDF Open-With Support | `9490029` | `main` |
 | 25 | 2026-05-19 | Remove unused jan-utils crate | `526b7dc` | `main` |
 | 24 | 2026-05-19 | Android Process Text Translation | `4b32bb2` | `main` |

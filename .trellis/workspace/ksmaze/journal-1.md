@@ -905,3 +905,37 @@ Added EPUB/PDF OS open-with import support, Android launch-intent capture, inacc
 ### Next Steps
 
 - None - task complete
+
+
+## Session 27: AI learning note generation
+
+**Date**: 2026-05-21
+**Task**: AI learning note generation
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Added AI learning-note quick action, source CFI resolution via Foliate search, note creation tools, default skill seeding, and documented the note-position contract.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `91896ab` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
