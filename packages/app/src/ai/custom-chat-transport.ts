@@ -2,7 +2,6 @@ import type { UIMessage } from "@ai-sdk/react";
 import {
   type ChatRequestOptions,
   type ChatTransport,
-  convertToModelMessages,
   type LanguageModel,
   type PrepareSendMessagesRequest,
   stepCountIs,
@@ -13,6 +12,7 @@ import { buildReadingPrompt } from "@/constants/prompt";
 import type { ChatContext } from "@/hooks/use-chat-state";
 import { useVectorModelStore } from "@/store/vector-model-store";
 import { shouldAttachBookWideRagTools } from "./chat-context";
+import { prepareModelMessagesForStream } from "./model-message-conversion";
 import {
   createCreateNoteTool,
   createRagContextTool,
@@ -26,7 +26,6 @@ import {
   type NoteSourceResolver,
   notesTool,
 } from "./tools";
-import { processQuoteMessages, selectValidMessages } from "./utils";
 
 export class CustomChatTransport implements ChatTransport<UIMessage> {
   private model: LanguageModel;
@@ -83,9 +82,6 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
     const chatContext = (requestBody as any)?.chatContext as ChatContext | undefined;
     const activeBookId = chatContext?.activeBookId;
 
-    const processedMessages = processQuoteMessages(options.messages);
-    const selectedMessages = selectValidMessages(processedMessages, 8);
-
     const hasVectorCapability = useVectorModelStore.getState().hasVectorCapability();
 
     const tools: any = {
@@ -110,10 +106,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       tools.ragContext = createRagContextTool(activeBookId);
     }
 
-    const convertedMessages = convertToModelMessages(selectedMessages, {
-      tools,
-      ignoreIncompleteToolCalls: true,
-    });
+    const convertedMessages = await prepareModelMessagesForStream(options.messages, tools);
 
     const result = streamText({
       model: this.model,

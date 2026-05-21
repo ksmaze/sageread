@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/app/frontend/index.md", "reason": "Package frontend spec index for app changes."}
+{"file": ".trellis/spec/app/frontend/state-management.md", "reason": "AI chat transport, note source, and state boundary contracts."}
+{"file": ".trellis/spec/app/frontend/quality-guidelines.md", "reason": "Required app verification commands and quality checklist."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer boundary guidance for SDK prompt conversion."}

@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/app/frontend/index.md", "reason": "Confirmed applicable app frontend spec set."}
+{"file": ".trellis/spec/app/frontend/state-management.md", "reason": "Verified the new AI chat transport conversion contract and existing AI note contracts."}
+{"file": ".trellis/spec/app/frontend/quality-guidelines.md", "reason": "Confirmed minimum build check and focused verification expectations."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Captured the async SDK conversion boundary as a prevention rule."}

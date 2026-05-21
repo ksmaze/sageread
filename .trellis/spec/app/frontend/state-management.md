@@ -332,6 +332,68 @@ separated
     .push_bind_unseparated(content_opt.clone());
 ```
 
+## AI Chat Transport Message Conversion Contract
+
+### 1. Scope / Trigger
+
+Use this contract when changing `src/ai/custom-chat-transport.ts`, quick actions, AI tool attachment, quote processing, message trimming, or AI SDK prompt conversion before `streamText`.
+
+### 2. Signatures
+
+```ts
+async function prepareModelMessagesForStream(messages: UIMessage[], tools: ToolSet): Promise<ModelMessage[]>;
+```
+
+### 3. Contracts
+
+- Convert chat UI messages to model messages through a pure helper under `src/ai/` before calling `streamText`.
+- In AI SDK 6, `convertToModelMessages(...)` is async. Always `await` it and pass only the resolved `ModelMessage[]` to `streamText`.
+- Keep quote expansion, valid-message selection, and SDK conversion in the helper so quick actions, normal sends, and regenerated sends share the same runtime shape.
+- Build the complete tool set before converting messages. The conversion needs the same tools that `streamText` receives so tool-call parts are interpreted consistently.
+- Keep conversion tests importable without constructing `CustomChatTransport`. Node tests should not initialize Tauri, Zustand stores, or browser globals just to verify message conversion.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Quick action submits a user prompt | Resolve converted model messages before `streamText`; do not pass a Promise as `messages`. |
+| `convertToModelMessages` returns a Promise | Await it inside the conversion helper. |
+| Tool set changes | Convert with the final tool set and pass that same set to `streamText`. |
+| Conversion helper is tested in Node | Import only pure AI conversion code; avoid side-effectful transport setup. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: Quick action "生成学习笔记" creates a user `UIMessage`, the helper awaits SDK conversion, and `streamText` receives a `ModelMessage[]`.
+- Base: Normal chat submit and regenerate use the same helper as quick actions.
+- Bad: Passing the raw `convertToModelMessages(...)` return value into `streamText`; prompt standardization can call `.some()` on a Promise and fail at runtime.
+
+### 6. Tests Required
+
+- Message conversion tests must assert the helper returns an array for a quick-action-style user prompt.
+- Run focused AI tests after changing message conversion, tool attachment, or quick action submission.
+- Run `pnpm --filter app build` after AI transport or SDK conversion changes.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+const convertedMessages = convertToModelMessages(selectedMessages, {
+  tools,
+  ignoreIncompleteToolCalls: true,
+});
+
+streamText({ model, messages: convertedMessages, tools });
+```
+
+#### Correct
+
+```ts
+const convertedMessages = await prepareModelMessagesForStream(messages, tools);
+
+streamText({ model, messages: convertedMessages, tools });
+```
+
 ## AI Learning Note Source Resolution Contract
 
 ### 1. Scope / Trigger

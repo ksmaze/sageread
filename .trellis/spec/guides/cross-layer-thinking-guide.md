@@ -49,6 +49,7 @@ For each arrow, ask:
 | Reader Navigation Request ↔ Logcat Observability | when note jumps stay intermittent, every layer must log the same request metadata so the failing boundary can be identified from Android logcat without guessing |
 | Generated PDF Page HTML ↔ Android Tauri WebView | assigning generated PDF pages as `blob:` iframe URLs can be intercepted by Wry `shouldOverrideUrlLoading` and block the UI thread |
 | Android Launch Intent ↔ Tauri RunEvent ↔ Frontend Import | Android cold-start file opens arrive as `MainActivity.intent`, while Tauri `RunEvent::Opened` is driven by `onNewIntent`; frontend imports must drain the visible activity/plugin queue and preserve `content://` URI shape across the JS fs boundary |
+| AI SDK UI Messages ↔ Model Prompt Conversion | SDK conversion helpers can be async even when their output is an array shape; callers must await conversion before handing data to prompt standardization or streaming APIs |
 
 ### Step 3: Define Contracts
 
@@ -133,6 +134,12 @@ For each boundary:
 
 **Good**: Map the Android activity lifecycle, Tauri runtime event, native plugin command, and frontend import service as one flow. Read `MainActivity.intent` through a native plugin for cold starts, call `setIntent(intent)` on warm starts, merge/dedupe native URLs with any Tauri queued URLs, and keep `content://` values as strings when crossing the JS fs API.
 
+### Mistake 13: Assuming SDK Conversion Helpers Are Synchronous
+
+**Bad**: Pass the return value of `convertToModelMessages(...)` directly into `streamText` because the eventual value is a `ModelMessage[]`.
+
+**Good**: Treat UI-message to model-message conversion as an async boundary. Wrap it in a focused helper, await it before streaming, and regression-test the helper with a quick-action-style prompt so runtime prompt standardization receives an array, not a Promise.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -164,6 +171,7 @@ After implementation:
 - [ ] For intermittent note jumps, verified the same request metadata appears in logcat across the UI, shell/store, reader, and foliate layers
 - [ ] For Android PDF note/page jumps, verified generated page loads do not produce `blob:` iframe navigation warnings or `shouldOverrideUrlLoading` ANRs
 - [ ] For Android open-with imports, verified both cold-start and warm-start intents reach the visible main activity/plugin queue and that `content://` URIs are passed to Tauri fs as strings
+- [ ] For AI SDK prompt conversion, verified async conversion helpers are awaited before calling streaming APIs and the result has the array shape those APIs inspect
 
 ---
 
