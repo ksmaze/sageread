@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 29
-- **Last Active**: 2026-05-21
+- **Total Sessions**: 30
+- **Last Active**: 2026-05-22
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1009 | Active |
+| `journal-1.md` | ~1043 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 30 | 2026-05-22 | Redesign AI note source matching | `21a925c` | `main` |
 | 29 | 2026-05-21 | Anchor AI learning notes to source passages | `9e2899a` | `main` |
 | 28 | 2026-05-21 | Fix quick action AI message conversion | `304e36d` | `main` |
 | 27 | 2026-05-21 | AI learning note generation | `91896ab` | `main` |

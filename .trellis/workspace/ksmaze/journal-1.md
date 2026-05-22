@@ -1007,3 +1007,37 @@ Implemented robust Foliate-backed source matching for AI notes, added two-mode l
 ### Next Steps
 
 - None - task complete
+
+
+## Session 30: Redesign AI note source matching
+
+**Date**: 2026-05-22
+**Task**: Redesign AI note source matching
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Made AI learning note source resolution use Foliate section.current, added normalized current-section DOM matching for robust CFI derivation, kept EPUB RAG tools available with BM25 fallback when vector config is absent, updated regression tests and Trellis specs.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `21a925c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
