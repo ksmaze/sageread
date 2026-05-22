@@ -1,6 +1,6 @@
 import { type BookDoc, getDirection } from "@/lib/document";
 import { transformContent } from "@/services/transform-service";
-import type { BookConfig, ViewSettings } from "@/types/book";
+import type { BookConfig, BookProgressSection, ViewSettings } from "@/types/book";
 import { type FoliateView, wrappedFoliateView } from "@/types/view";
 import { getBookDirFromLanguage, getBookDirFromWritingMode } from "@/utils/book";
 import { mountAdditionalFonts } from "@/utils/font";
@@ -45,7 +45,7 @@ export interface ProgressData {
   sectionHref: string;
   sectionLabel: string;
   sectionId: number;
-  section: number;
+  section: BookProgressSection;
   pageinfo: any;
   timeinfo: any;
   range: any;

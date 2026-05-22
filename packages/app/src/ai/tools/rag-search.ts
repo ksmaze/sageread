@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { EnhancedSearchItem } from "@/types/document";
 import { getCurrentVectorModelConfig } from "@/utils/model";
 import { resolveMarkdownImagePaths } from "@/utils/path";
+import { type RagSearchMode, resolveEffectiveRagSearchMode } from "./rag-search-mode";
 
 // 智能RAG搜索工具：混合检索系统（BM25 + 向量检索）+ 精确定位 + 智能权重
 export const createRagSearchTool = (activeBookId: string | undefined) =>
@@ -30,6 +31,7 @@ export const createRagSearchTool = (activeBookId: string | undefined) =>
 • 长查询（复杂问题）：系统自动偏重语义理解
 • 专业术语：建议使用bm25模式获得精确匹配
 • 概念理解：建议使用vector模式获得语义相关内容
+• 未启用向量模型时：自动降级为bm25关键词搜索
 • 标注需求：记录返回结果中的 chunk_id，用于后续的文本标注操作`,
     inputSchema: z.object({
       reasoning: z
@@ -74,7 +76,7 @@ export const createRagSearchTool = (activeBookId: string | undefined) =>
       question: string;
       limit?: number;
       // format?: boolean;
-      searchMode?: "vector" | "bm25" | "hybrid";
+      searchMode?: RagSearchMode;
       vectorWeight?: number;
       bm25Weight?: number;
     }) => {
@@ -87,21 +89,21 @@ export const createRagSearchTool = (activeBookId: string | undefined) =>
       );
 
       const vectorConfig = await getCurrentVectorModelConfig();
-      if (!vectorConfig) {
-        throw new Error("请先在设置中启用并选择外部向量模型");
-      }
+      const effectiveSearchMode = resolveEffectiveRagSearchMode(searchMode, Boolean(vectorConfig));
+      const effectiveVectorWeight = effectiveSearchMode === "bm25" ? 0 : (vectorWeight ?? 0.7);
+      const effectiveBm25Weight = effectiveSearchMode === "bm25" ? 1 : (bm25Weight ?? 0.3);
 
       const results = (await invoke("plugin:epub|search_db", {
         bookId: activeBookId,
         query: question,
         limit: limit ?? 5,
-        dimension: vectorConfig.dimension,
-        embeddingsUrl: vectorConfig.embeddingsUrl,
-        model: vectorConfig.model,
-        apiKey: vectorConfig.apiKey,
-        searchMode: searchMode ?? "hybrid",
-        vectorWeight: vectorWeight ?? 0.7,
-        bm25Weight: bm25Weight ?? 0.3,
+        dimension: vectorConfig?.dimension ?? 1024,
+        embeddingsUrl: vectorConfig?.embeddingsUrl ?? "",
+        model: vectorConfig?.model ?? "",
+        apiKey: vectorConfig?.apiKey ?? null,
+        searchMode: effectiveSearchMode,
+        vectorWeight: effectiveVectorWeight,
+        bm25Weight: effectiveBm25Weight,
       })) as EnhancedSearchItem[];
 
       const enhancedContext = await Promise.all(
@@ -163,9 +165,9 @@ export const createRagSearchTool = (activeBookId: string | undefined) =>
           book_id: activeBookId,
           query: question,
           search_config: {
-            mode: searchMode ?? "hybrid",
-            vector_weight: vectorWeight ?? 0.7,
-            bm25_weight: bm25Weight ?? 0.3,
+            mode: effectiveSearchMode,
+            vector_weight: effectiveVectorWeight,
+            bm25_weight: effectiveBm25Weight,
           },
         },
       };

@@ -10,7 +10,6 @@ import {
 } from "ai";
 import { buildReadingPrompt } from "@/constants/prompt";
 import type { ChatContext } from "@/hooks/use-chat-state";
-import { useVectorModelStore } from "@/store/vector-model-store";
 import { shouldAttachBookWideRagTools } from "./chat-context";
 import { prepareModelMessagesForStream } from "./model-message-conversion";
 import {
@@ -82,8 +81,6 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
     const chatContext = (requestBody as any)?.chatContext as ChatContext | undefined;
     const activeBookId = chatContext?.activeBookId;
 
-    const hasVectorCapability = useVectorModelStore.getState().hasVectorCapability();
-
     const tools: any = {
       notes: notesTool,
       getBooks: getBooksTool,
@@ -100,7 +97,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       tools.resolveNoteSource = createResolveNoteSourceTool(this.resolveNoteSource, chatContext);
     }
 
-    if (shouldAttachBookWideRagTools(chatContext, hasVectorCapability)) {
+    if (shouldAttachBookWideRagTools(chatContext)) {
       tools.ragSearch = createRagSearchTool(activeBookId);
       tools.ragToc = createRagTocTool(activeBookId);
       tools.ragContext = createRagContextTool(activeBookId);

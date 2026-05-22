@@ -1,9 +1,8 @@
 import { appDataDir } from "@tauri-apps/api/path";
 import { exists, readTextFile } from "@tauri-apps/plugin-fs";
-import { canUseBookWideContext } from "@/ai/chat-context";
+import { canUseBookWideContext, shouldAttachBookWideRagTools } from "@/ai/chat-context";
 import type { ChatContext } from "@/hooks/use-chat-state";
 import { getSkills } from "@/services/skill-service";
-import { useVectorModelStore } from "@/store/vector-model-store";
 
 export async function buildReadingPrompt(chatContext: ChatContext | undefined): Promise<string> {
   const activeBookId = chatContext?.activeBookId;
@@ -22,8 +21,6 @@ export async function buildReadingPrompt(chatContext: ChatContext | undefined): 
     console.warn("获取技能列表失败:", error);
   }
 
-  const hasVectorCapability = useVectorModelStore.getState().hasVectorCapability();
-
   let metadataMd: string | null = null;
   try {
     if (activeBookId && canUseContext) {
@@ -40,7 +37,7 @@ export async function buildReadingPrompt(chatContext: ChatContext | undefined): 
 
   let base = systemPromptBase;
 
-  if (hasVectorCapability === false || !canUseContext) {
+  if (!shouldAttachBookWideRagTools(chatContext)) {
     base = base.replace(/—— RAG 工具使用策略 ——[\s\S]*?—— 引用标注规范 ——/m, "");
     base = base.replace(/—— 引用标注规范 ——[\s\S]*?—— 图片输出规范 ——/m, "");
     base = base.replace(/—— 图片输出规范 ——[\s\S]*?—— 书籍与笔记管理工具 ——/m, "—— 书籍与笔记管理工具 ——");

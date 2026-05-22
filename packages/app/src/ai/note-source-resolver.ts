@@ -42,6 +42,7 @@ export interface ResolveNoteSourceRuntime {
   sectionHref?: string;
   sectionLabel?: string;
   chapterStartCfi?: string;
+  getSectionDocument?: (index: number) => Document | Promise<Document | undefined> | undefined;
 }
 
 export interface ResolvedNoteSourceMatch {
@@ -94,6 +95,39 @@ const DEFAULT_MAX_QUERIES = 25;
 const DEFAULT_MAX_QUERY_LENGTH = 120;
 const DEFAULT_MIN_QUERY_LENGTH = 10;
 const DEFAULT_WINDOW_QUERY_LENGTH = 80;
+const LOOSE_CONTEXT_LENGTH = 50;
+const NODE_ELEMENT = 1;
+const NODE_TEXT = 3;
+const NODE_CDATA_SECTION = 4;
+const FILTER_ACCEPT = 1;
+const FILTER_REJECT = 2;
+const FILTER_SKIP = 3;
+
+export interface LooseTextPosition {
+  chunkIndex: number;
+  offset: number;
+}
+
+export interface LooseTextMatch {
+  start: LooseTextPosition;
+  end: LooseTextPosition;
+  sourceText: string;
+  contextBefore?: string;
+  contextAfter?: string;
+  query: string;
+}
+
+interface RawTextChar {
+  char: string;
+  chunkIndex: number;
+  offset: number;
+  rawIndex: number;
+}
+
+interface ComparableTextChar {
+  char: string;
+  rawCharIndex: number;
+}
 
 export function normalizeSearchText(text: string): string {
   return text.replace(/\r\n?/g, "\n").replace(/\s+/g, " ").trim();
@@ -101,6 +135,186 @@ export function normalizeSearchText(text: string): string {
 
 export function compactSearchText(text: string): string {
   return normalizeSearchText(text).replace(/\s+/g, "");
+}
+
+function cleanLooseText(text: string): string {
+  return normalizeSearchText(
+    text.replace(/\u00ad/g, "").replace(/([\p{L}\p{N}])[-\u2010\u2011]\s+([\p{L}\p{N}])/gu, "$1$2"),
+  );
+}
+
+function isWhitespace(char: string): boolean {
+  return /\s/u.test(char);
+}
+
+function isFormatChar(char: string): boolean {
+  return /\p{Format}/u.test(char);
+}
+
+function isLetterOrNumber(char: string | undefined): boolean {
+  return Boolean(char && /[\p{L}\p{N}]/u.test(char));
+}
+
+function isHyphenationChar(char: string): boolean {
+  return char === "-" || char === "\u2010" || char === "\u2011";
+}
+
+function previousNonWhitespace(rawChars: RawTextChar[], index: number): string | undefined {
+  for (let current = index - 1; current >= 0; current--) {
+    const char = rawChars[current]?.char;
+    if (char && !isWhitespace(char)) {
+      return char;
+    }
+  }
+  return undefined;
+}
+
+function nextNonWhitespace(rawChars: RawTextChar[], index: number): string | undefined {
+  for (let current = index + 1; current < rawChars.length; current++) {
+    const char = rawChars[current]?.char;
+    if (char && !isWhitespace(char)) {
+      return char;
+    }
+  }
+  return undefined;
+}
+
+function shouldSkipHyphenation(rawChars: RawTextChar[], index: number): boolean {
+  const char = rawChars[index]?.char;
+  const next = rawChars[index + 1]?.char;
+  if (!char || !isHyphenationChar(char) || !next || !isWhitespace(next)) {
+    return false;
+  }
+  return (
+    isLetterOrNumber(previousNonWhitespace(rawChars, index)) && isLetterOrNumber(nextNonWhitespace(rawChars, index))
+  );
+}
+
+function buildRawTextIndex(chunks: string[]) {
+  const rawChars: RawTextChar[] = [];
+  let rawIndex = 0;
+
+  chunks.forEach((chunk, chunkIndex) => {
+    for (let offset = 0; offset < chunk.length; ) {
+      const codePoint = chunk.codePointAt(offset);
+      if (codePoint === undefined) {
+        break;
+      }
+      const char = String.fromCodePoint(codePoint);
+      rawChars.push({
+        char,
+        chunkIndex,
+        offset,
+        rawIndex,
+      });
+      offset += char.length;
+      rawIndex += char.length;
+    }
+  });
+
+  return {
+    rawText: chunks.join(""),
+    rawChars,
+  };
+}
+
+function buildComparableTextIndex(chunks: string[]) {
+  const { rawText, rawChars } = buildRawTextIndex(chunks);
+  const comparableChars: ComparableTextChar[] = [];
+
+  rawChars.forEach(({ char }, rawCharIndex) => {
+    if (
+      char === "\u00ad" ||
+      isFormatChar(char) ||
+      isWhitespace(char) ||
+      shouldSkipHyphenation(rawChars, rawCharIndex)
+    ) {
+      return;
+    }
+    comparableChars.push({
+      char: char.toLocaleLowerCase(),
+      rawCharIndex,
+    });
+  });
+
+  return {
+    rawText,
+    rawChars,
+    comparableChars,
+    comparableText: comparableChars.map(({ char }) => char).join(""),
+  };
+}
+
+function toLooseComparableText(text: string): string {
+  return buildComparableTextIndex([text]).comparableText;
+}
+
+export function findLooseTextMatches(chunks: string[], queries: string[], maxMatches: number): LooseTextMatch[] {
+  const { rawText, rawChars, comparableChars, comparableText } = buildComparableTextIndex(chunks);
+  if (!rawChars.length || !comparableChars.length || !comparableText) {
+    return [];
+  }
+
+  const matches: LooseTextMatch[] = [];
+  const seenSpans = new Set<string>();
+
+  for (const query of queries) {
+    const comparableQuery = toLooseComparableText(query);
+    if (!comparableQuery) {
+      continue;
+    }
+
+    let searchStart = 0;
+    while (matches.length < maxMatches) {
+      const matchIndex = comparableText.indexOf(comparableQuery, searchStart);
+      if (matchIndex < 0) {
+        break;
+      }
+
+      const startComparable = comparableChars[matchIndex];
+      const endComparable = comparableChars[matchIndex + comparableQuery.length - 1];
+      if (!startComparable || !endComparable) {
+        break;
+      }
+
+      const startRawChar = rawChars[startComparable.rawCharIndex];
+      const endRawChar = rawChars[endComparable.rawCharIndex];
+      if (!startRawChar || !endRawChar) {
+        break;
+      }
+
+      const endRawIndex = endRawChar.rawIndex + endRawChar.char.length;
+      const spanKey = `${startRawChar.rawIndex}:${endRawIndex}`;
+      if (!seenSpans.has(spanKey)) {
+        seenSpans.add(spanKey);
+        matches.push({
+          start: {
+            chunkIndex: startRawChar.chunkIndex,
+            offset: startRawChar.offset,
+          },
+          end: {
+            chunkIndex: endRawChar.chunkIndex,
+            offset: endRawChar.offset + endRawChar.char.length,
+          },
+          sourceText: cleanLooseText(rawText.slice(startRawChar.rawIndex, endRawIndex)),
+          contextBefore:
+            cleanLooseText(
+              rawText.slice(Math.max(0, startRawChar.rawIndex - LOOSE_CONTEXT_LENGTH), startRawChar.rawIndex),
+            ) || undefined,
+          contextAfter: cleanLooseText(rawText.slice(endRawIndex, endRawIndex + LOOSE_CONTEXT_LENGTH)) || undefined,
+          query,
+        });
+      }
+
+      searchStart = matchIndex + 1;
+    }
+
+    if (matches.length >= maxMatches) {
+      break;
+    }
+  }
+
+  return matches;
 }
 
 function takeByWordsOrChars(text: string, maxLength: number): string {
@@ -357,6 +571,118 @@ function toResolvedMatch(match: BookSearchMatch & { label?: string }, query: str
   };
 }
 
+function defaultAcceptSectionNode(node: Node): number {
+  if (node.nodeType === NODE_ELEMENT) {
+    const tagName = (node as Element).tagName?.toLowerCase();
+    if (tagName === "script" || tagName === "style") {
+      return FILTER_REJECT;
+    }
+    return FILTER_SKIP;
+  }
+  return FILTER_ACCEPT;
+}
+
+function getChildNodes(node: Node): Node[] {
+  const childNodes = (node as Node & { childNodes?: ArrayLike<Node> }).childNodes;
+  return childNodes ? Array.from(childNodes) : [];
+}
+
+function collectAcceptedTextNodes(node: Node, acceptNode: (node: Node) => number, nodes: Text[] = []): Text[] {
+  const decision = acceptNode(node);
+  if (decision === FILTER_REJECT) {
+    return nodes;
+  }
+
+  if (node.nodeType === NODE_TEXT || node.nodeType === NODE_CDATA_SECTION) {
+    if (decision === FILTER_ACCEPT) {
+      nodes.push(node as Text);
+    }
+    return nodes;
+  }
+
+  for (const child of getChildNodes(node)) {
+    collectAcceptedTextNodes(child, acceptNode, nodes);
+  }
+
+  return nodes;
+}
+
+function getSectionTextNodes(doc: Document, acceptNode?: (node: Node) => number): Text[] {
+  const root = (doc.body ?? doc.documentElement ?? doc) as Node;
+  return collectAcceptedTextNodes(root, acceptNode ?? defaultAcceptSectionNode);
+}
+
+function createRangeFromLooseMatch(doc: Document, nodes: Text[], match: LooseTextMatch): Range | undefined {
+  const startNode = nodes[match.start.chunkIndex];
+  const endNode = nodes[match.end.chunkIndex];
+  if (!startNode || !endNode) {
+    return undefined;
+  }
+
+  const range = doc.createRange();
+  range.setStart(startNode, match.start.offset);
+  range.setEnd(endNode, match.end.offset);
+  return range;
+}
+
+async function collectLooseSectionMatches(
+  runtime: ResolveNoteSourceRuntime,
+  searchConfig: Omit<BookSearchConfig, "query">,
+  queries: string[],
+  maxMatches: number,
+  seenCfis: Set<string>,
+): Promise<ResolvedNoteSourceMatch[]> {
+  if (!runtime.view || typeof runtime.sectionIndex !== "number" || !runtime.getSectionDocument) {
+    return [];
+  }
+
+  const doc = await runtime.getSectionDocument(runtime.sectionIndex);
+  if (!doc) {
+    return [];
+  }
+
+  const textNodes = getSectionTextNodes(doc, searchConfig.acceptNode);
+  const looseMatches = findLooseTextMatches(
+    textNodes.map((node) => node.nodeValue ?? ""),
+    queries,
+    maxMatches,
+  );
+  const resolvedMatches: ResolvedNoteSourceMatch[] = [];
+
+  for (const match of looseMatches) {
+    const range = createRangeFromLooseMatch(doc, textNodes, match);
+    if (!range) {
+      continue;
+    }
+
+    const cfi = runtime.view.getCFI(runtime.sectionIndex, range);
+    if (!cfi || seenCfis.has(cfi)) {
+      continue;
+    }
+
+    seenCfis.add(cfi);
+    resolvedMatches.push({
+      cfi,
+      sourceText: match.sourceText || normalizeSearchText(match.query),
+      contextBefore: match.contextBefore,
+      contextAfter: match.contextAfter,
+      query: match.query,
+      label: runtime.sectionLabel,
+      excerpt: {
+        pre: match.contextBefore ?? "",
+        match: match.sourceText || normalizeSearchText(match.query),
+        post: match.contextAfter ?? "",
+      },
+    });
+
+    if (resolvedMatches.length >= maxMatches) {
+      break;
+    }
+  }
+
+  return resolvedMatches;
+}
+
 export async function resolveNoteSourceFromView(
   input: ResolveNoteSourceInput,
   runtime: ResolveNoteSourceRuntime,
@@ -442,6 +768,17 @@ export async function resolveNoteSourceFromView(
     if (resolvedMatches.length >= maxMatches) {
       break;
     }
+  }
+
+  if (resolvedMatches.length < maxMatches) {
+    const looseMatches = await collectLooseSectionMatches(
+      runtime,
+      baseConfig,
+      queries,
+      maxMatches - resolvedMatches.length,
+      seenCfis,
+    );
+    resolvedMatches.push(...looseMatches);
   }
 
   if (resolvedMatches.length > 0) {

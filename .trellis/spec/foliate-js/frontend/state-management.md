@@ -64,6 +64,13 @@ Outbound state changes are published with events. Use event detail objects for s
 - `load` reports loaded document and section index
 - `create-overlayer` lets consumers attach an overlayer to a page
 
+For reflowable books, `View.#onRelocate()` emits the `SectionProgress`
+shape from `progress.js`: `section` is `{ current: number; total: number }`
+and `location` is `{ current: number; next?: number; total: number }`.
+Consumers that need a `book.sections[index]` index must use
+`detail.section.current`; `detail.location.current` is semantic reading
+location/page progress, not a section index.
+
 For fixed-layout/PDF pages, `relocate` is also the app-facing readiness signal for
 annotation replay. Do not emit it until the active page iframe has loaded, the PDF
 `onZoom()` render has completed, and the page overlayer can be returned from
@@ -124,6 +131,26 @@ Keep derived state close to its source:
 - `languageInfo()` derives locale, CJK, and direction data from book metadata.
 - `getDirection()` derives writing mode and RTL state from rendered document styles.
 
+## Search State
+
+`View.search(opts)` is the reader's visible search API. It clears previous
+search state, configures search drawing, stores search annotations in
+`#searchResults`, and yields `"done"` when the stream completes. Section search
+is selected by passing `opts.index`; that value must be a real
+`book.sections[index]` index.
+
+The stream shape depends on scope:
+
+- Section-scoped search yields direct `{ cfi, excerpt }` matches.
+- Book-wide search yields progress records and grouped `{ label, subitems }`
+  results.
+
+Search matching is built on `textWalker()` plus `searchMatcher()`, which converts
+matched text back into DOM `Range`s before `View.getCFI(index, range)` creates a
+CFI. This lower-level range-backed pattern is appropriate for background
+text-to-CFI features, but `View.search()` itself should not be used as a pure
+lookup API when callers must avoid visible search highlight side effects.
+
 ## Common Mistakes
 
 - Persisting app settings in a custom element. Consumers must store settings and set attributes or call methods.
@@ -131,3 +158,7 @@ Keep derived state close to its source:
 - Sharing one mutable singleton across multiple reader instances.
 - Making format adapters depend on `View` internals instead of the documented book interface.
 - Letting late fixed-layout/PDF async work write into the active renderer after a newer navigation. This can make the app think page N is active while the iframe still displays page N-1, which breaks annotation replay and can leave stale PDF render tasks alive.
+- Treating `relocate.detail.section` as a bare number. It is a section progress
+  object; use `.current` when a caller needs a section index.
+- Using `View.search()` as a background text lookup without accounting for its
+  search-state mutation and highlight drawing side effects.

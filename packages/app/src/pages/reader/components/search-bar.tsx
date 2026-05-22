@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import type { BookSearchConfig, BookSearchMatch, BookSearchResult } from "@/types/book";
 import { isCJKStr } from "@/utils/lang";
 import { createRejecttFilter } from "@/utils/node";
+import { getProgressSectionIndex } from "@/utils/progress";
 import { useReaderStoreApi } from "./reader-provider";
 
 const MINIMUM_SEARCH_TERM_LENGTH_DEFAULT = 2;
@@ -97,8 +98,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
         return;
       }
 
-      const { pageinfo } = progress!;
-      const index = searchConfig.scope === "section" ? pageinfo.current : undefined;
+      const sectionIndex = getProgressSectionIndex(progress);
+      if (searchConfig.scope === "section" && typeof sectionIndex !== "number") {
+        return;
+      }
+      const index = searchConfig.scope === "section" ? sectionIndex : undefined;
       const generator = await view.search({
         ...searchConfig,
         index,

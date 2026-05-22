@@ -1,0 +1,7 @@
+{"file": ".trellis/spec/app/frontend/index.md", "reason": "Frontend package spec index for app-side reader/chat changes."}
+{"file": ".trellis/spec/app/frontend/state-management.md", "reason": "AI note source resolution, reader progress, and search-consumer contracts."}
+{"file": ".trellis/spec/foliate-js/frontend/index.md", "reason": "Foliate library spec index for view/search/event contracts."}
+{"file": ".trellis/spec/foliate-js/frontend/state-management.md", "reason": "Foliate relocate/search state contracts."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer pitfalls for Foliate progress/search boundaries."}
+{"file": ".trellis/tasks/05-21-redesign-ai-note-source-matching/research/app-resolve-note-source-flow.md", "reason": "Root-cause evidence for app-side progress/search flow."}
+{"file": ".trellis/tasks/05-21-redesign-ai-note-source-matching/research/foliate-search-redesign.md", "reason": "Foliate search internals and resolver redesign constraints."}

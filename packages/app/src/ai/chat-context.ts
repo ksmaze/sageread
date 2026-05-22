@@ -8,15 +8,16 @@ export interface BookChatContext {
   activeBookFormat?: BookFormat;
 }
 
-export function shouldAttachBookWideRagTools(
-  chatContext: BookChatContext | undefined,
-  hasVectorCapability: boolean,
-): boolean {
-  if (!hasVectorCapability || !chatContext?.activeBookId) {
+export function isBookWideRagSupported(format: BookFormat | undefined): boolean {
+  return format == null || isSemanticIndexingSupported(format);
+}
+
+export function shouldAttachBookWideRagTools(chatContext: BookChatContext | undefined): boolean {
+  if (!chatContext?.activeBookId) {
     return false;
   }
 
-  return isSemanticIndexingSupported(chatContext.activeBookFormat);
+  return isBookWideRagSupported(chatContext.activeBookFormat);
 }
 
 export function canUseBookWideContext(chatContext: BookChatContext | undefined): boolean {

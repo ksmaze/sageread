@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/app/frontend/index.md", "reason": "Frontend package spec index for verification."}
+{"file": ".trellis/spec/app/frontend/state-management.md", "reason": "Verify section-index, AI source resolution, and search-consumer contracts."}
+{"file": ".trellis/spec/foliate-js/frontend/state-management.md", "reason": "Verify Foliate search/event assumptions against library contract."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Verify cross-layer boundary risks are covered."}
+{"file": ".trellis/tasks/05-21-redesign-ai-note-source-matching/research/app-resolve-note-source-flow.md", "reason": "Check implementation against discovered app-side root cause."}
+{"file": ".trellis/tasks/05-21-redesign-ai-note-source-matching/research/foliate-search-redesign.md", "reason": "Check implementation against Foliate search redesign constraints."}

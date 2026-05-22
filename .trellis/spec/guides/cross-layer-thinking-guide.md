@@ -52,6 +52,8 @@ For each arrow, ask:
 | AI SDK UI Messages ↔ Model Prompt Conversion | SDK conversion helpers can be async even when their output is an array shape; callers must await conversion before handing data to prompt standardization or streaming APIs |
 | Foliate Search Stream ↔ App Consumers | section-scoped search yields direct `{ cfi, excerpt }` matches while book-wide search can yield grouped `{ label, subitems }` results; consumers must type and handle both shapes |
 | Bundled Default Skills ↔ Existing User Database | changing `default-skills.json` only affects newly inserted rows unless startup safely refreshes stock legacy rows without overwriting user edits |
+| Foliate Relocate Progress ↔ App Section Index Consumers | Foliate emits `section: { current, total }` and `location/pageinfo` separately; consumers that need `book.sections[index]` must derive `section.current` explicitly |
+| AI Prompt/Skill Tool Names ↔ Runtime Tool Attachment | prompts and DB-backed skills can name tools that are conditionally attached at stream time; attachment gates must match tool fallback behavior so the model never plans around a missing tool |
 
 ### Step 3: Define Contracts
 
@@ -154,6 +156,18 @@ For each boundary:
 
 **Good**: Treat bundled skill text and persisted skill rows as a cross-layer contract. Insert missing skills by name, and only refresh an existing row when its content exactly matches a known old stock default. Preserve user-edited skills.
 
+### Mistake 16: Confusing Reader Location Progress With Section Index
+
+**Bad**: Pass `progress.section` or `pageinfo.current` directly to APIs that expect `book.sections[index]`, such as `view.search({ index })` or `view.getCFI(index, range)`.
+
+**Good**: Read the library event shape first. Foliate reflowable relocation exposes `section: { current, total }` and `location: { current, next, total }`; derive a named section index from `section.current` and regression-test the boundary where the event enters app state.
+
+### Mistake 17: Gating AI Tool Attachment On A Stronger Capability Than The Tool Needs
+
+**Bad**: Hide `ragSearch` because no vector model is configured, while the learning-note skill still instructs the model to retrieve source text with RAG and the backend has a BM25-only search path.
+
+**Good**: Map prompt text, skill text, tool attachment, and backend command modes together. Attach RAG tools for active EPUB/legacy books, exclude explicit non-EPUB formats, and let `ragSearch` degrade to BM25 when vector config is absent.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -188,6 +202,8 @@ After implementation:
 - [ ] For AI SDK prompt conversion, verified async conversion helpers are awaited before calling streaming APIs and the result has the array shape those APIs inspect
 - [ ] For Foliate search consumers, verified both direct section matches and grouped book-search results are handled before declaring "no results"
 - [ ] For bundled default skill changes, verified existing stock rows migrate and user-edited rows are preserved
+- [ ] For Foliate section-index consumers, verified the app derives `section.current` from relocate progress and never uses `pageinfo.current` as a section index
+- [ ] For AI tool attachment, verified prompt/skill tool names match the exact runtime tool set and fallback behavior
 
 ---
 

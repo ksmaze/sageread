@@ -18,6 +18,7 @@ import { useChatState } from "@/hooks/use-chat-state";
 import { useReaderStore } from "@/pages/reader/components/reader-provider";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useThemeStore } from "@/store/theme-store";
+import { getProgressSectionIndex } from "@/utils/progress";
 import { ChatContainerRoot } from "../prompt-kit/chat-container";
 import { ScrollButton } from "../prompt-kit/scroll-button";
 import { MindmapDialog } from "../tools/mindmap-dialog";
@@ -65,8 +66,10 @@ function ChatContent({ bookId }: ChatContentProps) {
         view,
         progress,
         bookDoc: bookData?.bookDoc,
+        searchConfig: bookData?.config?.searchConfig,
+        primaryLanguage: bookData?.book?.primaryLanguage,
       }),
-    [bookData?.bookDoc, progress, view],
+    [bookData?.book?.primaryLanguage, bookData?.bookDoc, bookData?.config?.searchConfig, progress, view],
   );
 
   const {
@@ -100,7 +103,7 @@ function ChatContent({ bookId }: ChatContentProps) {
       activeContext,
       activeSectionLabel: progress?.sectionLabel,
       activeSectionHref: progress?.sectionHref,
-      activeSectionIndex: progress?.section,
+      activeSectionIndex: getProgressSectionIndex(progress),
       activeChapterStartCfi: chapterStartLocation?.cfi,
     },
     resolveNoteSource,

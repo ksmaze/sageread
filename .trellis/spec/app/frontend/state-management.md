@@ -414,6 +414,13 @@ interface ChatContext {
   activeChapterStartCfi?: string;
 }
 
+interface BookProgress {
+  section: { current: number; total: number };
+  pageinfo: { current: number; next?: number; total: number };
+}
+
+function getProgressSectionIndex(progress?: BookProgress | null): number | undefined;
+
 interface ResolveNoteSourceInput {
   reasoning: string;
   sourceCandidates: Array<{ text: string; reason?: string }>;
@@ -440,9 +447,11 @@ interface CreateNoteToolInput {
 ### 3. Contracts
 
 - AI note positioning must never treat RAG `chunk_id` as a reader location. A saved CFI must come from Foliate search, the current TOC/section start, or an existing reader selection.
-- `resolveNoteSource` searches the current Foliate section first using the actual relocate `progress.section` value exposed as `ChatContext.activeSectionIndex`.
+- `resolveNoteSource` searches the current Foliate section first using a real `book.sections[index]` index. Foliate relocate progress exposes this as `progress.section.current`; never pass the raw `progress.section` object or `pageinfo.current` as a search `index`.
+- `ChatContext.activeSectionIndex`, `ResolveNoteSourceRuntime.sectionIndex`, reader search, and annotation search must derive the section index through one shared helper such as `getProgressSectionIndex(progress)`.
 - AI provides short verbatim `sourceCandidates`; the resolver normalizes whitespace and tries shorter spans to tolerate EPUB line breaks/markup.
 - Foliate search has two stream result shapes: section-scoped search can yield direct `{ cfi, excerpt }` matches, while book-wide search can yield grouped `{ label, subitems }` results. App search consumers and AI source resolution must handle both shapes explicitly.
+- `View.search()` is a visible reader search API: it clears existing search results and draws search annotations. AI source resolution should prefer a background text-to-CFI resolver that maps section text to DOM `Range` and calls `view.getCFI(sectionIndex, range)` without mutating visible search state.
 - AI note source resolution must continue across usable source candidates and query variants until `maxMatches` unique CFIs are collected or the bounded query list is exhausted. Do not return after the first query that finds one match.
 - Source query generation must include normalized whitespace, whitespace-compacted, and balanced start/middle/end window variants so EPUB/RAG spacing drift or a mismatch near the beginning does not force chapter-start fallback prematurely.
 - The "生成学习笔记" skill is the source of truth for learning-note behavior and must declare two modes:
@@ -450,9 +459,10 @@ interface CreateNoteToolInput {
   - targeted annotation mode: when the user asks to annotate a discussed concept or quoted paragraph, save notes only for that target.
 - Quick action prompts must not ask for "one learning note"; they must request the skill-driven up-to-3 automatic-save flow.
 - Before selecting passages, the model must obtain real source text. Use quoted/selected text directly when present; otherwise use RAG tools to retrieve source chunks. Do not create `sourceCandidates` from a model summary or chapter title alone.
+- EPUB book-wide RAG tool attachment is controlled by active book/format support, not by vector model availability. If `activeBookFormat` is temporarily missing for an active legacy book, treat it as RAG-compatible unless it is explicitly a non-EPUB format; if vector config is unavailable, `ragSearch` must degrade to BM25 instead of disappearing from the tool set.
 - For generated multi-note flows, call `resolveNoteSource` and `createNote` per selected passage. Do not pass multiple unrelated passages into one source-resolution call because returned matches are not mapped back to note bodies.
 - If a match is found, `createNote` must save `matches[0].cfi`, `sourceText`, `contextBefore`, and `contextAfter`. The note `content` should contain the concise AI annotation/summary and must not duplicate `sourceText`.
-- If matching fails, fallback to current chapter start in this order: TOC item `cfi` by `progress.sectionHref`, then `view.getCFI(progress.section, null)`, then no CFI.
+- If matching fails, fallback to current chapter start in this order: TOC item `cfi` by `progress.sectionHref`, then `view.getCFI(sectionIndex, null)` where `sectionIndex` was derived from `progress.section.current`, then no CFI.
 - Chapter-start fallback must not invent `sourceText`; save synthesized note content plus the fallback CFI only, and final chat feedback must report fallback count separately from matched count.
 - Book-bound AI note creation must supply `bookMeta` from `ChatContext.activeBookMeta` or a local `getBookWithStatusById(activeBookId)` lookup.
 - Default DB-backed skills are additive. Startup may insert missing default skills by name and may refresh an old stock default skill by exact content match, but must not overwrite user-edited existing skills.
@@ -463,6 +473,8 @@ interface CreateNoteToolInput {
 |---|---|
 | No active book id | Do not attach/use `createNote` for book-bound learning notes. |
 | No reader view or no section index | Return `chapter-start` if fallback CFI is available; otherwise `unavailable`. |
+| Foliate progress has `section: { current, total }` | Derive `section.current` before calling `view.search({ index })` or `view.getCFI(index, ...)`. |
+| Code attempts to use `pageinfo.current` as section index | Reject it in review/tests; `pageinfo` is semantic location/page progress, not `book.sections[index]`. |
 | Source candidate has newlines or repeated whitespace | Normalize whitespace and try shorter fallback queries. |
 | Source candidate has spaces inserted between CJK/markup-adjacent text | Try a whitespace-compacted query before falling back. |
 | Long source candidate differs near the beginning | Try middle/end window variants before falling back. |
@@ -472,6 +484,8 @@ interface CreateNoteToolInput {
 | Foliate search returns no match | Save at chapter-start fallback if available. |
 | `sourceText` is present without `cfi` | Reject the tool call; source text cannot be saved without a real location. |
 | Quick action "生成学习笔记" is submitted | Retrieve/follow the skill, gather real source text, save up to 3 notes, and report matched/fallback counts. |
+| EPUB or legacy active-book chat has no vector model configured | Keep `ragSearch`, `ragToc`, and `ragContext` attached; make `ragSearch` send `searchMode: "bm25"` with BM25-only weights. |
+| Explicit PDF/MOBI/CBZ/FB2/FBZ chat context | Do not attach EPUB RAG tools or keep RAG prompt policy. |
 | User asks "给这段加批注" with a quote/selection | Use the quoted text directly as the primary source candidate before RAG retrieval. |
 | User asks to annotate a concept without quoted text | Use recent chat topic plus RAG source chunks to find the target passages; do not generate unrelated chapter-summary notes. |
 | Existing default skill content exactly matches old bundled stock text | Refresh it to the current bundled text on startup. |
@@ -482,17 +496,20 @@ interface CreateNoteToolInput {
 - Good: Quick action asks for "生成学习笔记"; AI gets the skill, uses quoted text or RAG source chunks, selects up to 3 key passages, then calls `resolveNoteSource` and `createNote` once per passage.
 - Good: User asks "给这段加批注" after sending selected text; AI treats the quote as the source candidate, resolves it, and saves one concise annotation note.
 - Good: Five `sourceCandidates` are searched as bounded variants; if candidates 2 and 4 match different CFIs, both are returned before `createNote` chooses the best one.
+- Good: Reader progress `{ section: { current: 7, total: 42 } }` becomes `activeSectionIndex: 7` before any resolver/search call.
 - Base: Matching fails because of EPUB formatting; the note saves with current chapter-start CFI and no `sourceText`.
 - Bad: Passing `[118]` or any `chunk_id` into note `cfi`, or saving a paraphrased summary sentence as `sourceText`.
 - Bad: A quick action produces one broad full-chapter summary note, or a targeted annotation request creates unrelated chapter notes.
-- Bad: Assuming every `view.search()` result has `subitems`, returning after the first query match, or falling back before trying compacted/window variants.
+- Bad: Assuming every `view.search()` result has `subitems`, passing `progress.section` directly as `sectionIndex`, returning after the first query match, or falling back before trying compacted/window variants.
 
 ### 6. Tests Required
 
 - Resolver tests must assert whitespace normalization, compacted/window queries, direct section-search result handling, cross-candidate aggregation, nested TOC CFI lookup, and section-start fallback.
+- Reader note source runtime tests must pass a real Foliate-style progress object and assert that resolver search receives `progress.section.current`.
+- Search consumer tests must assert section scope uses `section.current`, not `pageinfo.current`.
 - Learning-note contract tests must assert quick-action prompt wording, default skill two-mode behavior, and tool descriptions for per-passage note creation.
 - Default skill migration tests must assert stock legacy content refreshes while user-edited content is preserved.
-- Chat context tests must cover new active section/book metadata fields if their behavior changes.
+- Chat context tests must cover RAG tool attachment for EPUB, explicit unsupported formats, and legacy/missing format active books; rag-search mode tests must cover BM25 fallback without vector config.
 - Run `pnpm --filter app build` after AI tool, chat context, reader progress, or note tool signature changes.
 - Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml` after default skill initialization changes.
 
@@ -596,7 +613,8 @@ interface ChatContext {
 | PDF/fixed-layout progress reports `range: null` | Treat `progress.location` as a page-level CFI. Replay highlights and reader note markers by resolving the saved CFI and current page CFI to section indexes, not by comparing the saved range CFI to `CFI.collapse(location)`/`collapse(location, true)`. |
 | PDF reader previous/next controls are tapped | Use the mounted renderer's adjacent-section/page movement contract; do not assume only `foliate-paginator` supports reader chrome. |
 | PDF chat has no selected text reference | Block submission with a selected-text-only message. |
-| EPUB chat has vector capability | Keep attaching EPUB RAG tools. |
+| EPUB or legacy active-book chat has no vector capability | Keep attaching EPUB RAG tools; `ragSearch` falls back to BM25. |
+| Explicit non-EPUB format chat opens without selected text | Do not attach EPUB RAG tools. |
 
 ### 5. Good/Base/Bad Cases
 
@@ -613,7 +631,7 @@ interface ChatContext {
 - TOC tests must cover async PDF outline destination resolution and must not add fake page-list items.
 - Fixed-layout renderer tests must assert PDF-style frame overlays and adjacent-section navigation.
 - Reader annotation visibility tests must assert that page-level fixed-layout progress matches saved page-internal PDF annotation CFIs.
-- Chat context tests must assert PDF selected-text-only behavior and EPUB-only RAG attachment.
+- Chat context tests must assert PDF selected-text-only behavior, EPUB/legacy RAG attachment, and explicit non-EPUB RAG exclusion.
 - Run `pnpm --filter app build` after reader store, upload, chat context, or `DocumentLoader` changes.
 
 ### 7. Wrong vs Correct

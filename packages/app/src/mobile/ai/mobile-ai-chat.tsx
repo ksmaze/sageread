@@ -29,6 +29,7 @@ import { useChatReaderStore } from "@/store/chat-reader-store";
 import { useLibraryStore } from "@/store/library-store";
 import { useThemeStore } from "@/store/theme-store";
 import type { Thread } from "@/types/thread";
+import { getProgressSectionIndex } from "@/utils/progress";
 
 interface MobileAiChatProps {
   bookId?: string;
@@ -157,9 +158,18 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
             view: readerView,
             progress: readerProgress,
             bookDoc: readerBookData?.bookDoc,
+            searchConfig: readerBookData?.config?.searchConfig,
+            primaryLanguage: readerBookData?.book?.primaryLanguage,
           })
         : undefined,
-    [readerBookData?.bookDoc, readerProgress, readerScoped, readerView],
+    [
+      readerBookData?.book?.primaryLanguage,
+      readerBookData?.bookDoc,
+      readerBookData?.config?.searchConfig,
+      readerProgress,
+      readerScoped,
+      readerView,
+    ],
   );
   const setActiveContext: (context: string | undefined) => void =
     readerScoped && readerSetActiveContext ? readerSetActiveContext : globalSetActiveContext;
@@ -201,7 +211,7 @@ export function MobileAiChat({ bookId, className }: MobileAiChatProps) {
       activeContext,
       activeSectionLabel: readerScoped ? readerProgress?.sectionLabel : undefined,
       activeSectionHref: readerScoped ? readerProgress?.sectionHref : undefined,
-      activeSectionIndex: readerScoped ? readerProgress?.section : undefined,
+      activeSectionIndex: readerScoped ? getProgressSectionIndex(readerProgress) : undefined,
       activeChapterStartCfi: chapterStartLocation?.cfi,
     },
     resolveNoteSource,

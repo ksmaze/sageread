@@ -1,6 +1,7 @@
 import { EXTS } from "@/lib/document";
 import { SUPPORTED_LANGS } from "@/services/constants";
 import type { Book, BookConfig, BookProgress, WritingMode } from "@/types/book";
+import { getProgressSectionIndex } from "@/utils/progress";
 import { getUserLang, isContentURI, isFileURI, isValidURL, makeSafeFilename } from "./misc";
 import { getDirFromLanguage } from "./rtl";
 import { getStorageType } from "./storage";
@@ -154,8 +155,15 @@ export const formatFileSize = (size: number | null) => {
 
 export const getCurrentPage = (book: Book, progress: BookProgress) => {
   const bookFormat = book.format;
-  const { section, pageinfo } = progress;
-  return bookFormat === "PDF" ? (section ? section.current + 1 : 0) : pageinfo ? pageinfo.current + 1 : 0;
+  const { pageinfo } = progress;
+  const sectionIndex = getProgressSectionIndex(progress);
+  return bookFormat === "PDF"
+    ? typeof sectionIndex === "number"
+      ? sectionIndex + 1
+      : 0
+    : pageinfo
+      ? pageinfo.current + 1
+      : 0;
 };
 
 export const getBookDirFromWritingMode = (writingMode: WritingMode) => {

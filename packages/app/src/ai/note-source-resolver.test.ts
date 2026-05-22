@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   buildSourceSearchQueries,
+  findLooseTextMatches,
   findTocItemByHref,
   normalizeSearchText,
   resolveNoteSourceFromView,
@@ -38,6 +39,24 @@ describe("note source resolver", () => {
       queries.some((query) => query.includes("middle target phrase")),
       `expected a middle-window query, got: ${JSON.stringify(queries)}`,
     );
+  });
+
+  it("loosely matches text across markup boundaries with missing whitespace", () => {
+    const matches = findLooseTextMatches(["alpha beta", "gamma delta"], ["beta gamma"], 3);
+
+    assert.equal(matches.length, 1);
+    assert.deepEqual(matches[0]?.start, { chunkIndex: 0, offset: 6 });
+    assert.deepEqual(matches[0]?.end, { chunkIndex: 1, offset: 5 });
+    assert.equal(matches[0]?.sourceText, "betagamma");
+  });
+
+  it("loosely matches simple line-break hyphenation", () => {
+    const matches = findLooseTextMatches(["alpha hy-\n", "phenated beta"], ["hyphenated beta"], 3);
+
+    assert.equal(matches.length, 1);
+    assert.deepEqual(matches[0]?.start, { chunkIndex: 0, offset: 6 });
+    assert.deepEqual(matches[0]?.end, { chunkIndex: 1, offset: 13 });
+    assert.equal(matches[0]?.sourceText, "hyphenated beta");
   });
 
   it("finds nested TOC items by current href", () => {
@@ -212,6 +231,63 @@ describe("note source resolver", () => {
     assert.equal(result.status, "matched");
     assert.equal(result.matches[0]?.cfi, "epubcfi(/6/6!/4/8[cjk])");
     assert.ok(searchedQueries.includes("人工智能生成学习笔记"));
+  });
+
+  it("uses normalized section text fallback when exact Foliate search misses", async () => {
+    const firstNode = { nodeType: 3, nodeValue: "alpha beta", childNodes: [] };
+    const secondNode = { nodeType: 3, nodeValue: "gamma delta", childNodes: [] };
+    const body = {
+      nodeType: 1,
+      tagName: "body",
+      childNodes: [firstNode, { nodeType: 1, tagName: "em", childNodes: [secondNode] }],
+    };
+    const rangeState: {
+      start?: { node: unknown; offset: number };
+      end?: { node: unknown; offset: number };
+    } = {};
+    const document = {
+      body,
+      createRange: () => ({
+        setStart: (node: unknown, offset: number) => {
+          rangeState.start = { node, offset };
+        },
+        setEnd: (node: unknown, offset: number) => {
+          rangeState.end = { node, offset };
+        },
+      }),
+    };
+
+    const result = await resolveNoteSourceFromView(
+      {
+        reasoning: "confirm source location despite markup spacing",
+        sourceCandidates: [{ text: "beta gamma" }],
+      },
+      {
+        sectionIndex: 5,
+        sectionLabel: "Chapter 5",
+        chapterStartCfi: "epubcfi(/6/10)",
+        getSectionDocument: (index: number) => {
+          assert.equal(index, 5);
+          return document;
+        },
+        view: {
+          search: async function* () {
+            yield "done";
+          },
+          getCFI: (index: number, range: Range | null) => {
+            assert.equal(index, 5);
+            assert.ok(range);
+            return "epubcfi(/6/10!/4/2[normalized])";
+          },
+        } as any,
+      } as any,
+    );
+
+    assert.equal(result.status, "matched");
+    assert.equal(result.matches[0]?.cfi, "epubcfi(/6/10!/4/2[normalized])");
+    assert.equal(result.matches[0]?.sourceText, "betagamma");
+    assert.deepEqual(rangeState.start, { node: firstNode, offset: 6 });
+    assert.deepEqual(rangeState.end, { node: secondNode, offset: 5 });
   });
 
   it("keeps chapter-start fallback when no source candidate matches", async () => {

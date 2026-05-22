@@ -3,11 +3,12 @@ import { describe, it } from "node:test";
 import { canSubmitBookChatPrompt, PDF_SELECTED_TEXT_ONLY_MESSAGE, shouldAttachBookWideRagTools } from "./chat-context";
 
 describe("chat context format rules", () => {
-  it("attaches book-wide RAG tools only for EPUB books with vector capability", () => {
-    assert.equal(shouldAttachBookWideRagTools({ activeBookId: "epub-1", activeBookFormat: "EPUB" }, true), true);
-    assert.equal(shouldAttachBookWideRagTools({ activeBookId: "pdf-1", activeBookFormat: "PDF" }, true), false);
-    assert.equal(shouldAttachBookWideRagTools({ activeBookId: "epub-1", activeBookFormat: "EPUB" }, false), false);
-    assert.equal(shouldAttachBookWideRagTools({ activeBookFormat: "EPUB" }, true), false);
+  it("attaches book-wide RAG tools for EPUB books independently of vector capability", () => {
+    assert.equal(shouldAttachBookWideRagTools({ activeBookId: "epub-1", activeBookFormat: "EPUB" }), true);
+    assert.equal(shouldAttachBookWideRagTools({ activeBookId: "legacy-epub" }), true);
+    assert.equal(shouldAttachBookWideRagTools({ activeBookId: "pdf-1", activeBookFormat: "PDF" }), false);
+    assert.equal(shouldAttachBookWideRagTools({ activeBookId: "mobi-1", activeBookFormat: "MOBI" }), false);
+    assert.equal(shouldAttachBookWideRagTools({ activeBookFormat: "EPUB" }), false);
   });
 
   it("blocks PDF book chat when no selected text reference is present", () => {

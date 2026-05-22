@@ -41,6 +41,13 @@ export interface TimeInfo {
   total: number;
 }
 
+export interface BookSectionProgress {
+  current: number;
+  total: number;
+}
+
+export type BookProgressSection = number | BookSectionProgress;
+
 export interface BookNote {
   bookHash?: string;
   id: string;
@@ -174,7 +181,7 @@ export interface ViewSettings
 
 export interface BookProgress {
   location: string;
-  section: number;
+  section: BookProgressSection;
   sectionId: number;
   sectionHref: string;
   sectionLabel: string;

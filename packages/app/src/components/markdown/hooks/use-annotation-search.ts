@@ -7,6 +7,7 @@ import type { BookSearchConfig, BookSearchMatch, BookSearchResult } from "@/type
 import type { DocumentChunk } from "@/types/document";
 import { createRejecttFilter } from "@/utils/node";
 import { resolveMarkdownImagePaths } from "@/utils/path";
+import { getProgressSectionIndex } from "@/utils/progress";
 import { getBestSearchSentence } from "../text-utils";
 
 export function useAnnotationSearch() {
@@ -97,8 +98,12 @@ export function useAnnotationSearch() {
 
       const searchConfig = config.searchConfig as BookSearchConfig;
       const primaryLang = bookData.book?.primaryLanguage || "en";
-      const { pageinfo } = progress;
-      const index = searchConfig.scope === "section" ? pageinfo.current : undefined;
+      const sectionIndex = getProgressSectionIndex(progress);
+      if (searchConfig.scope === "section" && typeof sectionIndex !== "number") {
+        setError("当前章节位置不可用，请稍后重试");
+        return false;
+      }
+      const index = searchConfig.scope === "section" ? sectionIndex : undefined;
 
       view.setSearchIndicator("arrow", {
         color: "#ff4444",
