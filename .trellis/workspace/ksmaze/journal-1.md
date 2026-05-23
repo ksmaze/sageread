@@ -1141,3 +1141,37 @@ Routed vector model settings tests through the native Rust embedding vectorizer 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 34: Reader background presets
+
+**Date**: 2026-05-23
+**Task**: Reader background presets
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Added separate reader background presets for default, paper, and green; fixed the reader background CSS to color the document canvas instead of only text blocks; verified tests, typecheck, biome, and app build.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b36f9fb` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
