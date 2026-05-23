@@ -22,7 +22,14 @@ import {
   readerNavigationInfo,
   readerNavigationWarn,
 } from "@/utils/reader-navigation-debug";
-import { getUnifiedNoteReaderTarget, UNIFIED_NOTE_FILTERS, type UnifiedNoteReaderTarget } from "./unified-note-model";
+import { getUnifiedAnnotationTextStyle } from "./unified-note-annotation-display";
+import {
+  getUnifiedNoteBadgeLabel,
+  getUnifiedNoteReaderTarget,
+  UNIFIED_NOTE_FILTERS,
+  type UnifiedAnnotationMark,
+  type UnifiedNoteReaderTarget,
+} from "./unified-note-model";
 import type { UnifiedNoteItem, UnifiedNoteType } from "./use-unified-notes";
 import { useUnifiedNotes } from "./use-unified-notes";
 
@@ -78,6 +85,93 @@ function getSourceText(item: UnifiedNoteItem): string | null {
   return [item.bookTitle, item.bookAuthor].filter(Boolean).join(" · ") || null;
 }
 
+function UnifiedAnnotationText({
+  contextClassName,
+  includeContext = false,
+  mark,
+  textClassName,
+}: {
+  contextClassName?: string;
+  includeContext?: boolean;
+  mark: UnifiedAnnotationMark;
+  textClassName?: string;
+}) {
+  const showContext = includeContext && (mark.contextBefore || mark.contextAfter);
+
+  return (
+    <>
+      {showContext && mark.contextBefore ? <span className={contextClassName}>...{mark.contextBefore}</span> : null}
+      {mark.text ? (
+        <span className={cn("font-medium", textClassName)} style={getUnifiedAnnotationTextStyle(mark)}>
+          {mark.text}
+        </span>
+      ) : null}
+      {showContext && mark.contextAfter ? <span className={contextClassName}>{mark.contextAfter}...</span> : null}
+    </>
+  );
+}
+
+function UnifiedAnnotationPreview({
+  item,
+  variant,
+}: {
+  item: UnifiedNoteItem;
+  variant: UnifiedNotesListVariant;
+}) {
+  const mark = item.annotationMark;
+  const styles = LIST_STYLES[variant];
+
+  if (!mark) {
+    return <p className={cn("line-clamp-4 whitespace-pre-line text-sm leading-6", styles.metaText)}>{item.body}</p>;
+  }
+
+  if (!mark.text && !mark.note) {
+    return <p className={cn("line-clamp-4 whitespace-pre-line text-sm leading-6", styles.metaText)}>{item.body}</p>;
+  }
+
+  return (
+    <div className="space-y-2 text-sm leading-6">
+      {mark.text ? (
+        <p className={cn("line-clamp-4 whitespace-pre-wrap break-words", styles.metaText)}>
+          <UnifiedAnnotationText
+            includeContext
+            contextClassName={styles.metaText}
+            mark={mark}
+            textClassName={styles.titleText}
+          />
+        </p>
+      ) : null}
+      {mark.note ? (
+        <p className={cn("line-clamp-3 whitespace-pre-line break-words", styles.metaText)}>{mark.note}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function UnifiedAnnotationDetailBody({ item }: { item: UnifiedNoteItem }) {
+  const mark = item.annotationMark;
+
+  if (!mark || (!mark.text && !mark.note)) {
+    return <div className="whitespace-pre-wrap break-words text-foreground text-sm leading-7">{item.body}</div>;
+  }
+
+  return (
+    <div className="space-y-3 text-sm leading-7">
+      {mark.text ? (
+        <div className="whitespace-pre-wrap break-words">
+          <UnifiedAnnotationText
+            includeContext
+            contextClassName="text-muted-foreground"
+            mark={mark}
+            textClassName="text-foreground"
+          />
+        </div>
+      ) : null}
+      {mark.note ? <div className="whitespace-pre-wrap break-words text-foreground">{mark.note}</div> : null}
+    </div>
+  );
+}
+
 function UnifiedNoteCard({
   item,
   onOpen,
@@ -98,11 +192,19 @@ function UnifiedNoteCard({
       onClick={() => onOpen(item)}
     >
       <div className="mb-1 flex items-center justify-between gap-3">
-        <h3 className={cn("min-w-0 flex-1 truncate font-medium", styles.titleText)}>{item.title}</h3>
-        <span className={cn("shrink-0 rounded-full px-2 py-1 text-xs", styles.typeBadge)}>{item.typeLabel}</span>
+        <h3 className={cn("min-w-0 flex-1 truncate font-medium", styles.titleText)}>
+          {item.annotationMark?.text ? (
+            <UnifiedAnnotationText mark={item.annotationMark} textClassName={styles.titleText} />
+          ) : (
+            item.title
+          )}
+        </h3>
+        <span className={cn("shrink-0 rounded-full px-2 py-1 text-xs", styles.typeBadge)}>
+          {getUnifiedNoteBadgeLabel(item)}
+        </span>
       </div>
       {sourceText ? <p className={cn("mb-2 truncate text-xs", styles.metaText)}>{sourceText}</p> : null}
-      <p className={cn("line-clamp-4 whitespace-pre-line text-sm leading-6", styles.metaText)}>{item.body}</p>
+      <UnifiedAnnotationPreview item={item} variant={variant} />
       {updatedAt ? <p className={cn("mt-2 text-xs", styles.metaText)}>更新于 {updatedAt}</p> : null}
     </button>
   );
@@ -134,7 +236,7 @@ function UnifiedNoteDetailDialog({
             <DialogTitle className="line-clamp-2 whitespace-normal break-words text-base leading-6 sm:text-lg">
               {item.title}
             </DialogTitle>
-            <Badge variant="secondary">{item.typeLabel}</Badge>
+            <Badge variant="secondary">{getUnifiedNoteBadgeLabel(item)}</Badge>
           </div>
         </DialogHeader>
         <div className={SCROLLABLE_DIALOG_BODY_CLASS_NAME}>
@@ -147,7 +249,7 @@ function UnifiedNoteDetailDialog({
                 {item.cfi ? <div className="break-all">位置: {item.cfi}</div> : null}
               </div>
             </DialogDescription>
-            <div className="whitespace-pre-wrap break-words text-foreground text-sm leading-7">{item.body}</div>
+            <UnifiedAnnotationDetailBody item={item} />
           </div>
         </div>
         {readerTarget && onOpenReaderTarget ? (

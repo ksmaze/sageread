@@ -251,6 +251,9 @@ The frontend calls a typed Tauri command; Rust delegates to the Android plugin, 
 - `UnifiedNotesPage` owns destination-level filter state and may be reused by `NotesDestination`; do not create a second app-level notes page with separate mapping logic.
 - Unified notes cards should expose enough content to identify the record: title, body preview, type label, source book/author when available, and updated time. Full content belongs in the detail dialog.
 - Unified notes detail dialogs may offer `打开原文` / `打开书籍` for book-linked items. Use `getUnifiedNoteReaderTarget` plus the shared reader navigation target contract from `state-management.md`; do not call foliate `view.goTo` directly from the notes page.
+- For `BookNote.type === "annotation"`, `createUnifiedNoteFromBookNote` must preserve reader-style display metadata on `UnifiedNoteItem.annotationMark`: `style`, `color`, `label`, `text`, `note`, and optional `contextBefore` / `contextAfter`. Keep `typeLabel` as the generic `"标注"` value; use `getUnifiedNoteBadgeLabel(item)` when the UI wants the visible subtype label (`"高亮"`, `"下划线"`, or `"波浪线"`).
+- Unified notes annotation cards and detail dialogs should render the selected source text with `getUnifiedAnnotationTextStyle`, matching reader annotation behavior: highlights use the translucent color background, underline/squiggly use colored text decorations, and legacy annotations without saved `style` / `color` default to `highlight` / `yellow`.
+- When changing unified annotation display mapping, add or update focused `tsx --test` coverage for both `unified-note-model.ts` metadata and `unified-note-annotation-display.ts` style output.
 
 ## Settings Contract
 

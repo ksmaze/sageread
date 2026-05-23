@@ -6,6 +6,7 @@ import {
   createUnifiedNoteFromBookNote,
   createUnifiedNoteFromStandaloneNote,
   filterUnifiedNotesByType,
+  getUnifiedNoteBadgeLabel,
   getUnifiedNoteReaderTarget,
   UNIFIED_NOTE_FILTERS,
 } from "./unified-note-model";
@@ -67,8 +68,8 @@ describe("unified note model", () => {
       type: "annotation",
       cfi: "epubcfi(/6/2)",
       text: "A useful highlighted passage",
-      style: "highlight",
-      color: "yellow",
+      style: "underline",
+      color: "green",
       note: "This explains the main claim.",
       context: {
         before: "Before",
@@ -87,14 +88,50 @@ describe("unified note model", () => {
     assert.equal(item.id, "annotation-1");
     assert.equal(item.type, "annotation");
     assert.equal(item.typeLabel, "标注");
+    assert.equal(getUnifiedNoteBadgeLabel(item), "下划线");
     assert.equal(item.title, "A useful highlighted passage");
     assert.equal(item.body, "A useful highlighted passage\n\nThis explains the main claim.");
+    assert.deepEqual(item.annotationMark, {
+      color: "green",
+      contextAfter: "After",
+      contextBefore: "Before",
+      label: "下划线",
+      note: "This explains the main claim.",
+      style: "underline",
+      text: "A useful highlighted passage",
+    });
     assert.equal(item.bookId, "book-1");
     assert.equal(item.bookTitle, "Effective Reading");
     assert.equal(item.bookAuthor, "Ada");
     assert.equal(item.cfi, "epubcfi(/6/2)");
     assert.equal(item.createdAt, 300);
     assert.equal(item.updatedAt, 400);
+  });
+
+  it("defaults annotation display metadata for legacy annotations without style values", () => {
+    const annotation: BookNote = {
+      id: "annotation-legacy",
+      type: "annotation",
+      cfi: "epubcfi(/6/2)",
+      text: "A legacy highlighted passage",
+      note: "",
+      createdAt: 300,
+      updatedAt: 400,
+    };
+
+    const item = createUnifiedNoteFromBookNote(annotation, {
+      id: "book-1",
+      title: "Effective Reading",
+    });
+
+    assert.deepEqual(item.annotationMark, {
+      color: "yellow",
+      label: "高亮",
+      note: "",
+      style: "highlight",
+      text: "A legacy highlighted passage",
+    });
+    assert.equal(getUnifiedNoteBadgeLabel(item), "高亮");
   });
 
   it("filters all supported note types", () => {

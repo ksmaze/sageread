@@ -1,8 +1,18 @@
 import { getNoteDisplayBody, getNoteDisplayTitle } from "@/components/notepad/note-utils";
-import type { BookNote, BookNoteType } from "@/types/book";
+import type { BookNote, BookNoteType, HighlightColor, HighlightStyle } from "@/types/book";
 import type { Note } from "@/types/note";
 
 export type UnifiedNoteType = "note" | BookNoteType;
+
+export interface UnifiedAnnotationMark {
+  color: HighlightColor;
+  contextAfter?: string;
+  contextBefore?: string;
+  label: string;
+  note: string;
+  style: HighlightStyle;
+  text: string;
+}
 
 export interface UnifiedNoteFilter {
   id: UnifiedNoteType | "all";
@@ -28,6 +38,7 @@ export interface UnifiedNoteItem {
   createdAt?: number;
   updatedAt: number;
   source: Note | BookNote;
+  annotationMark?: UnifiedAnnotationMark;
 }
 
 export interface UnifiedNoteReaderTarget {
@@ -51,8 +62,33 @@ export const UNIFIED_NOTE_TYPE_LABELS: Record<UnifiedNoteType, string> = {
   bookmark: "书签",
 };
 
+export const UNIFIED_ANNOTATION_STYLE_LABELS: Record<HighlightStyle, string> = {
+  highlight: "高亮",
+  underline: "下划线",
+  squiggly: "波浪线",
+};
+
 function cleanText(value: string | undefined | null): string {
   return value?.trim() ?? "";
+}
+
+function createUnifiedAnnotationMark(note: BookNote): UnifiedAnnotationMark | undefined {
+  if (note.type !== "annotation") return undefined;
+
+  const style = note.style ?? "highlight";
+  const color = note.color ?? "yellow";
+  const contextBefore = cleanText(note.context?.before);
+  const contextAfter = cleanText(note.context?.after);
+
+  return {
+    color,
+    label: UNIFIED_ANNOTATION_STYLE_LABELS[style],
+    note: cleanText(note.note),
+    style,
+    text: cleanText(note.text),
+    ...(contextBefore ? { contextBefore } : {}),
+    ...(contextAfter ? { contextAfter } : {}),
+  };
 }
 
 export function createUnifiedNoteFromStandaloneNote(note: Note): UnifiedNoteItem {
@@ -81,6 +117,7 @@ export function createUnifiedNoteFromBookNote(note: BookNote, book: BookNoteOwne
   const attachedNote = cleanText(note.note);
   const title = text || attachedNote || `${book.title} · ${label}`;
   const body = [text, attachedNote].filter(Boolean).join("\n\n") || label;
+  const annotationMark = createUnifiedAnnotationMark(note);
 
   return {
     id: note.id,
@@ -95,6 +132,7 @@ export function createUnifiedNoteFromBookNote(note: BookNote, book: BookNoteOwne
     createdAt: note.createdAt,
     updatedAt: note.updatedAt,
     source: note,
+    ...(annotationMark ? { annotationMark } : {}),
   };
 }
 
@@ -114,4 +152,8 @@ export function getUnifiedNoteReaderTarget(item: UnifiedNoteItem): UnifiedNoteRe
     title: cleanText(item.bookTitle) || item.title,
     ...(item.cfi ? { cfi: item.cfi } : {}),
   };
+}
+
+export function getUnifiedNoteBadgeLabel(item: UnifiedNoteItem): string {
+  return item.annotationMark?.label ?? item.typeLabel;
 }
