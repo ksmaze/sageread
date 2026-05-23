@@ -1041,3 +1041,37 @@ Made AI learning note source resolution use Foliate section.current, added norma
 ### Next Steps
 
 - None - task complete
+
+
+## Session 31: Mobile annotation notes styling
+
+**Date**: 2026-05-23
+**Task**: Mobile annotation notes styling
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Aligned unified Notes annotation cards and details with reader highlight, underline, and squiggly styling; added focused tests and updated the frontend contract.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d8f0075` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
