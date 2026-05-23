@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { FIXED_DIALOG_FOOTER_CLASS_NAME, SCROLLABLE_DIALOG_BODY_CLASS_NAME } from "@/components/ui/dialog-layout";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
 import {
@@ -131,25 +131,27 @@ function UnifiedNoteDetailDialog({
       <DialogContent className="!flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col overflow-hidden p-0 sm:max-h-[calc(100dvh-2rem)]">
         <DialogHeader className="shrink-0">
           <div className="min-w-0 space-y-2 pr-2">
-            <DialogTitle className="whitespace-normal break-words text-base leading-6 sm:text-lg">
+            <DialogTitle className="line-clamp-2 whitespace-normal break-words text-base leading-6 sm:text-lg">
               {item.title}
             </DialogTitle>
             <Badge variant="secondary">{item.typeLabel}</Badge>
           </div>
         </DialogHeader>
-        <DialogDescription asChild>
-          <div className="shrink-0 space-y-1 px-4 py-3 text-muted-foreground text-sm">
-            {sourceText ? <div className="break-words">{sourceText}</div> : null}
-            {createdAt ? <div>创建于 {createdAt}</div> : null}
-            {updatedAt ? <div>更新于 {updatedAt}</div> : null}
-            {item.cfi ? <div className="break-all">位置: {item.cfi}</div> : null}
+        <div className={SCROLLABLE_DIALOG_BODY_CLASS_NAME}>
+          <div className="space-y-4 px-4 py-3 pb-4">
+            <DialogDescription asChild>
+              <div className="space-y-1 text-muted-foreground text-sm">
+                {sourceText ? <div className="break-words">{sourceText}</div> : null}
+                {createdAt ? <div>创建于 {createdAt}</div> : null}
+                {updatedAt ? <div>更新于 {updatedAt}</div> : null}
+                {item.cfi ? <div className="break-all">位置: {item.cfi}</div> : null}
+              </div>
+            </DialogDescription>
+            <div className="whitespace-pre-wrap break-words text-foreground text-sm leading-7">{item.body}</div>
           </div>
-        </DialogDescription>
-        <ScrollArea className="min-h-0 flex-1 px-4">
-          <div className="whitespace-pre-wrap break-words pb-4 text-foreground text-sm leading-7">{item.body}</div>
-        </ScrollArea>
+        </div>
         {readerTarget && onOpenReaderTarget ? (
-          <DialogFooter className="shrink-0 border-t p-3 pt-3">
+          <DialogFooter className={FIXED_DIALOG_FOOTER_CLASS_NAME}>
             <Button
               type="button"
               className="h-11 w-full sm:w-auto"

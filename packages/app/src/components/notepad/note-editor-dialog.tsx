@@ -9,12 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { FIXED_DIALOG_FOOTER_CLASS_NAME, SCROLLABLE_DIALOG_BODY_CLASS_NAME } from "@/components/ui/dialog-layout";
 import { Textarea } from "@/components/ui/textarea";
 import type { Note, UpdateNoteData } from "@/types/note";
 import { describeReaderNavigationTarget, readerNavigationInfo } from "@/utils/reader-navigation-debug";
 import { runAfterDialogClose } from "./dialog-navigation";
-import { getNoteDisplayTitle, getNoteSourceExcerpt } from "./note-utils";
+import { getNoteEditorDialogTitle, getNoteSourceExcerpt } from "./note-utils";
 
 interface NoteEditorDialogProps {
   note: Note | null;
@@ -72,37 +72,44 @@ export function NoteEditorDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col overflow-hidden p-0 sm:max-h-[calc(100dvh-2rem)]">
         <DialogHeader className="shrink-0">
-          <DialogTitle className="whitespace-normal break-words text-base leading-6">
-            {getNoteDisplayTitle(note)}
-          </DialogTitle>
+          <DialogTitle className="text-base leading-6">{getNoteEditorDialogTitle()}</DialogTitle>
         </DialogHeader>
-        <DialogDescription asChild>
-          <div className="shrink-0 space-y-2 px-4 py-3 text-muted-foreground text-sm">
-            {note.bookMeta ? (
-              <div className="break-words">
-                {note.bookMeta.title}
-                {note.bookMeta.author ? ` · ${note.bookMeta.author}` : ""}
-              </div>
-            ) : null}
-            {sourceExcerpt ? (
-              <blockquote className="border-l-2 pl-3 text-foreground leading-6">{sourceExcerpt}</blockquote>
-            ) : null}
+        <div className={SCROLLABLE_DIALOG_BODY_CLASS_NAME}>
+          <div className="space-y-4 px-4 py-3 pb-4">
+            {note.bookMeta || sourceExcerpt ? (
+              <DialogDescription asChild>
+                <div className="space-y-2 text-muted-foreground text-sm">
+                  {note.bookMeta ? (
+                    <div className="break-words">
+                      {note.bookMeta.title}
+                      {note.bookMeta.author ? ` · ${note.bookMeta.author}` : ""}
+                    </div>
+                  ) : null}
+                  {sourceExcerpt ? (
+                    <blockquote className="whitespace-pre-wrap break-words border-l-2 pl-3 text-foreground leading-6">
+                      {sourceExcerpt}
+                    </blockquote>
+                  ) : null}
+                </div>
+              </DialogDescription>
+            ) : (
+              <DialogDescription className="sr-only">编辑笔记正文</DialogDescription>
+            )}
+            <Textarea
+              aria-label="笔记正文"
+              className="min-h-40 resize-none"
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+            />
           </div>
-        </DialogDescription>
-        <ScrollArea className="min-h-0 flex-1 px-4">
-          <Textarea
-            aria-label="笔记正文"
-            className="min-h-40 resize-none"
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-          />
-        </ScrollArea>
-        <DialogFooter className="shrink-0 border-t p-3 pt-3">
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-between">
-            <div className="flex flex-wrap gap-2">
+        </div>
+        <DialogFooter className={FIXED_DIALOG_FOOTER_CLASS_NAME}>
+          <div className="flex w-full flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap gap-2">
               {hasOriginalTarget ? (
                 <Button
                   type="button"
+                  className="h-11"
                   variant="outline"
                   onClick={() => {
                     const target = describeReaderNavigationTarget({
@@ -130,13 +137,19 @@ export function NoteEditorDialog({
                 </Button>
               ) : null}
               {onDelete ? (
-                <Button type="button" variant="destructive" disabled={isDeleting} onClick={handleDelete}>
+                <Button
+                  type="button"
+                  className="h-11"
+                  variant="destructive"
+                  disabled={isDeleting}
+                  onClick={handleDelete}
+                >
                   <Trash2 className="size-4" />
                   删除
                 </Button>
               ) : null}
             </div>
-            <Button type="button" disabled={isSaving || isDeleting} onClick={handleSave}>
+            <Button type="button" className="ml-auto h-11" disabled={isSaving || isDeleting} onClick={handleSave}>
               保存
             </Button>
           </div>

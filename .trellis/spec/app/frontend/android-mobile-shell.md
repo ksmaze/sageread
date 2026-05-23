@@ -270,6 +270,7 @@ The frontend calls a typed Tauri command; Rust delegates to the Android plugin, 
 - Portalled controls opened from reader sheets must render above the active sheet layer. For example, a `SelectContent` used inside `ReaderStylePanel` needs a z-index above `z-[100]`, such as `z-[120]`, because the shared select content portals to `document.body`.
 - Shared portalled primitives that may be used from mobile sheets or dialogs (`DialogContent`, `DropdownMenuContent`, `PopoverContent`, and `SelectContent`) should default to a layer above active sheets, currently `z-[120]`. Do not raise one modal layer without checking nested portalled controls that open from inside it.
 - Portalled popovers opened from inline mobile sheet content must also fit the visual viewport. Prefer Radix collision-aware vertical placement (`side="bottom"` with normal flip/shift behavior), `collisionPadding`, and viewport-clamped dimensions such as `w-[min(20rem,calc(100vw-2rem))]` plus `max-h-[min(<cap>,var(--radix-popover-content-available-height))]`. Avoid desktop sidebar assumptions such as forcing `side="left"` / `side="right"`, computing offsets from `#chat-sidebar`, or fixed `w-80` panels that can overflow a phone sheet.
+- Mobile dialogs with fixed headers or footers must use a clipped scroll body, for example `mobile-scroll-area min-h-0 flex-1 overflow-y-auto`, and opaque fixed footer backgrounds such as `bg-background`. A transparent footer over a non-clipping scroll primitive can make textarea/source content bleed behind footer buttons on Android.
 
 ## Mobile AI Chat Contracts
 
@@ -392,3 +393,4 @@ window.addEventListener("message", handleIframeSingleClick);
 - Using z-index values that put reader selection controls under the dock.
 - Forgetting that portalled option lists/popovers opened from `MobileSheet` need to stack above the sheet, not at the shared primitive default `z-50`.
 - Treating `MobileAiChat` as a desktop side-chat container. The same `#chat-sidebar` id appears in mobile surfaces, but popover placement must be based on the viewport and Radix collision data, not sidebar offset math.
+- Moving long dialog body content into a scroll primitive without verifying clipping and footer opacity. If footer buttons are fixed at the bottom, the body must scroll in a clipping `overflow-y-auto` container and the footer must mask content behind it.

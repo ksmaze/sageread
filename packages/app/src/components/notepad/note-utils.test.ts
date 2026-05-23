@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Note } from "@/types/note";
-import { getNoteDisplayBody, getNoteDisplayTitle, getNoteSourceExcerpt, isSourceBoundNote } from "./note-utils";
+import {
+  getNoteDisplayBody,
+  getNoteDisplayTitle,
+  getNoteEditorDialogTitle,
+  getNoteSourceExcerpt,
+  isSourceBoundNote,
+} from "./note-utils";
 
 describe("note display helpers", () => {
   it("uses source excerpt as the display content for empty source-bound notes", () => {
@@ -21,6 +27,7 @@ describe("note display helpers", () => {
     assert.equal(getNoteSourceExcerpt(note), "Selected source text");
     assert.equal(getNoteDisplayTitle(note), "Selected source text");
     assert.equal(getNoteDisplayBody(note), "Selected source text");
+    assert.equal(getNoteEditorDialogTitle(), "编辑笔记");
   });
 
   it("falls back to note body and unnamed labels when no source excerpt exists", () => {

@@ -23,6 +23,10 @@ export function getNoteDisplayTitle(note: Note): string {
   );
 }
 
+export function getNoteEditorDialogTitle(): string {
+  return "编辑笔记";
+}
+
 export function getNoteDisplayBody(note: Note): string {
   return cleanNoteText(note.content) || getNoteSourceExcerpt(note) || "无正文";
 }
