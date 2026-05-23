@@ -1,8 +1,7 @@
 import { useVectorModelStore } from "@/store/vector-model-store";
+import { normalizeEmbeddingsUrl } from "./embeddings";
 
-export function normalizeEmbeddingsUrl(url: string): string {
-  return url.replace(/\/$/, "");
-}
+export { normalizeEmbeddingsUrl };
 
 export interface VectorModelConfig {
   embeddingsUrl: string;

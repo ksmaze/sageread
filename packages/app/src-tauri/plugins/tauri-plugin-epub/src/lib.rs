@@ -28,6 +28,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .invoke_handler(tauri::generate_handler![
             commands::parse_epub,
             commands::index_epub,
+            commands::detect_embedding_dimension,
             commands::search_db,
             commands::convert_to_mdbook,
             commands::parse_toc,

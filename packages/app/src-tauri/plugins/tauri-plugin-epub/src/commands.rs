@@ -11,6 +11,7 @@ use crate::models::{
     DocumentChunk, ProcessOptions, VectorizerConfig, FlatTocNode,
     ParsedBook, IndexResult, MdbookResult
 };
+use crate::text::TextVectorizer;
 use epub2mdbook::convert_epub_to_mdbook;
 
 /// Parse an EPUB under $AppData/books/{book_id} and return basic metadata.
@@ -101,6 +102,44 @@ pub async fn index_epub<R: Runtime>(
         message: "indexed".into(),
         report: Some(report.into()),
     })
+}
+
+#[tauri::command]
+pub async fn detect_embedding_dimension(
+    embeddings_url: String,
+    model: String,
+    api_key: Option<String>,
+    test_text: Option<String>,
+) -> Result<usize, String> {
+    let api_key = api_key.and_then(|key| {
+        let trimmed = key.trim().to_string();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed)
+        }
+    });
+    let sample_text = test_text
+        .filter(|text| !text.trim().is_empty())
+        .unwrap_or_else(|| "test".to_string());
+
+    let mut vectorizer = TextVectorizer::new(VectorizerConfig {
+        embeddings_url,
+        model_name: model,
+        api_key,
+    })
+    .await
+    .map_err(|e| {
+        log::error!("Embedding dimension detection setup failed: {:?}", e);
+        e.to_string()
+    })?;
+
+    let embedding = vectorizer.vectorize_text(&sample_text).await.map_err(|e| {
+        log::error!("Embedding dimension detection failed: {:?}", e);
+        e.to_string()
+    })?;
+
+    Ok(embedding.len())
 }
 
 /// Convert an EPUB under $AppData/books/{book_id} to mdBook structure at {book_dir}/mdbook

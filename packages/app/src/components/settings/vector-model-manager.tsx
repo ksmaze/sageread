@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { detectVectorModelDimension } from "@/services/vector-model-service";
 import { useVectorModelStore, type VectorModelConfig } from "@/store/vector-model-store";
-import { normalizeEmbeddingsUrl } from "@/utils/model";
 
 export default function VectorModelSettings() {
   const {
@@ -107,41 +107,12 @@ export default function VectorModelSettings() {
     setTestResults((prev) => ({ ...prev, [model.id]: statusMessage }));
 
     try {
-      const testUrl = normalizeEmbeddingsUrl(model.url);
-      const isOllama = testUrl.endsWith("/api/embed");
-
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (model.apiKey.trim()) {
-        headers.Authorization = `Bearer ${model.apiKey}`;
-      }
-
-      const requestBody = isOllama
-        ? {
-            model: model.modelId,
-            input: testText || "测试文本",
-          }
-        : {
-            input: [testText || "测试文本"],
-            model: model.modelId,
-            encoding_format: "float",
-          };
-
-      const res = await fetch(testUrl, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(requestBody),
+      const len = await detectVectorModelDimension({
+        url: model.url,
+        modelId: model.modelId,
+        apiKey: model.apiKey,
+        testText: testText || "测试文本",
       });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      const json = await res.json();
-
-      const len = isOllama ? (json?.embeddings?.[0]?.length ?? 0) : (json?.data?.[0]?.embedding?.length ?? 0);
 
       updateVectorModel(model.id, { dimension: len });
       setTestResults((prev) => ({ ...prev, [model.id]: `连接成功 | 维度: ${len}` }));

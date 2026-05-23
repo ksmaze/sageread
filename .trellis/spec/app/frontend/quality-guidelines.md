@@ -158,6 +158,73 @@ Use this when changing root `biome.json`, upgrading `@biomejs/biome`, or adding 
 }
 ```
 
+## Scenario: Vector Model Embedding Tests
+
+### 1. Scope / Trigger
+
+Use this when changing settings UI behavior that tests external embedding/vector models, or when adding/changing Tauri commands used by that settings flow.
+
+### 2. Signatures
+
+- Frontend service: `detectVectorModelDimension(input, nativeInvoke?) -> Promise<number>`
+- Service input: `{ url: string; modelId: string; apiKey: string; testText: string }`
+- Native command: `plugin:epub|detect_embedding_dimension`
+- Native command args: `{ embeddingsUrl: string; model: string; apiKey: string | null; testText: string }`
+- Native command response: `number` vector dimension
+
+### 3. Contracts
+
+- Settings UI must call a service under `src/services/*`; do not put Tauri invocation or network request assembly directly in the component.
+- The settings test must use the native EPUB/vectorizer command path, not browser `fetch`, so Android release behavior matches actual EPUB vectorization/RAG behavior.
+- Normalize embedding URLs at the service boundary by removing one trailing slash.
+- Convert blank API keys to `null` before crossing the Tauri boundary.
+- The native command must reuse the Rust `TextVectorizer` request logic and return the embedding length.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required response |
+|---|---|
+| Blank URL or model reaches service | Let native command fail and surface its error message; form validation should prevent this in normal UI flow. |
+| Blank API key | Pass `apiKey: null`. |
+| Empty test text | Native side falls back to `"test"`. |
+| HTTP/API failure | Preserve the native error string so the settings UI can show the real failure. |
+| Dimension returned | Persist the dimension on the selected vector model and show success. |
+
+### 5. Good/Base/Bad Cases
+
+- Good: settings test and EPUB vectorization both use Rust `TextVectorizer`, so Android release cleartext/WebView policy cannot create a false negative.
+- Base: the native command returns a numeric dimension for OpenAI-compatible and Ollama-style endpoints.
+- Bad: settings test uses browser `fetch` and diverges from actual vectorization behavior.
+
+### 6. Tests Required
+
+- Unit test the frontend service with a fake native invoker, asserting command name and payload normalization.
+- Run `cargo check` after changing the Rust command/plugin registration.
+- Run `pnpm --filter app build` after changing the settings UI or service boundary.
+- For Android release issues, manually verify the release settings test against the same endpoint used for vectorization.
+
+### 7. Wrong vs Correct
+
+#### Wrong
+
+```ts
+await fetch(model.url, {
+  method: "POST",
+  body: JSON.stringify({ input: [testText], model: model.modelId }),
+});
+```
+
+#### Correct
+
+```ts
+await detectVectorModelDimension({
+  url: model.url,
+  modelId: model.modelId,
+  apiKey: model.apiKey,
+  testText,
+});
+```
+
 When UI behavior changes, manually or with device emulation verify the relevant Android surfaces:
 
 - `390x844` phone portrait

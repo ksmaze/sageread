@@ -1,6 +1,7 @@
 const COMMANDS: &[&str] = &[
     "parse_epub",
     "index_epub",
+    "detect_embedding_dimension",
     "search_db",
     "convert_to_mdbook",
     "parse_toc",
