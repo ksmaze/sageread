@@ -1,4 +1,15 @@
-import { type CustomTheme, generateDarkPalette, generateLightPalette, type Palette, themes } from "@/styles/themes";
+import {
+  type CustomTheme,
+  generateDarkPalette,
+  generateLightPalette,
+  getReaderBackgroundFromThemeColor,
+  isReaderBackground,
+  type Palette,
+  type ReaderBackground,
+  readerBackgroundThemeNames,
+  type ThemeMode,
+  themes,
+} from "@/styles/themes";
 import type { ViewSettings } from "@/types/book";
 import { getOSPlatform } from "./misc";
 
@@ -64,6 +75,7 @@ const getFontStyles = (
 
 const getColorStyles = (overrideColor: boolean, invertImgColorInDark: boolean, themeCode: ThemeCode) => {
   const { bg, fg, primary, isDarkMode } = themeCode;
+  const effectiveOverrideColor = overrideColor || themeCode.forceContentColors;
   const colorStyles = `
     html {
       --theme-bg-color: ${bg};
@@ -73,6 +85,7 @@ const getColorStyles = (overrideColor: boolean, invertImgColorInDark: boolean, t
     }
     html, body {
       color: ${fg};
+      ${effectiveOverrideColor ? "background: var(--background-set, var(--theme-bg-color));" : ""}
     }
     html[has-background], body[has-background] {
       --background-set: var(--theme-bg-color);
@@ -82,14 +95,14 @@ const getColorStyles = (overrideColor: boolean, invertImgColorInDark: boolean, t
       background: var(--background-set, none);
     }
     div, p, h1, h2, h3, h4, h5, h6 {
-      ${overrideColor ? `background-color: ${bg} !important;` : ""}
-      ${overrideColor ? `color: ${fg} !important;` : ""}
+      ${effectiveOverrideColor ? `background-color: ${bg} !important;` : ""}
+      ${effectiveOverrideColor ? `color: ${fg} !important;` : ""}
     }
     pre, span { /* inline code blocks */
-      ${overrideColor ? `background-color: ${bg} !important;` : ""}
+      ${effectiveOverrideColor ? `background-color: ${bg} !important;` : ""}
     }
     a:any-link {
-      ${overrideColor ? `color: ${primary};` : isDarkMode ? "color: lightblue;" : ""}
+      ${effectiveOverrideColor ? `color: ${primary};` : isDarkMode ? "color: lightblue;" : ""}
       text-decoration: none;
     }
     body.pbg {
@@ -97,7 +110,7 @@ const getColorStyles = (overrideColor: boolean, invertImgColorInDark: boolean, t
     }
     img {
       ${isDarkMode && invertImgColorInDark ? "filter: invert(100%);" : ""}
-      ${!isDarkMode && overrideColor ? "mix-blend-mode: multiply;" : ""}
+      ${!isDarkMode && effectiveOverrideColor ? "mix-blend-mode: multiply;" : ""}
     }
     /* inline images */
     p img, span img, sup img {
@@ -343,23 +356,37 @@ export interface ThemeCode {
   primary: string;
   palette: Palette;
   isDarkMode: boolean;
+  readerBackground: ReaderBackground;
+  forceContentColors: boolean;
 }
 
-export const getThemeCode = () => {
-  let themeMode = "auto";
-  let themeColor = "default";
-  let systemIsDarkMode = false;
-  let customThemes: CustomTheme[] = [];
-  if (typeof window !== "undefined") {
-    themeColor = localStorage.getItem("themeColor") || "default";
-    themeMode = localStorage.getItem("themeMode") || "auto";
-    customThemes = JSON.parse(localStorage.getItem("customThemes") || "[]");
-    systemIsDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  }
+interface ThemeCodeOptions {
+  themeMode?: ThemeMode;
+  readerBackground?: ReaderBackground | string | null;
+  systemIsDarkMode?: boolean;
+  customThemes?: CustomTheme[];
+}
+
+const getReaderBackgroundFromStorage = (): ReaderBackground => {
+  if (typeof window === "undefined") return "default";
+  const storedReaderBackground = localStorage.getItem("readerBackground");
+  if (isReaderBackground(storedReaderBackground)) return storedReaderBackground;
+  return getReaderBackgroundFromThemeColor(localStorage.getItem("themeColor")) ?? "default";
+};
+
+export const getThemeCodeFromOptions = ({
+  themeMode = "auto",
+  readerBackground = "default",
+  systemIsDarkMode = false,
+  customThemes = [],
+}: ThemeCodeOptions = {}) => {
   const isDarkMode = themeMode === "dark" || (themeMode === "auto" && systemIsDarkMode);
-  let currentTheme = themes.find((theme) => theme.name === themeColor);
+  const normalizedReaderBackground = isReaderBackground(readerBackground) ? readerBackground : "default";
+  const themeName = isDarkMode ? "default" : readerBackgroundThemeNames[normalizedReaderBackground];
+
+  let currentTheme = themes.find((theme) => theme.name === themeName);
   if (!currentTheme) {
-    const customTheme = customThemes.find((theme) => theme.name === themeColor);
+    const customTheme = customThemes.find((theme) => theme.name === themeName);
     if (customTheme) {
       currentTheme = {
         name: customTheme.name,
@@ -372,6 +399,7 @@ export const getThemeCode = () => {
     }
   }
   if (!currentTheme) currentTheme = themes[0];
+
   const defaultPalette = isDarkMode ? currentTheme!.colors.dark : currentTheme!.colors.light;
   return {
     bg: defaultPalette["base-100"],
@@ -379,7 +407,28 @@ export const getThemeCode = () => {
     primary: defaultPalette.primary,
     palette: defaultPalette,
     isDarkMode,
+    readerBackground: normalizedReaderBackground,
+    forceContentColors: !isDarkMode && normalizedReaderBackground !== "default",
   } as ThemeCode;
+};
+
+export const getThemeCode = () => {
+  let themeMode = "auto";
+  let systemIsDarkMode = false;
+  let customThemes: CustomTheme[] = [];
+  let readerBackground: ReaderBackground = "default";
+  if (typeof window !== "undefined") {
+    themeMode = localStorage.getItem("themeMode") || "auto";
+    readerBackground = getReaderBackgroundFromStorage();
+    customThemes = JSON.parse(localStorage.getItem("customThemes") || "[]");
+    systemIsDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  return getThemeCodeFromOptions({
+    themeMode: themeMode as ThemeMode,
+    readerBackground,
+    systemIsDarkMode,
+    customThemes,
+  });
 };
 
 const getScrollbarStyles = (themeCode: ThemeCode) => {
@@ -534,7 +583,7 @@ export const applyFixedlayoutStyles = (document: Document, viewSettings: ViewSet
     themeCode = getThemeCode();
   }
   const { bg, fg, primary, isDarkMode } = themeCode;
-  const overrideColor = viewSettings.overrideColor!;
+  const overrideColor = viewSettings.overrideColor! || themeCode.forceContentColors;
   const invertImgColorInDark = viewSettings.invertImgColorInDark!;
 
   const existingStyleId = "fixed-layout-styles";

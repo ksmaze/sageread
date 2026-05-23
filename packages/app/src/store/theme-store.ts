@@ -1,10 +1,18 @@
 import { create } from "zustand";
-import type { CustomTheme, Palette, ThemeMode } from "@/styles/themes";
+import {
+  type CustomTheme,
+  getReaderBackgroundFromThemeColor,
+  isReaderBackground,
+  type Palette,
+  type ReaderBackground,
+  type ThemeMode,
+} from "@/styles/themes";
 import type { SystemSettings } from "@/types/settings";
-import { getThemeCode, type ThemeCode } from "@/utils/style";
+import { getThemeCode, getThemeCodeFromOptions, type ThemeCode } from "@/utils/style";
 
 interface ThemeState {
   themeMode: ThemeMode;
+  readerBackground: ReaderBackground;
   systemIsDarkMode: boolean;
   themeCode: ThemeCode;
   isDarkMode: boolean;
@@ -18,6 +26,7 @@ interface ThemeState {
   dismissSystemUI: () => void;
   getIsDarkMode: () => boolean;
   setThemeMode: (mode: ThemeMode) => void;
+  setReaderBackground: (background: ReaderBackground) => void;
   setAutoScroll: (enabled: boolean) => void;
   updateAppTheme: (color: keyof Palette) => void;
   saveCustomTheme: (settings: SystemSettings, theme: CustomTheme, isDelete?: boolean) => void;
@@ -30,6 +39,16 @@ const getInitialThemeMode = (): ThemeMode => {
   return "auto";
 };
 
+const getInitialReaderBackground = (): ReaderBackground => {
+  if (typeof window !== "undefined" && localStorage) {
+    const stored = localStorage.getItem("readerBackground");
+    if (isReaderBackground(stored)) return stored;
+    const legacyBackground = getReaderBackgroundFromThemeColor(localStorage.getItem("themeColor"));
+    if (legacyBackground) return legacyBackground;
+  }
+  return "default";
+};
+
 const getInitialAutoScroll = (): boolean => {
   if (typeof window !== "undefined" && localStorage) {
     const stored = localStorage.getItem("autoScroll");
@@ -40,6 +59,7 @@ const getInitialAutoScroll = (): boolean => {
 
 export const useThemeStore = create<ThemeState>((set, get) => {
   const initialThemeMode = getInitialThemeMode();
+  const initialReaderBackground = getInitialReaderBackground();
   const initialAutoScroll = getInitialAutoScroll();
 
   console.log("initialThemeMode", initialThemeMode);
@@ -63,7 +83,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     const handleSystemThemeChange = () => {
       const mode = get().themeMode;
       const isDarkMode = mode === "dark" || (mode === "auto" && mediaQuery.matches);
-      set({ systemIsDarkMode: mediaQuery.matches, isDarkMode });
+      set({ systemIsDarkMode: mediaQuery.matches, isDarkMode, themeCode: getThemeCode() });
     };
 
     mediaQuery.addEventListener("change", handleSystemThemeChange);
@@ -71,6 +91,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
 
   return {
     themeMode: initialThemeMode,
+    readerBackground: initialReaderBackground,
     systemIsDarkMode,
     isDarkMode,
     themeCode,
@@ -103,6 +124,13 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       set({ themeCode: getThemeCode() });
     },
 
+    setReaderBackground: (background) => {
+      if (typeof window !== "undefined" && localStorage) {
+        localStorage.setItem("readerBackground", background);
+      }
+      set({ readerBackground: background, themeCode: getThemeCode() });
+    },
+
     setAutoScroll: (enabled) => {
       if (typeof window !== "undefined" && localStorage) {
         localStorage.setItem("autoScroll", enabled.toString());
@@ -110,7 +138,12 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       set({ autoScroll: enabled });
     },
     updateAppTheme: (color) => {
-      const { palette } = get().themeCode;
+      const { themeMode, systemIsDarkMode } = get();
+      const { palette } = getThemeCodeFromOptions({
+        themeMode,
+        readerBackground: "default",
+        systemIsDarkMode,
+      });
       document.querySelector('meta[name="theme-color"]')?.setAttribute("content", palette[color]);
     },
     saveCustomTheme: async (settings, theme, isDelete) => {

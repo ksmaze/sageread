@@ -558,6 +558,15 @@ currentView?.renderer.setStyles?.(getStyles(updatedSettings));
 
 `useThemeStore` owns the document `.dark` class and localStorage-backed theme preferences. Do not create component-local dark mode state.
 
+### Reader Appearance Contract
+
+- `useThemeStore` owns reader appearance state that is independent from persisted `globalViewSettings`, including `themeMode`, `readerBackground`, and the derived `themeCode`.
+- `readerBackground` is a `ReaderBackground` union of `default`, `paper`, and `green`, persisted with the `readerBackground` localStorage key. Preserve the legacy `themeColor` fallback only for migration.
+- Resolve light/dark mode first. Dark mode always uses the existing default dark reader palette; paper and green are light-mode-only backgrounds.
+- Non-default light reader backgrounds must apply to the reader document canvas, not only text elements, and force compatible reader content foreground/background colors even when `globalViewSettings.overrideColor` is false. The `default` background keeps the original-color behavior.
+- Reader background color must not tint app chrome or system UI metadata. When updating app theme colors, derive the palette with `readerBackground: "default"`.
+- Cover reader background policy with pure style tests for palette mapping, dark-mode override, and forced content colors before changing renderer wiring.
+
 ## Server State
 
 - Library refresh flows through `useLibraryStore.refreshBooks`.

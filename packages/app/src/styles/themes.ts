@@ -9,6 +9,36 @@ export type BaseColor = {
 };
 
 export type ThemeMode = "auto" | "light" | "dark";
+export type ReaderBackground = "default" | "paper" | "green";
+
+export const readerBackgroundThemeNames: Record<ReaderBackground, string> = {
+  default: "default",
+  paper: "sepia",
+  green: "grass",
+};
+
+export const readerBackgroundPresets = [
+  { value: "default", label: _("Default"), swatch: "#ffffff" },
+  { value: "paper", label: _("Paper"), swatch: "#f1e8d0" },
+  { value: "green", label: _("Eye comfort"), swatch: "#d7dbbd" },
+] as const satisfies ReadonlyArray<{
+  value: ReaderBackground;
+  label: string;
+  swatch: string;
+}>;
+
+export const isReaderBackground = (value: string | null | undefined): value is ReaderBackground => {
+  return value === "default" || value === "paper" || value === "green";
+};
+
+export const getReaderBackgroundFromThemeColor = (
+  themeColor: string | null | undefined,
+): ReaderBackground | undefined => {
+  if (themeColor === "sepia") return "paper";
+  if (themeColor === "grass") return "green";
+  if (themeColor === "default") return "default";
+  return undefined;
+};
 
 export type Palette = {
   "base-100": string;

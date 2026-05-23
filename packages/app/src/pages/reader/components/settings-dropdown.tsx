@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DEFAULT_BOOK_FONT } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useThemeStore } from "@/store/theme-store";
+import { type ReaderBackground, readerBackgroundPresets } from "@/styles/themes";
 import { getMaxInlineSize } from "@/utils/config";
 import { isCJKEnv } from "@/utils/misc";
 import { getStyles } from "@/utils/style";
@@ -17,10 +18,15 @@ import { getReaderStyleFontOptions } from "./reader-style-font-options";
 const FONT_SIZE_MIN = 12;
 const FONT_SIZE_MAX = 32;
 const FONT_SIZE_STEP = 2;
+const readerBackgroundLabels: Record<ReaderBackground, string> = {
+  default: "默认",
+  paper: "纸张",
+  green: "护眼绿",
+};
 
 export function ReaderStylePanel() {
   const store = useReaderStoreApi();
-  const { themeMode, setThemeMode } = useThemeStore();
+  const { themeMode, readerBackground, setThemeMode, setReaderBackground } = useThemeStore();
   const { settings, setSettings } = useAppSettingsStore();
 
   const globalViewSettings = settings.globalViewSettings;
@@ -225,6 +231,36 @@ export function ReaderStylePanel() {
               {!globalViewSettings.scrolled && <MdCheck size={16} />}
             </button>
           </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-3 font-medium text-sm">阅读背景</div>
+        <div className="grid grid-cols-3 gap-2">
+          {readerBackgroundPresets.map((preset) => {
+            const isSelected = readerBackground === preset.value;
+            const label = readerBackgroundLabels[preset.value];
+            return (
+              <button
+                key={preset.value}
+                type="button"
+                className={`btn btn-sm flex h-9 min-w-0 items-center justify-center gap-2 rounded-md px-2 ${
+                  isSelected
+                    ? "border-none bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "border bg-muted text-primary hover:bg-muted/70"
+                }`}
+                onClick={() => setReaderBackground(preset.value)}
+                title={`${label}背景`}
+              >
+                <span
+                  className="size-4 shrink-0 rounded-full border border-black/20 dark:border-white/25"
+                  style={{ backgroundColor: preset.swatch }}
+                />
+                <span className="min-w-0 truncate text-xs">{label}</span>
+                {isSelected && <MdCheck size={14} className="shrink-0" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
