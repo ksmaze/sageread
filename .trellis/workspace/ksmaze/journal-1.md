@@ -1075,3 +1075,35 @@ Aligned unified Notes annotation cards and details with reader highlight, underl
 ### Next Steps
 
 - None - task complete
+
+
+## Session 32: Finish bootstrap guidelines
+
+**Date**: 2026-05-23
+**Task**: Finish bootstrap guidelines
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Verified current Trellis specs against recent app and foliate changes, found no additional spec edits needed, and archived 00-bootstrap-guidelines.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
