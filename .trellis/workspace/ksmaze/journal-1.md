@@ -1107,3 +1107,37 @@ Verified current Trellis specs against recent app and foliate changes, found no 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 33: Native embedding settings test
+
+**Date**: 2026-05-23
+**Task**: Native embedding settings test
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Routed vector model settings tests through the native Rust embedding vectorizer path, added regression coverage, and archived the debug-release embedding network task.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dbf5375` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
