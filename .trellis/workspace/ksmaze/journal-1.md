@@ -1175,3 +1175,37 @@ Added separate reader background presets for default, paper, and green; fixed th
 ### Next Steps
 
 - None - task complete
+
+
+## Session 35: Reader color coverage
+
+**Date**: 2026-05-24
+**Task**: Reader color coverage
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Expanded forced reader color coverage for paper and green comfort backgrounds to match Readest-inspired semantic content, border, link, image, hardcoded black text, and EPUB template handling; verified tests, typecheck, biome, and app build.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1cdb835` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

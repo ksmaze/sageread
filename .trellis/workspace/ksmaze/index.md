@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 34
-- **Last Active**: 2026-05-23
+- **Total Sessions**: 35
+- **Last Active**: 2026-05-24
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1177 | Active |
+| `journal-1.md` | ~1211 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 35 | 2026-05-24 | Reader color coverage | `1cdb835` | `main` |
 | 34 | 2026-05-23 | Reader background presets | `b36f9fb` | `main` |
 | 33 | 2026-05-23 | Native embedding settings test | `dbf5375` | `main` |
 | 32 | 2026-05-23 | Finish bootstrap guidelines | - | `main` |
