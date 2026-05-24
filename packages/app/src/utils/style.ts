@@ -94,15 +94,17 @@ const getColorStyles = (overrideColor: boolean, invertImgColorInDark: boolean, t
       background-color: var(--theme-bg-color, transparent);
       background: var(--background-set, none);
     }
-    div, p, h1, h2, h3, h4, h5, h6 {
+    section, aside, blockquote, article, nav, header, footer, main, figure,
+    div, p, font, h1, h2, h3, h4, h5, h6, li, span {
       ${effectiveOverrideColor ? `background-color: ${bg} !important;` : ""}
       ${effectiveOverrideColor ? `color: ${fg} !important;` : ""}
+      ${effectiveOverrideColor ? `border-color: ${fg} !important;` : ""}
     }
     pre, span { /* inline code blocks */
       ${effectiveOverrideColor ? `background-color: ${bg} !important;` : ""}
     }
     a:any-link {
-      ${effectiveOverrideColor ? `color: ${primary};` : isDarkMode ? "color: lightblue;" : ""}
+      ${effectiveOverrideColor ? `color: ${primary} !important;` : isDarkMode ? "color: lightblue;" : ""}
       text-decoration: none;
     }
     body.pbg {
@@ -112,11 +114,28 @@ const getColorStyles = (overrideColor: boolean, invertImgColorInDark: boolean, t
       ${isDarkMode && invertImgColorInDark ? "filter: invert(100%);" : ""}
       ${!isDarkMode && effectiveOverrideColor ? "mix-blend-mode: multiply;" : ""}
     }
+    svg, img {
+      ${effectiveOverrideColor ? "background-color: transparent !important;" : ""}
+    }
+    *:has(> hr.background-img):not(body) {
+      ${effectiveOverrideColor ? `background-color: ${bg};` : ""}
+    }
+    hr.background-img {
+      ${effectiveOverrideColor ? "mix-blend-mode: multiply;" : ""}
+    }
+    p[width][height] > img:only-child {
+      ${effectiveOverrideColor ? "mix-blend-mode: multiply;" : ""}
+    }
     /* inline images */
-    p img, span img, sup img {
+    *:has(> img.has-text-siblings):not(body) {
+      ${effectiveOverrideColor ? `background-color: ${bg};` : ""}
+    }
+    p img.has-text-siblings, span img.has-text-siblings, sup img.has-text-siblings {
       mix-blend-mode: ${isDarkMode ? "screen" : "multiply"};
     }
     /* override inline hardcoded text color */
+    font[color="#000000"], font[color="#000"], font[color="black"],
+    font[color="rgb(0,0,0)"], font[color="rgb(0, 0, 0)"],
     *[style*="color: rgb(0,0,0)"], *[style*="color: rgb(0, 0, 0)"],
     *[style*="color: #000"], *[style*="color: #000000"], *[style*="color: black"],
     *[style*="color:rgb(0,0,0)"], *[style*="color:rgb(0, 0, 0)"],
@@ -134,6 +153,10 @@ const getColorStyles = (overrideColor: boolean, invertImgColorInDark: boolean, t
     .chapterHeader, .chapterHeader * {
       border-color: unset;
       background-color: ${bg} !important;
+    }
+    .calibre {
+      color: unset;
+      background-color: unset;
     }
   `;
   return colorStyles;

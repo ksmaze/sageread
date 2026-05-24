@@ -29,6 +29,9 @@ const getCssBlocks = (styles: string, selector: string) => {
   );
 };
 
+const forcedContentSelector = `section, aside, blockquote, article, nav, header, footer, main, figure,
+    div, p, font, h1, h2, h3, h4, h5, h6, li, span`;
+
 describe("reader background style policy", () => {
   it("maps paper and green reader backgrounds to light-mode palettes", () => {
     const paper = getThemeCodeFromOptions({
@@ -77,6 +80,40 @@ describe("reader background style policy", () => {
     assert.match(styles, /color: #5b4636 !important;/);
   });
 
+  it("forces semantic reader content colors and borders for non-default light backgrounds", () => {
+    const themeCode = getThemeCodeFromOptions({
+      themeMode: "light",
+      readerBackground: "green",
+      systemIsDarkMode: false,
+      customThemes: [],
+    });
+
+    const styles = getStyles({ ...baseViewSettings, overrideColor: false }, themeCode);
+    const contentColorBlock = getCssBlocks(styles, forcedContentSelector)[0];
+
+    assert.ok(contentColorBlock);
+    assert.match(contentColorBlock, /background-color: #d7dbbd !important;/);
+    assert.match(contentColorBlock, /color: #232c16 !important;/);
+    assert.match(contentColorBlock, /border-color: #232c16 !important;/);
+  });
+
+  it("adds Readest-inspired image and hardcoded black text handling under forced reader colors", () => {
+    const themeCode = getThemeCodeFromOptions({
+      themeMode: "light",
+      readerBackground: "paper",
+      systemIsDarkMode: false,
+      customThemes: [],
+    });
+
+    const styles = getStyles({ ...baseViewSettings, overrideColor: false }, themeCode);
+
+    assert.match(styles, /font\[color="#000000"\], font\[color="#000"\], font\[color="black"\]/);
+    assert.match(styles, /svg, img \{[\s\S]*background-color: transparent !important;/);
+    assert.match(styles, /\*:has\(> hr\.background-img\):not\(body\) \{[\s\S]*background-color: #f1e8d0;/);
+    assert.match(styles, /p\[width\]\[height\] > img:only-child \{[\s\S]*mix-blend-mode: multiply;/);
+    assert.match(styles, /\*:has\(> img\.has-text-siblings\):not\(body\) \{[\s\S]*background-color: #f1e8d0;/);
+  });
+
   it("sets the reader document background for non-default light reader backgrounds", () => {
     const themeCode = getThemeCodeFromOptions({
       themeMode: "light",
@@ -102,7 +139,7 @@ describe("reader background style policy", () => {
     });
 
     const styles = getStyles({ ...baseViewSettings, overrideColor: false }, themeCode);
-    const contentColorBlock = getCssBlocks(styles, "div, p, h1, h2, h3, h4, h5, h6")[0];
+    const contentColorBlock = getCssBlocks(styles, forcedContentSelector)[0];
 
     assert.ok(contentColorBlock);
     assert.doesNotMatch(contentColorBlock, /background-color:/);
