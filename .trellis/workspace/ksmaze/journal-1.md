@@ -1209,3 +1209,37 @@ Expanded forced reader color coverage for paper and green comfort backgrounds to
 ### Next Steps
 
 - None - task complete
+
+
+## Session 36: Stabilize reader bundled fonts
+
+**Date**: 2026-05-25
+**Task**: Stabilize reader bundled fonts
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Bundled CJK and English reader fonts, added Android native asset materialization and logcat diagnostics, synchronized Foliate reader style state, hid legacy conceptual font presets, and added regression coverage.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a74202d` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
