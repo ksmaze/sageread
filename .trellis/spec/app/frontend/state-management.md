@@ -563,9 +563,180 @@ currentView?.renderer.setStyles?.(getStyles(updatedSettings));
 - `useThemeStore` owns reader appearance state that is independent from persisted `globalViewSettings`, including `themeMode`, `readerBackground`, and the derived `themeCode`.
 - `readerBackground` is a `ReaderBackground` union of `default`, `paper`, and `green`, persisted with the `readerBackground` localStorage key. Preserve the legacy `themeColor` fallback only for migration.
 - Resolve light/dark mode first. Dark mode always uses the existing default dark reader palette; paper and green are light-mode-only backgrounds.
+- Reader font presets live in `CURATED_FONTS` and may use comma-separated CSS font-family stacks for `serif`, `sansSerif`, and `cjk`. Each preset must also declare `defaultFont` (`"Serif"` or `"Sans-serif"`) so selecting a preset updates the active Latin axis instead of reusing stale global state. Use `applyReaderStyleFontOption()` from `reader-style-font-options.ts` when applying a preset, and use `getReaderStyleFontPreviewFamily()` for selector previews. `getStyles()` must format each family separately, preserve generic families such as `system-ui`, emit CJK-only local aliases for non-bundled CJK families, place the CJK stack before the selected Latin stack, and append a generic fallback. Do not wrap an entire comma-separated preset value in one quoted font-family string.
+- When `globalViewSettings.overrideFont` is true, reader descendants must inherit the selected `html, body` font stack with `font-family: inherit !important`. Do not use `font-family: revert !important`; `revert` can roll descendants back to book/user-agent fonts and make reader font selection appear broken even though settings and renderer updates fire.
+- Built-in reader font files are registered through `BuiltInFontFaceDefinition` in `src/utils/font.ts`. The current registry includes `ChillHuoFangSong`, `Noto Serif CJK SC`, `Noto Sans CJK SC`, `LXGW WenKai Lite`, `Literata`, `Merriweather`, `Source Sans 3`, and `Atkinson Hyperlegible`. Add future bundled WOFF2 files under `src-tauri/resources/fonts/`, sync generated Android assets, include local aliases in the registry, and cover the generated `@font-face` CSS with a pure unit test.
 - Non-default light reader backgrounds must apply to the reader document canvas, not only text elements, and force compatible reader content foreground/background/border colors even when `globalViewSettings.overrideColor` is false. The forced reader color selector must cover semantic reader content (`section`, `aside`, `blockquote`, `article`, `nav`, `header`, `footer`, `main`, `figure`), text elements (`div`, `p`, `font`, `h1`-`h6`, `li`, `span`), links, image/SVG backgrounds, inline hardcoded black text, and known EPUB template classes such as Feedbooks `.chapterHeader` and `.calibre`. The `default` background keeps the original-color behavior.
 - Reader background color must not tint app chrome or system UI metadata. When updating app theme colors, derive the palette with `readerBackground: "default"`.
 - Cover reader background policy with pure style tests for palette mapping, dark-mode override, and forced content colors before changing renderer wiring.
+
+#### Bundled Reader Font Asset Contract
+
+##### 1. Scope / Trigger
+
+Use this contract when adding, moving, or loading bundled reader fonts from `src-tauri/resources/fonts/`, or when changing `src/utils/font.ts`, Foliate reader load hooks, or app startup font mounting.
+
+##### 2. Signatures
+
+```ts
+interface BuiltInFontFaceDefinition {
+  family: string;
+  fileName: string;
+  localNames: string[];
+  weight: number;
+  style: "normal" | "italic";
+  unicodeRange?: string;
+}
+
+interface PreparedReaderFontAsset {
+  filePath: string;
+  byteLength: number;
+}
+
+function buildBuiltInFontFaceCss(definitions: BuiltInFontFaceDefinition[], resolveFontUrl?: (fileName: string) => string): string;
+function toBuiltInFontAssetUrl(resolvedResourcePath: string, convertFilePathToAssetUrl?: (filePath: string) => string): string;
+function upsertBuiltInFontFaceStyle(document: Document, cssText: string, styleId?: string): void;
+async function mountAdditionalFonts(document: Document): Promise<void>;
+async function logMountedBuiltInFontDiagnostics(document: Document, scope?: "reader-document-style"): Promise<void>;
+async function mountFontsToMainApp(): Promise<void>;
+```
+
+```rust
+#[tauri::command]
+async fn log_reader_font_diagnostics(payload: serde_json::Value) -> Result<(), String>;
+
+#[tauri::command]
+async fn prepare_reader_font_asset(resource_path: String) -> Result<PreparedReaderFontAssetResponse, String>;
+```
+
+```kotlin
+AndroidSystemPlugin.logReaderFontDiagnostics(payload): void;
+AndroidSystemPlugin.prepareReaderFontAsset(resourcePath): { filePath: string, byteLength: long };
+```
+
+##### 3. Contracts
+
+- Load bundled font files with `readFile("resources/fonts/<fileName>", { baseDir: BaseDirectory.Resource })`, then create a `Blob` with `type: "font/woff2"` and use `URL.createObjectURL(...)` in CSS. Android WebView does not reliably load `asset://localhost/...` directly from `@font-face`.
+- Keep `blob:` in `tauri.conf.json > app.security.csp["font-src"]`; otherwise the generated font URLs can be blocked by CSP.
+- If Android `readFile(..., BaseDirectory.Resource)` fails for an APK asset path that native `activity.assets.open("resources/fonts/<fileName>")` can read, call `prepare_reader_font_asset`. The native plugin must copy the APK asset into a versioned app cache directory and return `{ filePath, byteLength }`; the frontend must pass that cache file path through `convertFileSrc(...)` before placing it in `@font-face`.
+- `resolveResource(...)` plus `toBuiltInFontAssetUrl(...)` is only a fallback path. Do not assume an `asset://localhost/...` resource URI that works for native path APIs is fetchable by CSS.
+- Mount bundled `@font-face` CSS into every Foliate reader document and into the main app preview document. Do not gate mounting on `isCJKEnv()` or book metadata language; EPUB language metadata is often missing or wrong.
+- Use one stable style id per document and update that style element instead of appending duplicate `<style>` nodes on repeated loads.
+- Register every bundled font in `BuiltInFontFaceDefinition`; presets may reference registered families in `CURATED_FONTS`.
+- If a preset references a reading font that should visibly work out of the box, bundle the corresponding WOFF2 and register it. A preset that only names non-installed fonts will collapse to Android/WebView fallback fonts and may appear identical to other options.
+- `mountAdditionalFonts()` and `mountFontsToMainApp()` must send per-font diagnostics through the native `log_reader_font_diagnostics` command after inserting the built-in `@font-face` CSS. Do not rely only on React/browser console output for Android release font debugging.
+- The Android native plugin must log with the `SageReadReaderFont` logcat tag and include a `[SageRead:ReaderFont]` message prefix, then independently inspect APK assets with `activity.assets.open("resources/fonts/<fileName>")`. The frontend diagnostic payload should include Tauri resource read status, native asset preparation status/path/byte length, URL kind, CSS mount status, `document.fonts.load/check` results with script-appropriate sample text, and whether the computed `body`/documentElement font stack currently contains the family.
+- Treat `activeEffective` in the native log as "this family is both loadable and active in the current computed stack". Non-active registered fonts can have `webViewLoadOk=true` and `activeEffective=false`; that is expected when the current preset does not reference that family.
+- A selected preset is not proven effective by `apkAssetExists`, `nativeAssetPreparedOk`, `fontFaceCheck`, or `webViewLoadOk` alone. The current Foliate document style stack must also contain the selected family; `computedBodyFontFamily=system-ui` after a bundled preset is selected is a stale/not-applied reader style bug, not a font file bug.
+- Foliate document load handlers must use the latest `globalViewSettings`, not constructor-time settings, and must apply current reader styles to the loaded document before or with reader font diagnostics. Keep `FoliateViewerManager.config.globalViewSettings`, `StyleManager.currentSettings`, and direct `renderer.setStyles(...)` updates synchronized.
+- Callbacks that persist load-derived reader settings must merge against `useAppSettingsStore.getState().settings`. Do not merge into a hook-captured `settings` object because a later load can overwrite newer font selections with stale persisted state.
+- Diagnostics should run both when bundled `@font-face` CSS is mounted (`reader-document`) and after live reader style updates (`reader-document-style`) so logcat distinguishes "font loadable" from "font currently active".
+- Preferred English families for release-stable presets must be bundled and placed first on the active Latin axis (`serif` when `defaultFont` is `"Serif"`, `sansSerif` when it is `"Sans-serif"`). Keep system or legacy aliases such as `Source Sans Pro` after the bundled family.
+- Preferred CJK families for release-stable presets must be bundled and placed first in the preset's `cjk` stack. Keep opportunistic system siblings such as `Source Han Serif SC` or `LXGW WenKai` after the bundled family, not before it. Do not keep legacy conceptual presets visible when their label is not an actual bundled/generic font choice; map their persisted settings to a visible bundled option instead.
+- Keep a bundled CJK fallback such as `ChillHuoFangSong` in every non-system preset's `cjk` stack until that preset's preferred CJK font is bundled. Otherwise Android devices without Source Han/LXGW/system aliases can show no visible CJK change.
+- When the reader body stack includes CJK before Latin, CJK-only fonts must be constrained with `unicode-range` so they do not steal Latin glyphs. For non-bundled local CJK names, emit local-only `@font-face` aliases such as `"SageRead CJK Source Han Serif SC"` with the shared CJK unicode range, then put those aliases before the active Latin stack.
+- Every bundled WOFF2 must contain standard OpenType `name` table records for at least name IDs `1` (family), `2` (subfamily), `4` (full font name), and `6` (PostScript name). Android WebView/Chromium font sanitization can reject otherwise valid-looking fonts when required name records are missing.
+
+##### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Android `readFile(..., BaseDirectory.Resource)` succeeds | Use a generated `blob:` URL in `@font-face`; do not use `asset://localhost/...` directly as the CSS font URL. |
+| Android `readFile(..., BaseDirectory.Resource)` fails but APK asset exists | Use `prepare_reader_font_asset` to materialize the APK asset into app cache, convert that cache file path with `convertFileSrc(...)`, and expect `nativeAssetPreparedOk=true`, `nativeAssetByteLength>0`, `fontFaceCheck=true`, and `webViewLoadOk=true` in diagnostics. |
+| Android `resolveResource` returns `asset://localhost/...` in fallback | Keep that URL unchanged; do not call `convertFileSrc` on it, but treat it as fallback-only for CSS fonts. |
+| Desktop `resolveResource` returns a filesystem path | Convert it with `convertFileSrc` before placing it in `url(...)`. |
+| Reader EPUB has no CJK language metadata | Built-in font CSS still mounts. |
+| User selects a preset referencing a bundled family | The reader document has a matching `@font-face` rule before/while styles apply. |
+| Reader font diagnostics run on Android | Logcat shows `SageReadReaderFont` entries with `[SageRead:ReaderFont]` summary and one font line per registry entry, including `apkAssetExists`, `tauriResourceReadOk`, `nativeAssetPreparedOk`, `nativeAssetBytes`, `fontFaceLoadedCount`, `fontFaceCheck`, `webViewLoadOk`, `activeInComputedStack`, and `activeEffective`. |
+| `webViewLoadOk=true` but selected family has `activeEffective=false` and summary font family is `system-ui` | Treat font files/resource loading as already solved; inspect stale `globalViewSettings`, manager/style-manager sync, and whether live styles were applied to the current Foliate document. |
+| User selects a serif or sans-serif preset | The persisted settings update `defaultFont` to the preset's intended axis and live styles are regenerated from that updated setting. |
+| Release build lacks the system English family named first by a preset | The preset's active Latin axis starts with a bundled registry family and the WOFF2 exists in both source resources and generated Android assets. |
+| Android/WebView Latin family can satisfy CJK through system fallback | The generated reader `font-family` puts CJK aliases/bundled CJK families before the active Latin stack, with CJK fonts unicode-range constrained. |
+| Release build lacks the system CJK family named first by a preset | The preset's first CJK family is a bundled registry family and the WOFF2 exists in both source resources and generated Android assets. |
+| Legacy conceptual presets (`classic`, `modern`, `elegant`) are persisted from older builds | Do not show them in the selector; map them to visible bundled options (`merriweather`, `source-sans`, `wenkai`) before saving current settings. |
+| Preferred CJK family is not installed or bundled | The preset falls through to a bundled CJK fallback before reaching generic system fallback. |
+| Font URL resolution fails | Log the failure and still emit usable local aliases when available; do not crash reader startup. |
+| Bundled WOFF2 lacks standard `name` records | Normalize the font metadata before bundling and add/keep a regression test that parses the shipped file. |
+
+##### 5. Good/Base/Bad Cases
+
+- Good: `source-serif` starts its CJK stack with bundled `Noto Serif CJK SC`, then opportunistic system aliases, and the generated reader body stack puts that CJK family before `Literata`.
+- Good: `source-sans` starts its active sans-serif stack with bundled `Source Sans 3`, keeps `Source Sans Pro` as a local/system alias, and does not rely on Android shipping that family.
+- Good: the visible selector contains actual bundled/generic choices such as `comfortable`, `source-serif`, `source-sans`, `merriweather`, and `wenkai`; older `classic`, `modern`, and `elegant` settings are aliases that migrate to those visible options instead of appearing as separate choices.
+- Good: `merriweather` starts its active serif stack with bundled `Merriweather`, then falls back to `Literata` and platform serif fonts.
+- Good: Android logcat contains `SageReadReaderFont` / `[SageRead:ReaderFont]` lines where every registered file has `apkAssetExists=true`; if `tauriResourceReadOk=false` on Android release, `nativeAssetPreparedOk=true`, `nativeAssetBytes>0`, `webViewLoadOk=true`, and the selected preset's active families have `activeEffective=true`.
+- Good: `readFile("resources/fonts/ChillHuoFangSong_Regular.woff2", { baseDir: BaseDirectory.Resource })` returns bytes, and the generated CSS uses a `blob:` URL.
+- Base: If resource-byte loading fails but native Android materialization succeeds, the generated CSS uses the `convertFileSrc(...)` URL for the cached file path.
+- Base: If both resource-byte loading and native Android materialization fail, a filesystem path from `resolveResource` can be converted to an `asset://`/asset-host URL through `convertFileSrc` as a last fallback.
+- Bad: `${await resourceDir()}/resources/fonts/font.woff2` followed by `convertFileSrc(...)`; on Android this can double-encode an already-special `asset://localhost/` resource prefix.
+- Bad: Using `asset://localhost/resources/fonts/font.woff2` directly in `@font-face` on Android without a device test; WebView can report `NetworkError` for that URL.
+- Bad: Mounting the font only when `isCJKEnv()` or `isCJKLang(book.metadata.language)` is true; this makes bundled fonts disappear for books with absent language metadata.
+- Bad: Debugging Android release font behavior only through React console logs or only by checking that CSS text contains a family; those signals do not prove the APK asset exists or that WebView accepted the font face.
+- Bad: Shipping a WOFF2 that has glyph coverage but is missing family/full-name records; CSS can still reference the family, but WebView may reject the file and silently fall back for CJK glyphs.
+- Bad: A preset changes only `serifFont`, `sansSerifFont`, and `defaultCJKFont` while leaving `defaultFont` unchanged; the UI looks like it selected a different family, but `getStyles()` keeps using the old serif/sans axis and many options collapse to the same actual font.
+- Bad: Generating `font-family: "Literata", "Georgia", "Source Han Serif SC", ...` for body text; Android/WebView can satisfy Chinese through the earlier Latin family's system fallback before the selected CJK stack is considered.
+- Bad: Putting a bundled CJK font before Latin without `unicode-range`; many CJK fonts contain Latin glyphs and can make English stop following the selected Latin preset.
+
+##### 6. Tests Required
+
+- Unit tests must cover `toBuiltInFontAssetUrl` for Android `asset://localhost/...` inputs and desktop filesystem paths.
+- Unit tests must cover `buildBuiltInFontFaceCss` for registered family, local aliases, URL source, weight, and style.
+- A mounting test must assert `mountAdditionalFonts` reads `resources/fonts/<fileName>` from `BaseDirectory.Resource` and writes a `builtin-reader-fonts` style containing generated `blob:` URLs.
+- A reader style option test must assert presets apply their intended `defaultFont` axis and that previews use the same active Latin family.
+- A reader style option test must assert release-stable English presets put a bundled family first on their active Latin axis (`Literata`, `Merriweather`, `Source Sans 3`, or `Atkinson Hyperlegible`).
+- A reader style option test must assert every non-system preset keeps a bundled CJK fallback until its preferred CJK font is bundled.
+- A reader style option test must assert release-stable CJK presets put their bundled CJK family first (`Noto Serif CJK SC`, `Noto Sans CJK SC`, `LXGW WenKai Lite`).
+- A reader style option test must assert hidden legacy conceptual presets do not appear in the visible selector, and that legacy persisted settings for `classic`, `modern`, and `elegant` map to visible bundled choices (`merriweather`, `source-sans`, `wenkai`).
+- A reader style test must assert CJK aliases/bundled CJK families appear before the active Latin stack in the body `font-family`.
+- A bundled-font CSS test must assert bundled CJK fonts declare a CJK `unicode-range`, while Latin-only bundled fonts do not.
+- A bundled-font metadata test must parse each shipped WOFF2 and assert required OpenType `name` records `1`, `2`, `4`, and `6`.
+- A bundled-font asset test must assert every registered `fileName` exists in both `src-tauri/resources/fonts/` and `src-tauri/gen/android/app/src/main/assets/resources/fonts/`, and that the generated Android asset bytes match the source resource bytes.
+- A native-diagnostic test must assert `mountAdditionalFonts()` sends one diagnostic payload through `log_reader_font_diagnostics` with every registry family, resource byte length, CSS mount status, and `document.fonts.load/check` result.
+- A native-materialization test must force `readFile(..., BaseDirectory.Resource)` to fail, assert `prepare_reader_font_asset` is called for every registered font, and assert the generated CSS no longer uses `asset://localhost/resources/fonts/...`.
+- A Foliate manager test must assert updated font settings survive a later document load and are applied immediately from the latest manager/style state, not from initial `system-ui` settings.
+- Run `cargo check --manifest-path packages/app/src-tauri/Cargo.toml` after adding or changing the native diagnostic command.
+- Run `./gradlew.bat :app:compileUniversalDebugKotlin` from `packages/app/src-tauri/gen/android` after changing `AndroidSystemPlugin.kt`.
+- Run `pnpm --filter app exec tsx --test src/utils/font.test.ts src/utils/style.test.ts` after changing reader font asset loading.
+- Run `pnpm --filter app build` after changing Tauri resource loading, font registries, or Foliate reader mounting.
+
+##### 7. Wrong vs Correct
+
+###### Wrong
+
+```ts
+const resDir = await resourceDir();
+const fontPath = `${resDir}/resources/fonts/${fileName}`;
+const fontUrl = convertFileSrc(fontPath);
+```
+
+###### Correct
+
+```ts
+const fontBytes = await readFile(`resources/fonts/${fileName}`, { baseDir: BaseDirectory.Resource });
+const fontUrl = URL.createObjectURL(new Blob([fontBytes], { type: "font/woff2" }));
+```
+
+###### Wrong
+
+```css
+html, body {
+  font-family: "Literata", "Georgia", "Source Han Serif SC", "ChillHuoFangSong", serif;
+}
+```
+
+###### Correct
+
+```css
+@font-face {
+  font-family: "SageRead CJK Source Han Serif SC";
+  src: local("Source Han Serif SC");
+  unicode-range: U+4E00-9FFF;
+}
+
+html, body {
+  font-family: "Noto Serif CJK SC", "SageRead CJK Source Han Serif SC", "ChillHuoFangSong", "Literata", "Georgia", serif;
+}
+```
 
 ## Server State
 

@@ -5,7 +5,6 @@ import { type FoliateView, wrappedFoliateView } from "@/types/view";
 import { getBookDirFromLanguage, getBookDirFromWritingMode } from "@/utils/book";
 import { mountAdditionalFonts } from "@/utils/font";
 import { manageSyntaxHighlighting } from "@/utils/highlightjs";
-import { isCJKLang } from "@/utils/lang";
 import {
   describeReaderNavigationError,
   describeReaderNavigationResult,
@@ -168,7 +167,7 @@ export class FoliateViewerManager {
 
     book.transformTarget?.addEventListener("load", (event: Event) => {
       const { detail } = event as CustomEvent;
-      if (detail.isScript) detail.allowScript = globalViewSettings.allowScript ?? false;
+      if (detail.isScript) detail.allowScript = this.config.globalViewSettings.allowScript ?? false;
     });
 
     book.transformTarget?.addEventListener("data", this.getDocTransformHandler(dimensions));
@@ -233,7 +232,8 @@ export class FoliateViewerManager {
     if (!doc) return;
 
     const writingDir = this.view?.renderer.setStyles && getDirection(doc);
-    const { bookDoc, globalViewSettings } = this.config;
+    const { bookDoc } = this.config;
+    const globalViewSettings = this.styleManager?.getCurrentSettings() ?? this.config.globalViewSettings;
 
     // Update view settings based on document
     const updatedSettings = {
@@ -243,14 +243,13 @@ export class FoliateViewerManager {
         writingDir?.rtl || getDirFromUILanguage() === "rtl" || globalViewSettings.writingMode?.includes("rl") || false,
     };
 
+    this.config.globalViewSettings = updatedSettings;
+    this.styleManager?.updateSettings(updatedSettings);
+    this.styleManager?.applyStylesImmediately();
     this.onViewSettingsUpdate?.(updatedSettings);
 
     // Apply document-specific styles
-    const language = Array.isArray(bookDoc.metadata.language)
-      ? bookDoc.metadata.language[0]
-      : bookDoc.metadata.language;
-
-    mountAdditionalFonts(doc, isCJKLang(language)).catch((error) => {
+    mountAdditionalFonts(doc).catch((error) => {
       console.error("[FoliateViewer] Failed to mount fonts:", error);
     });
 
@@ -422,6 +421,10 @@ export class FoliateViewerManager {
 
   // Public API methods
   updateViewSettings(settings: Partial<ViewSettings>): void {
+    this.config.globalViewSettings = {
+      ...this.config.globalViewSettings,
+      ...settings,
+    };
     if (this.styleManager) {
       this.styleManager.updateSettings(settings);
     }

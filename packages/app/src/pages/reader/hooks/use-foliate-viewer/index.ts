@@ -6,6 +6,7 @@ import { useThemeStore } from "@/store/theme-store";
 import type { BookConfig, ViewSettings } from "@/types/book";
 import type { Insets } from "@/types/misc";
 import type { FoliateView } from "@/types/view";
+import { logMountedBuiltInFontDiagnostics } from "@/utils/font";
 import {
   describeReaderNavigationError,
   describeReaderNavigationTarget,
@@ -76,8 +77,9 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
     });
 
     manager.setViewSettingsCallback((updatedSettings: ViewSettings) => {
+      const { settings: currentSettings } = useAppSettingsStore.getState();
       setSettings({
-        ...settings,
+        ...currentSettings,
         globalViewSettings: updatedSettings,
       });
     });
@@ -123,10 +125,18 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional existing hook behavior
   useEffect(() => {
-    const view = managerRef.current?.getView();
+    const manager = managerRef.current;
+    manager?.updateViewSettings(settings.globalViewSettings);
+    const view = manager?.getView();
     if (view?.renderer && isInitialized.current) {
       const styles = getStyles(settings.globalViewSettings, themeCode);
       view.renderer.setStyles?.(styles);
+      const contents = view.renderer.getContents?.() ?? [];
+      contents.forEach(({ doc }) => {
+        logMountedBuiltInFontDiagnostics(doc, "reader-document-style").catch((error) => {
+          console.warn("[FoliateViewer] Failed to log reader font style diagnostics:", error);
+        });
+      });
 
       if (bookDoc.rendition?.layout === "pre-paginated") {
         const docs = view.renderer.getContents();

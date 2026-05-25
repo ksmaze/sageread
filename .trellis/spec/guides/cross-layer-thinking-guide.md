@@ -42,6 +42,7 @@ For each arrow, ask:
 | Dynamic SQL ↔ Service Error UI | malformed generated SQL, hidden backend string errors |
 | Library Runtime Assets ↔ Bundler ↔ Tauri Static Server | computed URLs that bundlers cannot statically discover, missing copied asset directories, production-only `/assets/undefined` URLs |
 | Foliate Renderer ↔ Reader UI/Annotations | one renderer emits/returns the expected navigation and overlayer contract while another renderer silently lacks it |
+| Foliate Renderer Style State ↔ Persisted Reader Settings | font assets can load successfully while a stale manager/store setting leaves the current document computed stack on `system-ui` |
 | Reader Progress CFI ↔ Annotation Replay | reflowable EPUB progress is a visible range CFI, while fixed-layout/PDF progress can be a page-level CFI with `range: null`; replay logic must branch on that contract |
 | Reader Pending Target ↔ Saved Location Restore | opening from notes requires the pending target to win over stale saved reader location during initialization |
 | Fixed-Layout/PDF Async Renderer ↔ Annotation Replay | app replay treats `relocate` as page-ready, so stale section/iframe/render completions must not mutate current frames or emit readiness events |
@@ -92,9 +93,9 @@ For each boundary:
 
 ### Mistake 5: Trusting Bundlers To Discover Runtime Asset Directories
 
-**Bad**: A library builds a computed `./vendor/pdfjs/${path}` URL for both files and directories, then assumes the production bundle will copy `cmaps/` and `standard_fonts/`.
+**Bad**: A library builds a computed `./vendor/pdfjs/${path}` URL for both files and directories, then assumes the production bundle will copy `cmaps/` and `standard_fonts/`. A Tauri frontend appends a resource path to `resourceDir()` and then calls `convertFileSrc()` without checking that Android may already return an `asset://localhost/` resource URI.
 
-**Good**: Treat runtime-fetched asset trees as an explicit cross-layer contract. Keep directory URLs runtime-relative and make the consuming app copy and test the emitted asset tree.
+**Good**: Treat runtime-fetched asset trees as an explicit cross-layer contract. Keep directory URLs runtime-relative and make the consuming app copy and test the emitted asset tree. For Tauri packaged resources, verify the consumer API separately: CSS `@font-face` on Android needs either resource bytes converted to `blob:` URLs or a native-materialized app-cache file URL, while native/path APIs may return `asset://localhost/...` values that prove APK existence but are not directly CSS-fetchable.
 
 ### Mistake 6: Treating Every Reader Location As A Visible Range
 
@@ -168,6 +169,12 @@ For each boundary:
 
 **Good**: Map prompt text, skill text, tool attachment, and backend command modes together. Attach RAG tools for active EPUB/legacy books, exclude explicit non-EPUB formats, and let `ragSearch` degrade to BM25 when vector config is absent.
 
+### Mistake 18: Treating Loaded Fonts As Active Fonts
+
+**Bad**: See `apkAssetExists=true`, `nativeAssetPreparedOk=true`, `fontFaceCheck=true`, and `webViewLoadOk=true`, then keep changing bundled font files while the computed reader stack still says `system-ui`.
+
+**Good**: Separate asset availability from active style state. For Foliate documents, verify the current `globalViewSettings` reached the manager/style manager, live styles were applied to the loaded document, and `activeEffective=true` appears for the selected family in logcat.
+
 ---
 
 ## Checklist for Cross-Layer Features
@@ -178,10 +185,11 @@ Before implementation:
 - [ ] Defined format at each boundary
 - [ ] Decided where validation happens
 - [ ] For portalled UI, identified the trigger surface, portal root, z-index layer, collision boundary, and max viewport size
-- [ ] For runtime library assets, identified which layer owns URL construction, asset copying, and packaged static serving
+- [ ] For runtime library assets, identified which layer owns URL construction, byte loading, asset copying, packaged static serving, and platform-specific URL/file-path differences
 - [ ] For reader renderer features, checked every mounted renderer type (`foliate-paginator` and `foliate-fxl`) exposes the methods/events consumed by app chrome, annotations, and TOC/progress code
 - [ ] For annotation replay, identified whether the current renderer reports a visible range CFI or a page-level CFI
 - [ ] For reader jumps, identified whether pending navigation or saved location owns initial foliate startup
+- [ ] For reader style changes, identified which layer owns persisted settings, manager settings, direct renderer styles, and per-document computed style diagnostics
 
 After implementation:
 - [ ] Tested with edge cases (null, empty, invalid)
@@ -189,7 +197,7 @@ After implementation:
 - [ ] Checked data survives round-trip
 - [ ] For dynamic SQL, tested the generated query against a real/in-memory database, not only by reading the builder code
 - [ ] For Tauri/backend string errors, verified the frontend service preserves the real message instead of replacing it with a generic fallback
-- [ ] For runtime library assets, verified the production output contains the directories fetched at runtime
+- [ ] For runtime library assets, verified the production output contains the directories fetched at runtime and that Android/iOS/desktop resource URLs or blob URLs are actually accepted by the consuming browser API
 - [ ] For renderer contracts, verified annotation overlays and previous/next/TOC navigation against both reflowable and fixed-layout/PDF books
 - [ ] For close/reopen flows, reopened the same PDF after teardown and verified stale renderer events and cached object URLs do not survive the previous session
 - [ ] For fixed-layout/PDF annotation replay, tested close/reopen and note-jump flows with saved page-internal highlight and note-marker CFIs
@@ -204,6 +212,7 @@ After implementation:
 - [ ] For bundled default skill changes, verified existing stock rows migrate and user-edited rows are preserved
 - [ ] For Foliate section-index consumers, verified the app derives `section.current` from relocate progress and never uses `pageinfo.current` as a section index
 - [ ] For AI tool attachment, verified prompt/skill tool names match the exact runtime tool set and fallback behavior
+- [ ] For reader font changes, verified logcat distinguishes font availability from active computed stack membership after both document load and live style updates
 
 ---
 

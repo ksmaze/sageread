@@ -119,6 +119,15 @@ export class StyleManager {
     this.lastUpdateTime = now;
   }
 
+  applyStylesImmediately(): void {
+    if (this.updateDebounceTimer) {
+      clearTimeout(this.updateDebounceTimer);
+      this.updateDebounceTimer = null;
+    }
+    this.doApplyStyles();
+    this.lastUpdateTime = Date.now();
+  }
+
   private doApplyStyles(): void {
     if (!this.view?.renderer) return;
 

@@ -1,0 +1,17 @@
+export const CJK_UNICODE_RANGE = [
+  "U+2E80-2EFF",
+  "U+3000-303F",
+  "U+3040-30FF",
+  "U+3130-318F",
+  "U+31C0-31EF",
+  "U+3400-4DBF",
+  "U+4E00-9FFF",
+  "U+AC00-D7AF",
+  "U+F900-FAFF",
+  "U+FF00-FFEF",
+  "U+20000-2A6DF",
+  "U+2A700-2B73F",
+  "U+2B740-2B81F",
+  "U+2B820-2CEAF",
+  "U+2CEB0-2EBEF",
+].join(", ");

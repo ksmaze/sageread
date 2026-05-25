@@ -13,7 +13,13 @@ import { isCJKEnv } from "@/utils/misc";
 import { getStyles } from "@/utils/style";
 import { FontSizeSlider } from "./font-size-slider";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
-import { getReaderStyleFontOptions } from "./reader-style-font-options";
+import {
+  applyReaderStyleFontOption,
+  getReaderStyleFontOptionForSettings,
+  getReaderStyleFontOptions,
+  getReaderStyleFontPreviewFamily,
+  readerStyleFontOptionMatchesSettings,
+} from "./reader-style-font-options";
 
 const FONT_SIZE_MIN = 12;
 const FONT_SIZE_MAX = 32;
@@ -32,16 +38,13 @@ export function ReaderStylePanel() {
   const globalViewSettings = settings.globalViewSettings;
   const view = store.getState().view;
   const allFonts = useMemo(() => getReaderStyleFontOptions(), []);
+  const selectedFont = useMemo(
+    () => getReaderStyleFontOptionForSettings(globalViewSettings, allFonts),
+    [globalViewSettings, allFonts],
+  );
 
   useEffect(() => {
-    const currentFontExists = allFonts.some(
-      (font) =>
-        font.serif === globalViewSettings.serifFont &&
-        font.sansSerif === globalViewSettings.sansSerifFont &&
-        font.cjk === globalViewSettings.defaultCJKFont,
-    );
-
-    if (!currentFontExists) {
+    if (!selectedFont) {
       const { settings: currentSettings } = useAppSettingsStore.getState();
       setSettings({
         ...currentSettings,
@@ -50,18 +53,22 @@ export function ReaderStylePanel() {
           serifFont: DEFAULT_BOOK_FONT.serifFont,
           sansSerifFont: DEFAULT_BOOK_FONT.sansSerifFont,
           defaultCJKFont: DEFAULT_BOOK_FONT.defaultCJKFont,
+          defaultFont: DEFAULT_BOOK_FONT.defaultFont,
         },
       });
+      return;
     }
-  }, [allFonts, globalViewSettings, setSettings]);
 
-  const currentFontId =
-    allFonts.find(
-      (font) =>
-        font.serif === globalViewSettings.serifFont &&
-        font.sansSerif === globalViewSettings.sansSerifFont &&
-        font.cjk === globalViewSettings.defaultCJKFont,
-    )?.id || "comfortable";
+    if (!readerStyleFontOptionMatchesSettings(globalViewSettings, selectedFont)) {
+      const { settings: currentSettings } = useAppSettingsStore.getState();
+      setSettings({
+        ...currentSettings,
+        globalViewSettings: applyReaderStyleFontOption(currentSettings.globalViewSettings, selectedFont),
+      });
+    }
+  }, [globalViewSettings, selectedFont, setSettings]);
+
+  const currentFontId = selectedFont?.id || "comfortable";
 
   const updateGlobalViewSettings = useCallback(
     (updater: (settings: typeof globalViewSettings) => typeof globalViewSettings) => {
@@ -114,12 +121,7 @@ export function ReaderStylePanel() {
     (fontId: string) => {
       const selectedFont = allFonts.find((f) => f.id === fontId);
       if (!selectedFont) return;
-      updateGlobalViewSettings((settings) => ({
-        ...settings,
-        serifFont: selectedFont.serif,
-        sansSerifFont: selectedFont.sansSerif,
-        defaultCJKFont: selectedFont.cjk,
-      }));
+      updateGlobalViewSettings((settings) => applyReaderStyleFontOption(settings, selectedFont));
     },
     [updateGlobalViewSettings, allFonts],
   );
@@ -140,13 +142,12 @@ export function ReaderStylePanel() {
         <div className="mb-3 font-medium text-sm">字体系列</div>
         {(() => {
           const selected = allFonts.find((f) => f.id === currentFontId);
-          const triggerFontFamily = selected ? (isCJK ? selected.cjk : selected.serif) : undefined;
-          const triggerFontWeight = selected?.id === "classic" ? "normal" : undefined;
+          const triggerFontFamily = selected ? getReaderStyleFontPreviewFamily(selected, isCJK) : undefined;
           return (
             <Select value={currentFontId} onValueChange={handleFontChange}>
               <SelectTrigger
                 className="h-8 w-full focus:outline-none focus:ring-0"
-                style={{ fontFamily: triggerFontFamily, fontWeight: triggerFontWeight }}
+                style={{ fontFamily: triggerFontFamily }}
               >
                 <SelectValue placeholder="选择字体" />
               </SelectTrigger>
@@ -156,8 +157,7 @@ export function ReaderStylePanel() {
                     <span
                       className="truncate"
                       style={{
-                        fontFamily: isCJK ? font.cjk : font.serif,
-                        fontWeight: font.id === "classic" ? "normal" : undefined,
+                        fontFamily: getReaderStyleFontPreviewFamily(font, isCJK),
                       }}
                     >
                       {font.name}

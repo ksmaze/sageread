@@ -2,7 +2,10 @@
 
 mod core;
 use crate::core::{
-    android_system::{process_text, take_opened_book_urls},
+    android_system::{
+        log_reader_font_diagnostics, prepare_reader_font_asset, process_text,
+        take_opened_book_urls,
+    },
     backup::{create_backup_archive, import_backup_archive},
     books::commands::{
         create_book_note,
@@ -193,7 +196,9 @@ pub fn run() {
             delete_skill,
             toggle_skill_active,
             app_ready,
+            prepare_reader_font_asset,
             process_text,
+            log_reader_font_diagnostics,
             opened_urls,
             create_backup_archive,
             import_backup_archive,

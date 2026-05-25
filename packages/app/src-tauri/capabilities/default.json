@@ -31,6 +31,7 @@
     "fs:allow-appconfig-write-recursive",
     "fs:allow-appdata-read-recursive",
     "fs:allow-appdata-write-recursive",
+    "fs:allow-resource-read-recursive",
     "fs:allow-temp-read-recursive",
     "fs:allow-temp-write-recursive",
     {

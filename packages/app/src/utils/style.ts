@@ -11,7 +11,106 @@ import {
   themes,
 } from "@/styles/themes";
 import type { ViewSettings } from "@/types/book";
+import { CJK_UNICODE_RANGE } from "./font-ranges";
 import { getOSPlatform } from "./misc";
+
+const CSS_GENERIC_FONT_FAMILIES = new Set([
+  "serif",
+  "sans-serif",
+  "monospace",
+  "cursive",
+  "fantasy",
+  "system-ui",
+  "ui-serif",
+  "ui-sans-serif",
+  "ui-monospace",
+  "ui-rounded",
+  "math",
+  "emoji",
+]);
+const DIRECT_CJK_FONT_FACE_FAMILIES = new Set([
+  "ChillHuoFangSong",
+  "Noto Serif CJK SC",
+  "Noto Sans CJK SC",
+  "LXGW WenKai Lite",
+]);
+
+const parseFontFamilyList = (fontFamily: string): string[] => {
+  const families = fontFamily
+    .split(",")
+    .map((family) => family.trim().replace(/^["']|["']$/g, ""))
+    .filter(Boolean);
+
+  const seen = new Set<string>();
+  return families.filter((family) => {
+    const key = family.toLowerCase();
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
+const isGenericFontFamily = (fontFamily: string) => CSS_GENERIC_FONT_FAMILIES.has(fontFamily.toLowerCase());
+
+const quoteCssString = (value: string) => JSON.stringify(value);
+
+const formatFontFamily = (fontFamily: string): string => {
+  if (isGenericFontFamily(fontFamily)) {
+    return fontFamily;
+  }
+  return quoteCssString(fontFamily);
+};
+
+const appendGenericFallback = (fontFamilies: string[], genericFallback: "serif" | "sans-serif" | "monospace") => {
+  if (fontFamilies.some(isGenericFontFamily)) {
+    return fontFamilies;
+  }
+  return [...fontFamilies, genericFallback];
+};
+
+const formatFontFamilyStack = (fontFamilies: string[]) => fontFamilies.map(formatFontFamily).join(", ");
+
+const uniqueFontFamilies = (fontFamilies: string[]): string[] => {
+  const seen = new Set<string>();
+  return fontFamilies.filter((family) => {
+    const key = family.toLowerCase();
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
+const toCjkFontAlias = (fontFamily: string): string => `SageRead CJK ${fontFamily}`;
+
+const useDirectCjkFontFamily = (fontFamily: string): boolean =>
+  isGenericFontFamily(fontFamily) || DIRECT_CJK_FONT_FACE_FAMILIES.has(fontFamily);
+
+const getCjkDisplayFamilies = (cjkFamilies: string[]): string[] =>
+  cjkFamilies.map((family) => (useDirectCjkFontFamily(family) ? family : toCjkFontAlias(family)));
+
+const getCjkLocalFontFaceCss = (cjkFamilies: string[]): string => {
+  const localOnlyFamilies = uniqueFontFamilies(cjkFamilies).filter((family) => !useDirectCjkFontFamily(family));
+  if (localOnlyFamilies.length === 0) {
+    return "";
+  }
+
+  return localOnlyFamilies
+    .map(
+      (family) => `
+  @font-face {
+    font-family: ${quoteCssString(toCjkFontAlias(family))};
+    font-display: swap;
+    src: local(${quoteCssString(family)});
+    unicode-range: ${CJK_UNICODE_RANGE};
+  }
+`,
+    )
+    .join("\n");
+};
 
 const getFontStyles = (
   serif: string,
@@ -24,17 +123,30 @@ const getFontStyles = (
   fontWeight: number,
   overrideFont: boolean,
 ) => {
-  // 为了确保字体正确应用，我们直接使用指定的字体
-  // CJK 字体通过 defaultCJKFont 单独处理
+  const serifFamilies = parseFontFamilyList(serif);
+  const sansSerifFamilies = parseFontFamilyList(sansSerif);
+  const monospaceFamilies = parseFontFamilyList(monospace);
+  const cjkFamilies = parseFontFamilyList(defaultCJKFont);
+  const cjkDisplayFamilies = getCjkDisplayFamilies(cjkFamilies);
+  const cjkFontFaceCss = getCjkLocalFontFaceCss(cjkFamilies);
+  const defaultFontIsSerif = defaultFont.toLowerCase() === "serif";
+  const defaultGenericFallback = defaultFontIsSerif ? "serif" : "sans-serif";
+  const defaultLatinFamilies = defaultFontIsSerif ? serifFamilies : sansSerifFamilies;
+  const defaultFamilies = appendGenericFallback(
+    uniqueFontFamilies([...cjkDisplayFamilies, ...defaultLatinFamilies]),
+    defaultGenericFallback,
+  );
+
   const fontStyles = `
+    ${cjkFontFaceCss}
     html {
-      --serif-font: "${serif}", serif;
-      --sans-serif-font: "${sansSerif}", sans-serif;
-      --monospace-font: "${monospace}", monospace;
-      --cjk-font: "${defaultCJKFont}", sans-serif;
+      --serif-font: ${formatFontFamilyStack(appendGenericFallback(serifFamilies, "serif"))};
+      --sans-serif-font: ${formatFontFamilyStack(appendGenericFallback(sansSerifFamilies, "sans-serif"))};
+      --monospace-font: ${formatFontFamilyStack(appendGenericFallback(monospaceFamilies, "monospace"))};
+      --cjk-font: ${formatFontFamilyStack(appendGenericFallback(cjkDisplayFamilies, "sans-serif"))};
     }
     html, body {
-      font-family: ${defaultFont.toLowerCase() === "serif" ? `"${serif}"` : `"${sansSerif}"`}, "${defaultCJKFont}", ${defaultFont.toLowerCase() === "serif" ? "serif" : "sans-serif"} ${overrideFont ? "!important" : ""};
+      font-family: ${formatFontFamilyStack(defaultFamilies)} ${overrideFont ? "!important" : ""};
       font-size: ${fontSize}px !important;
       font-weight: ${fontWeight};
       -webkit-text-size-adjust: none;
@@ -66,7 +178,7 @@ const getFontStyles = (
       font-size: 1rem !important;
     }
     body * {
-      ${overrideFont ? "font-family: revert !important;" : ""}
+      ${overrideFont ? "font-family: inherit !important;" : ""}
     }
     
   `;

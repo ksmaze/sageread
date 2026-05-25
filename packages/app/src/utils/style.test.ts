@@ -33,6 +33,77 @@ const forcedContentSelector = `section, aside, blockquote, article, nav, header,
     div, p, font, h1, h2, h3, h4, h5, h6, li, span`;
 
 describe("reader background style policy", () => {
+  it("renders comma-separated reader font settings as CSS font-family stacks", () => {
+    const styles = getStyles({
+      ...baseViewSettings,
+      defaultFont: "Serif",
+      serifFont: "Literata, Georgia",
+      sansSerifFont: "Atkinson Hyperlegible, Arial",
+      defaultCJKFont: "Source Han Serif SC, Noto Serif SC, Songti SC",
+    });
+
+    assert.match(styles, /--serif-font: "Literata", "Georgia", serif;/);
+    assert.match(styles, /--sans-serif-font: "Atkinson Hyperlegible", "Arial", sans-serif;/);
+    assert.match(
+      styles,
+      /--cjk-font: "SageRead CJK Source Han Serif SC", "SageRead CJK Noto Serif SC", "SageRead CJK Songti SC", sans-serif;/,
+    );
+    assert.match(
+      styles,
+      /font-family: "SageRead CJK Source Han Serif SC", "SageRead CJK Noto Serif SC", "SageRead CJK Songti SC", "Literata", "Georgia", serif !important;/,
+    );
+    assert.doesNotMatch(styles, /"Literata, Georgia"/);
+    assert.doesNotMatch(styles, /"Source Han Serif SC, Noto Serif SC, Songti SC"/);
+  });
+
+  it("prioritizes the CJK stack before Latin fallback for reader body text", () => {
+    const styles = getStyles({
+      ...baseViewSettings,
+      defaultFont: "Serif",
+      serifFont: "Literata, Georgia",
+      sansSerifFont: "Atkinson Hyperlegible, Arial",
+      defaultCJKFont: "Source Han Serif SC, ChillHuoFangSong",
+    });
+
+    assert.match(
+      styles,
+      /font-family: "SageRead CJK Source Han Serif SC", "ChillHuoFangSong", "Literata", "Georgia", serif !important;/,
+    );
+    assert.match(styles, /@font-face \{[\s\S]*font-family: "SageRead CJK Source Han Serif SC";/);
+    assert.match(styles, /@font-face \{[\s\S]*src: local\("Source Han Serif SC"\);/);
+    assert.match(styles, /@font-face \{[\s\S]*unicode-range: [^;]*U\+4E00-9FFF/);
+  });
+
+  it("uses bundled CJK families directly before Latin fallback in reader body text", () => {
+    const styles = getStyles({
+      ...baseViewSettings,
+      defaultFont: "Serif",
+      serifFont: "Literata, Georgia",
+      sansSerifFont: "Atkinson Hyperlegible, Arial",
+      defaultCJKFont: "Noto Serif CJK SC, Source Han Serif SC, LXGW WenKai Lite, ChillHuoFangSong",
+    });
+
+    assert.match(
+      styles,
+      /font-family: "Noto Serif CJK SC", "SageRead CJK Source Han Serif SC", "LXGW WenKai Lite", "ChillHuoFangSong", "Literata", "Georgia", serif !important;/,
+    );
+    assert.doesNotMatch(styles, /font-family: "SageRead CJK Noto Serif CJK SC";/);
+    assert.doesNotMatch(styles, /font-family: "SageRead CJK LXGW WenKai Lite";/);
+  });
+
+  it("forces reader descendants to inherit the selected font stack when font override is enabled", () => {
+    const styles = getStyles({
+      ...baseViewSettings,
+      defaultFont: "Serif",
+      serifFont: "Literata, Georgia",
+      defaultCJKFont: "Source Han Serif SC, Noto Serif SC",
+      overrideFont: true,
+    });
+
+    assert.match(styles, /body \* \{[\s\S]*font-family: inherit !important;/);
+    assert.doesNotMatch(styles, /font-family: revert !important;/);
+  });
+
   it("maps paper and green reader backgrounds to light-mode palettes", () => {
     const paper = getThemeCodeFromOptions({
       themeMode: "light",

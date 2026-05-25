@@ -48,7 +48,7 @@
         "child-src": ["'self'", "data:", "blob:", "https:", "http:"],
         "default-src": ["'self'", "asset://localhost", "ipc://localhost", "data:", "blob:"],
         "img-src": ["'self'", "asset://localhost", "data:", "blob:", "https:", "http:"],
-        "font-src": ["'self'", "asset://localhost", "data:", "https:", "http:"],
+        "font-src": ["'self'", "asset://localhost", "data:", "blob:", "https:", "http:"],
         "connect-src": ["'self'", "asset://localhost", "ipc://localhost", "data:", "blob:", "https:", "http:"]
       },
       "assetProtocol": {
