@@ -6,7 +6,7 @@ import { useThemeStore } from "@/store/theme-store";
 import type { BookConfig, ViewSettings } from "@/types/book";
 import type { Insets } from "@/types/misc";
 import type { FoliateView } from "@/types/view";
-import { logMountedBuiltInFontDiagnostics } from "@/utils/font";
+import { mountAdditionalFonts } from "@/utils/font";
 import {
   describeReaderNavigationError,
   describeReaderNavigationTarget,
@@ -133,8 +133,8 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
       view.renderer.setStyles?.(styles);
       const contents = view.renderer.getContents?.() ?? [];
       contents.forEach(({ doc }) => {
-        logMountedBuiltInFontDiagnostics(doc, "reader-document-style").catch((error) => {
-          console.warn("[FoliateViewer] Failed to log reader font style diagnostics:", error);
+        mountAdditionalFonts(doc, settings.globalViewSettings, "reader-document-style").catch((error) => {
+          console.warn("[FoliateViewer] Failed to update reader font faces for style diagnostics:", error);
         });
       });
 

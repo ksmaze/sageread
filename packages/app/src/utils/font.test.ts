@@ -6,6 +6,8 @@ import { clearMocks, mockIPC } from "@tauri-apps/api/mocks";
 import {
   buildBuiltInFontFaceCss,
   getBuiltInFontFaceDefinitions,
+  getBuiltInFontFaceDefinitionsForSettings,
+  mountFontPreviewsToMainApp,
   mountAdditionalFonts,
   toBuiltInFontAssetUrl,
   upsertBuiltInFontFaceStyle,
@@ -13,10 +15,16 @@ import {
 
 const createFakeDocument = () => {
   const appended: Array<{ id: string; textContent: string | null }> = [];
-  const elements = new Map<string, { id: string; textContent: string | null }>();
+  const elements = new Map<string, { id: string; textContent: string | null; remove?: () => void }>();
   const fakeDocument = {
     getElementById: (id: string) => elements.get(id) ?? null,
-    createElement: () => ({ id: "", textContent: null }),
+    createElement: () => ({
+      id: "",
+      textContent: null,
+      remove() {
+        elements.delete(this.id);
+      },
+    }),
     head: {
       appendChild: (element: { id: string; textContent: string | null }) => {
         elements.set(element.id, element);
@@ -27,6 +35,20 @@ const createFakeDocument = () => {
   } as unknown as Document;
 
   return { appended, elements, fakeDocument };
+};
+
+const comfortableFontSettings = {
+  defaultFont: "Serif",
+  serifFont: "Literata, Georgia",
+  sansSerifFont: "Source Sans 3, Helvetica",
+  defaultCJKFont: "ChillHuoFangSong",
+};
+
+const sourceSerifFontSettings = {
+  defaultFont: "Serif",
+  serifFont: "Literata, Merriweather, Georgia",
+  sansSerifFont: "Atkinson Hyperlegible, Noto Sans, Helvetica, Arial",
+  defaultCJKFont: "Noto Serif CJK SC, Source Han Serif SC, Noto Serif SC, Noto Serif CJK, Songti SC, SimSun, ChillHuoFangSong",
 };
 
 const WOFF2_KNOWN_TAGS = [
@@ -266,6 +288,15 @@ describe("built-in reader font registry", () => {
     assert.equal(url, "asset://localhost/C%3A%5CProgram%20Files%5CSageRead%5Cresources%5Cfonts%5CTestSerif.woff2");
   });
 
+  it("resolves only bundled families used by the selected reader settings", () => {
+    const definitions = getBuiltInFontFaceDefinitionsForSettings(sourceSerifFontSettings);
+
+    assert.deepEqual(
+      definitions.map((definition) => definition.family),
+      ["Noto Serif CJK SC", "ChillHuoFangSong", "Literata", "Merriweather"],
+    );
+  });
+
   it("upserts built-in font CSS into a reader document without language gating", () => {
     const { appended, elements, fakeDocument } = createFakeDocument();
 
@@ -300,15 +331,19 @@ describe("built-in reader font registry", () => {
       });
 
       const { elements, fakeDocument } = createFakeDocument();
-      await mountAdditionalFonts(fakeDocument);
+      await mountAdditionalFonts(fakeDocument, comfortableFontSettings);
 
       const styleText = elements.get("builtin-reader-fonts")?.textContent ?? "";
-      for (let i = 1; i <= getBuiltInFontFaceDefinitions().length; i += 1) {
+      for (let i = 1; i <= 2; i += 1) {
         assert.match(styleText, new RegExp(`url\\("blob:test-font-${i}"\\) format\\("woff2"\\)`));
       }
+      assert.match(styleText, /font-family: "ChillHuoFangSong";/);
+      assert.match(styleText, /font-family: "Literata";/);
+      assert.doesNotMatch(styleText, /font-family: "Noto Serif CJK SC";/);
+      assert.doesNotMatch(styleText, /font-family: "Source Sans 3";/);
       assert.deepEqual(
         createdBlobSizes,
-        getBuiltInFontFaceDefinitions().map(() => 4),
+        ["ChillHuoFangSong", "Literata"].map(() => 4),
       );
     } finally {
       clearMocks();
@@ -381,7 +416,7 @@ describe("built-in reader font registry", () => {
         }),
       };
 
-      await mountAdditionalFonts(documentWithFonts);
+      await mountAdditionalFonts(documentWithFonts, sourceSerifFontSettings);
 
       assert.equal(diagnostics.length, 1);
       const payload = diagnostics[0] as {
@@ -400,50 +435,49 @@ describe("built-in reader font registry", () => {
         }>;
       };
       assert.equal(payload.scope, "reader-document");
-      assert.equal(payload.fonts.length, getBuiltInFontFaceDefinitions().length);
       assert.deepEqual(
         payload.fonts.map((font) => font.family),
-        getBuiltInFontFaceDefinitions().map((definition) => definition.family),
+        ["Noto Serif CJK SC", "ChillHuoFangSong", "Literata", "Merriweather"],
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.resourceReadOk),
-        getBuiltInFontFaceDefinitions().map(() => true),
+        payload.fonts.map(() => true),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.resourceByteLength),
-        getBuiltInFontFaceDefinitions().map(() => 4),
+        payload.fonts.map(() => 4),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.fontUrlKind),
-        getBuiltInFontFaceDefinitions().map(() => "blob"),
+        payload.fonts.map(() => "blob"),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.cssMounted),
-        getBuiltInFontFaceDefinitions().map(() => true),
+        payload.fonts.map(() => true),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.fontFaceLoadStatus),
-        getBuiltInFontFaceDefinitions().map(() => "loaded"),
+        payload.fonts.map(() => "loaded"),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.fontFaceLoadedCount),
-        getBuiltInFontFaceDefinitions().map(() => 1),
+        payload.fonts.map(() => 1),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.fontFaceCheck),
-        getBuiltInFontFaceDefinitions().map(() => true),
+        payload.fonts.map(() => true),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.computedBodyContainsFamily),
-        getBuiltInFontFaceDefinitions().map(() => true),
+        payload.fonts.map(() => true),
       );
       assert.deepEqual(
         loadedFontFamilies,
-        getBuiltInFontFaceDefinitions().map((definition) => definition.family),
+        ["Noto Serif CJK SC", "ChillHuoFangSong", "Literata", "Merriweather"],
       );
       assert.deepEqual(
         checkedFontFamilies,
-        getBuiltInFontFaceDefinitions().map((definition) => definition.family),
+        ["Noto Serif CJK SC", "ChillHuoFangSong", "Literata", "Merriweather"],
       );
     } finally {
       clearMocks();
@@ -515,10 +549,13 @@ describe("built-in reader font registry", () => {
         getComputedStyle: () => ({ fontFamily: '"ChillHuoFangSong", serif' }),
       };
 
-      await mountAdditionalFonts(documentWithFonts);
+      await mountAdditionalFonts(documentWithFonts, comfortableFontSettings);
 
       assert.equal(unexpectedConsoleErrors.length, 0);
-      assert.equal(materializedPaths.length, getBuiltInFontFaceDefinitions().length);
+      assert.deepEqual(materializedPaths, [
+        "resources/fonts/ChillHuoFangSong_Regular.woff2",
+        "resources/fonts/Literata_Regular.woff2",
+      ]);
       const styleText = elements.get("builtin-reader-fonts")?.textContent ?? "";
       assert.doesNotMatch(styleText, /asset:\/\/localhost\/resources\/fonts\//);
       assert.match(styleText, /reader-fonts/);
@@ -533,19 +570,19 @@ describe("built-in reader font registry", () => {
       };
       assert.deepEqual(
         payload.fonts.map((font) => font.resourceReadOk),
-        getBuiltInFontFaceDefinitions().map(() => false),
+        payload.fonts.map(() => false),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.nativeAssetPreparedOk),
-        getBuiltInFontFaceDefinitions().map(() => true),
+        payload.fonts.map(() => true),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.nativeAssetByteLength),
-        getBuiltInFontFaceDefinitions().map(() => 1234),
+        payload.fonts.map(() => 1234),
       );
       assert.deepEqual(
         payload.fonts.map((font) => font.fontUrlKind),
-        getBuiltInFontFaceDefinitions().map(() => "asset"),
+        payload.fonts.map(() => "asset"),
       );
     } finally {
       clearMocks();
@@ -569,6 +606,57 @@ describe("built-in reader font registry", () => {
       assert.ok(nameIds.has(2), `${definition.fileName}: font subfamily name record is required`);
       assert.ok(nameIds.has(4), `${definition.fileName}: full font name record is required`);
       assert.ok(nameIds.has(6), `${definition.fileName}: PostScript name record is required`);
+    }
+  });
+
+  it("loads all candidate fonts only through the scoped main-app preview path", async () => {
+    const globalWithWindow = globalThis as typeof globalThis & { window?: typeof globalThis; document?: Document };
+    const originalWindow = globalWithWindow.window;
+    const originalDocument = globalWithWindow.document;
+    globalWithWindow.window = globalThis;
+    const originalCreateObjectUrl = URL.createObjectURL;
+    let blobIndex = 0;
+    URL.createObjectURL = (() => {
+      blobIndex += 1;
+      return `blob:preview-font-${blobIndex}`;
+    }) as typeof URL.createObjectURL;
+
+    try {
+      mockIPC((cmd) => {
+        if (cmd === "plugin:fs|read_file") {
+          return [0x77, 0x4f, 0x46, 0x32];
+        }
+        if (cmd === "log_reader_font_diagnostics") {
+          return null;
+        }
+        throw new Error(`Unexpected IPC command: ${cmd}`);
+      });
+
+      const { elements, fakeDocument } = createFakeDocument();
+      globalWithWindow.document = fakeDocument;
+
+      const cleanup = await mountFontPreviewsToMainApp();
+      const styleText = elements.get("builtin-fonts-main-app")?.textContent ?? "";
+
+      assert.equal(blobIndex, getBuiltInFontFaceDefinitions().length);
+      assert.match(styleText, /font-family: "ChillHuoFangSong";/);
+      assert.match(styleText, /font-family: "Atkinson Hyperlegible";/);
+
+      cleanup();
+      assert.equal(elements.get("builtin-fonts-main-app"), undefined);
+    } finally {
+      clearMocks();
+      URL.createObjectURL = originalCreateObjectUrl;
+      if (originalWindow) {
+        globalWithWindow.window = originalWindow;
+      } else {
+        delete globalWithWindow.window;
+      }
+      if (originalDocument) {
+        globalWithWindow.document = originalDocument;
+      } else {
+        delete globalWithWindow.document;
+      }
     }
   });
 

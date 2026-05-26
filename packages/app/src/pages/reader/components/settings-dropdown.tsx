@@ -9,6 +9,7 @@ import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useThemeStore } from "@/store/theme-store";
 import { type ReaderBackground, readerBackgroundPresets } from "@/styles/themes";
 import { getMaxInlineSize } from "@/utils/config";
+import { mountFontPreviewsToMainApp } from "@/utils/font";
 import { isCJKEnv } from "@/utils/misc";
 import { getStyles } from "@/utils/style";
 import { FontSizeSlider } from "./font-size-slider";
@@ -69,6 +70,28 @@ export function ReaderStylePanel() {
   }, [globalViewSettings, selectedFont, setSettings]);
 
   const currentFontId = selectedFont?.id || "comfortable";
+
+  useEffect(() => {
+    let isDisposed = false;
+    let cleanupPreviewFonts: (() => void) | undefined;
+
+    mountFontPreviewsToMainApp()
+      .then((cleanup) => {
+        if (isDisposed) {
+          cleanup();
+          return;
+        }
+        cleanupPreviewFonts = cleanup;
+      })
+      .catch((error) => {
+        console.warn("[Font] Failed to load reader font previews:", error);
+      });
+
+    return () => {
+      isDisposed = true;
+      cleanupPreviewFonts?.();
+    };
+  }, []);
 
   const updateGlobalViewSettings = useCallback(
     (updater: (settings: typeof globalViewSettings) => typeof globalViewSettings) => {

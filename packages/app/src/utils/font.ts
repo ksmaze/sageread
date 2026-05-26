@@ -1,6 +1,7 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { resolveResource } from "@tauri-apps/api/path";
 import { BaseDirectory, readFile } from "@tauri-apps/plugin-fs";
+import type { ViewSettings } from "@/types/book";
 import { CJK_UNICODE_RANGE } from "./font-ranges";
 
 export interface BuiltInFontFaceDefinition {
@@ -85,6 +86,7 @@ const PREPARE_FONT_ASSET_COMMAND = "prepare_reader_font_asset";
 
 type BuiltInFontUrlKind = "blob" | "asset" | "file" | "resource-path" | "empty" | "other";
 type BuiltInFontDiagnosticScope = "reader-document" | "reader-document-style" | "main-app";
+type ReaderFontSettings = Pick<ViewSettings, "serifFont" | "sansSerifFont" | "defaultCJKFont" | "defaultFont">;
 
 interface PreparedReaderFontAsset {
   filePath: string;
@@ -106,6 +108,7 @@ interface BuiltInFontResourceResult {
 }
 
 const mountedBuiltInFontResources = new WeakMap<Document, BuiltInFontResourceResult[]>();
+const mountedBuiltInFontResourceKeys = new WeakMap<Document, string>();
 
 const quoteCssString = (value: string) => JSON.stringify(value);
 const convertFilePathToDefaultAssetUrl = (filePath: string): string => {
@@ -121,6 +124,62 @@ export const getBuiltInFontFaceDefinitions = (): BuiltInFontFaceDefinition[] =>
     ...definition,
     localNames: [...definition.localNames],
   }));
+
+const parseFontFamilyList = (fontFamily: string | null | undefined): string[] => {
+  if (!fontFamily) {
+    return [];
+  }
+
+  const families = fontFamily
+    .split(",")
+    .map((family) => family.trim().replace(/^["']|["']$/g, ""))
+    .filter(Boolean);
+
+  const seen = new Set<string>();
+  return families.filter((family) => {
+    const key = family.toLowerCase();
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
+const fontFamilyMatchesDefinition = (fontFamily: string, definition: BuiltInFontFaceDefinition): boolean => {
+  const normalizedFamily = fontFamily.toLowerCase();
+  return (
+    definition.family.toLowerCase() === normalizedFamily ||
+    definition.localNames.some((localName) => localName.toLowerCase() === normalizedFamily)
+  );
+};
+
+export const getBuiltInFontFaceDefinitionsForFamilies = (fontFamilies: string[]): BuiltInFontFaceDefinition[] => {
+  const definitions = getBuiltInFontFaceDefinitions();
+  const selectedDefinitions: BuiltInFontFaceDefinition[] = [];
+  const selectedFamilies = new Set<string>();
+
+  for (const fontFamily of fontFamilies) {
+    const definition = definitions.find((candidate) => fontFamilyMatchesDefinition(fontFamily, candidate));
+    if (!definition || selectedFamilies.has(definition.family)) {
+      continue;
+    }
+    selectedDefinitions.push(definition);
+    selectedFamilies.add(definition.family);
+  }
+
+  return selectedDefinitions;
+};
+
+export const getBuiltInFontFaceDefinitionsForSettings = (
+  settings: ReaderFontSettings,
+): BuiltInFontFaceDefinition[] => {
+  const defaultFontIsSerif = settings.defaultFont?.toLowerCase() === "serif";
+  const activeLatinFamilies = parseFontFamilyList(defaultFontIsSerif ? settings.serifFont : settings.sansSerifFont);
+  const activeCjkFamilies = parseFontFamilyList(settings.defaultCJKFont);
+
+  return getBuiltInFontFaceDefinitionsForFamilies([...activeCjkFamilies, ...activeLatinFamilies]);
+};
 
 export const buildBuiltInFontFaceCss = (
   definitions: BuiltInFontFaceDefinition[],
@@ -254,11 +313,12 @@ const resolveBuiltInFontResource = async (
   }
 };
 
-const getBuiltInFontFaces = async (): Promise<{
+const getBuiltInFontFaces = async (
+  definitions: BuiltInFontFaceDefinition[] = getBuiltInFontFaceDefinitions(),
+): Promise<{
   cssText: string;
   resources: BuiltInFontResourceResult[];
 }> => {
-  const definitions = getBuiltInFontFaceDefinitions();
   const resources = await Promise.all(definitions.map(resolveBuiltInFontResource));
   const fontUrls = new Map(resources.map((resource) => [resource.definition.fileName, resource.fontUrl]));
 
@@ -268,16 +328,26 @@ const getBuiltInFontFaces = async (): Promise<{
   };
 };
 
+const getBuiltInFontDefinitionKey = (definitions: BuiltInFontFaceDefinition[]): string =>
+  definitions.map((definition) => definition.fileName).join("|");
+
 export const upsertBuiltInFontFaceStyle = (
   document: Document,
   cssText: string,
   styleId = READER_BUILT_IN_FONT_STYLE_ID,
 ) => {
+  let style = document.getElementById(styleId) as HTMLStyleElement | null;
   if (!cssText.trim()) {
+    if (style) {
+      if (typeof style.remove === "function") {
+        style.remove();
+      } else {
+        style.textContent = null;
+      }
+    }
     return;
   }
 
-  let style = document.getElementById(styleId) as HTMLStyleElement | null;
   if (!style) {
     style = document.createElement("style");
     style.id = styleId;
@@ -379,16 +449,24 @@ const logBuiltInFontDiagnostics = async (
   }
 };
 
-export const mountAdditionalFonts = async (document: Document) => {
-  const builtInFontFaces = await getBuiltInFontFaces();
+export const mountAdditionalFonts = async (
+  document: Document,
+  settings: ReaderFontSettings,
+  scope: BuiltInFontDiagnosticScope = "reader-document",
+) => {
+  const definitions = getBuiltInFontFaceDefinitionsForSettings(settings);
+  const definitionKey = getBuiltInFontDefinitionKey(definitions);
+  const mountedResources = mountedBuiltInFontResources.get(document);
+  if (mountedBuiltInFontResourceKeys.get(document) === definitionKey && mountedResources) {
+    await logBuiltInFontDiagnostics(document, mountedResources, scope, READER_BUILT_IN_FONT_STYLE_ID);
+    return;
+  }
+
+  const builtInFontFaces = await getBuiltInFontFaces(definitions);
   upsertBuiltInFontFaceStyle(document, builtInFontFaces.cssText);
   mountedBuiltInFontResources.set(document, builtInFontFaces.resources);
-  await logBuiltInFontDiagnostics(
-    document,
-    builtInFontFaces.resources,
-    "reader-document",
-    READER_BUILT_IN_FONT_STYLE_ID,
-  );
+  mountedBuiltInFontResourceKeys.set(document, definitionKey);
+  await logBuiltInFontDiagnostics(document, builtInFontFaces.resources, scope, READER_BUILT_IN_FONT_STYLE_ID);
 };
 
 export const logMountedBuiltInFontDiagnostics = async (
@@ -402,12 +480,12 @@ export const logMountedBuiltInFontDiagnostics = async (
   await logBuiltInFontDiagnostics(document, resources, scope, READER_BUILT_IN_FONT_STYLE_ID);
 };
 
-export const mountFontsToMainApp = async () => {
-  try {
-    const builtInFontFaces = await getBuiltInFontFaces();
-    upsertBuiltInFontFaceStyle(document, builtInFontFaces.cssText, MAIN_APP_BUILT_IN_FONT_STYLE_ID);
-    await logBuiltInFontDiagnostics(document, builtInFontFaces.resources, "main-app", MAIN_APP_BUILT_IN_FONT_STYLE_ID);
-  } catch (error) {
-    console.error("[Font] Failed to load fonts to main app:", error);
-  }
+export const mountFontPreviewsToMainApp = async (): Promise<() => void> => {
+  const builtInFontFaces = await getBuiltInFontFaces();
+  upsertBuiltInFontFaceStyle(document, builtInFontFaces.cssText, MAIN_APP_BUILT_IN_FONT_STYLE_ID);
+  await logBuiltInFontDiagnostics(document, builtInFontFaces.resources, "main-app", MAIN_APP_BUILT_IN_FONT_STYLE_ID);
+
+  return () => {
+    upsertBuiltInFontFaceStyle(document, "", MAIN_APP_BUILT_IN_FONT_STYLE_ID);
+  };
 };

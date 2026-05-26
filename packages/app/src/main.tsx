@@ -5,13 +5,10 @@ import { HashRouter } from "react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { flushAllWrites } from "./lib/tauri-storage.ts";
 import AndroidAppShell from "./mobile/app-shell.tsx";
-import { mountFontsToMainApp } from "./utils/font.ts";
 
 const queryClient = new QueryClient();
 
 import "./index.css";
-
-mountFontsToMainApp();
 
 window.addEventListener("beforeunload", () => {
   flushAllWrites().catch((error) => {

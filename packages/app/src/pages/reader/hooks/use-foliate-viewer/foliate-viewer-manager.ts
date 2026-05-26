@@ -249,7 +249,7 @@ export class FoliateViewerManager {
     this.onViewSettingsUpdate?.(updatedSettings);
 
     // Apply document-specific styles
-    mountAdditionalFonts(doc).catch((error) => {
+    mountAdditionalFonts(doc, updatedSettings).catch((error) => {
       console.error("[FoliateViewer] Failed to mount fonts:", error);
     });
 
