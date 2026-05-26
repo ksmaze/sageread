@@ -1243,3 +1243,37 @@ Bundled CJK and English reader fonts, added Android native asset materialization
 ### Next Steps
 
 - None - task complete
+
+
+## Session 37: Simplify reader font loading
+
+**Date**: 2026-05-26
+**Task**: Simplify reader font loading
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Changed bundled reader font loading to selected-font-only in reader documents, moved all-font loading to scoped style-panel previews, updated tests and frontend font contract.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3829b78` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
