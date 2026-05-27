@@ -45,7 +45,7 @@ createRoot(document.getElementById("root")!).render(
 
 - Top-level destinations are `"library"`, `"notes"`, `"ai"`, and `"stats"`.
 - `useMobileShellStore` owns Android presentation state: active destination, active book, reader open state, reader chrome visibility, and active reader sheet.
-- Phone navigation is `MobileBottomNav` with safe-area bottom padding.
+- Phone navigation is `MobileBottomNav` with safe-area bottom padding, and it must be hidden from the `md` breakpoint upward.
 - Tablet navigation is `TabletRail` from the `md` breakpoint upward.
 - Shared destination frames use `MobileSurface`, which applies `mobile-paper`, safe-area horizontal padding, and mobile scroll containment.
 - A floating `MobileSettingsEntry` opens global settings outside the reader overlay on non-AI destinations.
@@ -321,6 +321,8 @@ For Android shell changes, run at minimum:
 ```bash
 pnpm --filter app build
 ```
+
+When changing shell navigation breakpoint behavior, add or update focused `tsx --test` coverage for the class contract so `MobileBottomNav` cannot be visible at the same breakpoint as `TabletRail`.
 
 Manual or device-emulated checks should cover:
 

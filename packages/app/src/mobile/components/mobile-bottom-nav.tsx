@@ -13,7 +13,7 @@ export function MobileBottomNav({ activeDestination, onDestinationChange, hidden
   if (hidden) return null;
 
   return (
-    <nav className="mobile-tonal-border fixed inset-x-0 bottom-0 z-40 border-t bg-[var(--mobile-paper-high)] px-safe pb-safe">
+    <nav className="mobile-tonal-border fixed inset-x-0 bottom-0 z-40 border-t bg-[var(--mobile-paper-high)] px-safe pb-safe md:hidden">
       <div className="grid h-16 grid-cols-4 px-2">
         {MOBILE_DESTINATIONS.map((destination) => {
           const Icon = destination.icon;
