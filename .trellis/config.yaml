@@ -95,4 +95,5 @@ packages:
     path: packages/app
   foliate-js:
     path: packages/foliate-js
+    type: submodule
 default_package: app
