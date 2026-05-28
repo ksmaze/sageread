@@ -1277,3 +1277,37 @@ Changed bundled reader font loading to selected-font-only in reader documents, m
 ### Next Steps
 
 - None - task complete
+
+
+## Session 38: Hide tablet duplicate bottom navigation
+
+**Date**: 2026-05-27
+**Task**: Hide tablet duplicate bottom navigation
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Hid MobileBottomNav from md upward so TabletRail is the sole global navigation on landscape/tablet layouts; added regression coverage and updated Android shell spec.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `58673a7` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

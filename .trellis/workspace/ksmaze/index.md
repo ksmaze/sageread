@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 37
-- **Last Active**: 2026-05-26
+- **Total Sessions**: 38
+- **Last Active**: 2026-05-27
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1279 | Active |
+| `journal-1.md` | ~1313 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 38 | 2026-05-27 | Hide tablet duplicate bottom navigation | `58673a7` | `main` |
 | 37 | 2026-05-26 | Simplify reader font loading | `3829b78` | `main` |
 | 36 | 2026-05-25 | Stabilize reader bundled fonts | `a74202d` | `main` |
 | 35 | 2026-05-24 | Reader color coverage | `1cdb835` | `main` |
