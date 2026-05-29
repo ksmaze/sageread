@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 38
-- **Last Active**: 2026-05-27
+- **Total Sessions**: 39
+- **Last Active**: 2026-05-28
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1313 | Active |
+| `journal-1.md` | ~1347 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 39 | 2026-05-28 | Require Android APK final verification | `1b6c39c` | `main` |
 | 38 | 2026-05-27 | Hide tablet duplicate bottom navigation | `58673a7` | `main` |
 | 37 | 2026-05-26 | Simplify reader font loading | `3829b78` | `main` |
 | 36 | 2026-05-25 | Stabilize reader bundled fonts | `a74202d` | `main` |

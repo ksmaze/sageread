@@ -1311,3 +1311,37 @@ Hid MobileBottomNav from md upward so TabletRail is the sole global navigation o
 ### Next Steps
 
 - None - task complete
+
+
+## Session 39: Require Android APK final verification
+
+**Date**: 2026-05-28
+**Task**: Require Android APK final verification
+**Package**: app
+**Branch**: `main`
+
+### Summary
+
+Documented pnpm tauri android build --target aarch64 --apk as the final implementation verification gate and confirmed the Android APK build passes.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1b6c39c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
