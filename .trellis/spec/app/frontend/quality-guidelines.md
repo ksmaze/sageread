@@ -86,6 +86,14 @@ There is no dedicated frontend test script in `packages/app/package.json` today.
 pnpm --filter app build
 ```
 
+At the end of implementation, run the Android APK build as the final verification gate:
+
+```bash
+pnpm tauri android build --target aarch64 --apk
+```
+
+This final build is required even when narrower checks pass, because it verifies the Tauri Android release path, native packaging, and generated APK output.
+
 When bundler/runtime asset wiring changes, also run the focused build-output regression:
 
 ```bash
